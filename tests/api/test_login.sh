@@ -9,6 +9,18 @@ echo "LIMS 登录模块 API 测试"
 echo "======================================"
 echo ""
 
+# 检查后端服务是否运行
+echo "检查后端服务..."
+health_response=$(curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/auth/health" 2>/dev/null)
+if [ "$health_response" != "200" ]; then
+    echo -e "\033[0;31m错误: 后端服务未启动或无法连接\033[0m"
+    echo "请确保后端服务已启动:"
+    echo "  cd backend/LimsAuth.Api && dotnet run --urls \"http://localhost:5000\""
+    exit 1
+fi
+echo -e "\033[0;32m后端服务运行正常\033[0m"
+echo ""
+
 # 颜色定义
 GREEN='\033[0;32m'
 RED='\033[0;31m'
