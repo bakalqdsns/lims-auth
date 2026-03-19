@@ -107,17 +107,8 @@ public class AuthService
                 new User
                 {
                     Id = Guid.NewGuid(),
-                    Username = "admin",
-                    PasswordHash = HashPassword("admin123"),
-                    Role = "Admin",
-                    FullName = "系统管理员",
-                    IsActive = true
-                },
-                new User
-                {
-                    Id = Guid.NewGuid(),
                     Username = "teacher",
-                    PasswordHash = HashPassword("teacher123"),
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("teacher123"),
                     Role = "Teacher",
                     FullName = "张老师",
                     IsActive = true
@@ -126,7 +117,7 @@ public class AuthService
                 {
                     Id = Guid.NewGuid(),
                     Username = "student",
-                    PasswordHash = HashPassword("student123"),
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("student123"),
                     Role = "Student",
                     FullName = "李同学",
                     IsActive = true
@@ -141,16 +132,13 @@ public class AuthService
 
     private static string HashPassword(string password)
     {
-        // 简化版：实际生产环境应使用 BCrypt
-        // return BCrypt.HashPassword(password);
-        return Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(password));
+        // 使用 BCrypt 进行密码哈希
+        return BCrypt.Net.BCrypt.HashPassword(password);
     }
 
     private static bool VerifyPassword(string password, string hash)
     {
-        // 简化版：实际生产环境应使用 BCrypt
-        // return BCrypt.Verify(password, hash);
-        var hashedInput = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(password));
-        return hashedInput == hash;
+        // 使用 BCrypt 验证密码
+        return BCrypt.Net.BCrypt.Verify(password, hash);
     }
 }

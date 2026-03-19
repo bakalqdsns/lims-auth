@@ -19,12 +19,12 @@ public class AppDbContext : DbContext
         base.OnModelCreating(modelBuilder);
         
         // 添加默认管理员用户
+        // 使用 BCrypt 哈希: admin123
         modelBuilder.Entity<User>().HasData(new User
         {
             Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
             Username = "admin",
-            // 密码: admin123 (使用 BCrypt 哈希)
-            PasswordHash = "$2a$11$3Zf0J1vX9qQqQqQqQqQqQOe0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e",
+            PasswordHash = "$2a$11$a5KJRw3O4upDmqpwnebX8O7loyuih3XazDAGmyI.Kc1fU5JWjC2/q",
             Role = "Admin",
             FullName = "系统管理员",
             IsActive = true,
