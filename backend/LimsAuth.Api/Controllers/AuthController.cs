@@ -31,11 +31,12 @@ public class AuthController : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
         {
-            return BadRequest(new { Code = 400, Message = "用户名和密码不能为空" });
+            return Ok(new LoginResponse { Code = 400, Message = "用户名和密码不能为空" });
         }
 
         var response = await _authService.LoginAsync(request);
-        return StatusCode(response.Code == 200 ? 200 : 401, response);
+        // 始终返回 200 HTTP 状态码，业务错误码在 body 中
+        return Ok(response);
     }
 
     /// <summary>

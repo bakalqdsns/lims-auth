@@ -44,6 +44,7 @@ export const useAuthStore = defineStore('auth', () => {
         password
       })
 
+      // 检查业务状态码
       if (response.data.code === 200 && response.data.data) {
         token.value = response.data.data.token
         user.value = response.data.data.user
@@ -54,17 +55,20 @@ export const useAuthStore = defineStore('auth', () => {
         
         return true
       } else {
-        error.value = response.data.message
+        // 业务错误（如 401 用户名密码错误、400 参数错误）
+        error.value = response.data.message || '登录失败'
         return false
       }
     } catch (err: any) {
-      // 优先显示后端返回的错误信息
-      if (err.response?.data?.message) {
-        error.value = err.response.data.message
-      } else if (err.response?.status === 401) {
-        error.value = '用户名或密码错误'
-      } else if (err.code === 'ECONNREFUSED' || err.code === 'ERR_NETWORK') {
+      // 网络错误或服务器错误
+      console.error('登录请求失败:', err)
+      
+      if (err.code === 'ECONNREFUSED' || err.code === 'ERR_NETWORK') {
         error.value = '无法连接到服务器，请检查网络连接'
+      } else if (err.code === 'ETIMEDOUT') {
+        error.value = '连接超时，请检查网络'
+      } else if (err.response?.status >= 500) {
+        error.value = '服务器错误，请稍后重试'
       } else {
         error.value = '登录失败，请稍后重试'
       }
