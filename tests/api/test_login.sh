@@ -30,13 +30,13 @@ NC='\033[0m' # No Color
 PASSED=0
 FAILED=0
 
-# 测试函数
+# 测试函数 - 检查业务状态码
 test_api() {
     local name=$1
     local method=$2
     local endpoint=$3
     local data=$4
-    local expected_code=$5
+    local expected_business_code=$5
     
     echo -n "测试: $name ... "
     
@@ -51,11 +51,14 @@ test_api() {
     http_code=$(echo "$response" | tail -n1)
     body=$(echo "$response" | sed '$d')
     
-    if [ "$http_code" -eq "$expected_code" ]; then
-        echo -e "${GREEN}通过${NC} (HTTP $http_code)"
+    # 提取业务状态码 (code 字段)
+    business_code=$(echo "$body" | grep -o '"code":[0-9]*' | cut -d':' -f2)
+    
+    if [ "$business_code" -eq "$expected_business_code" ]; then
+        echo -e "${GREEN}通过${NC} (业务码: $business_code)"
         ((PASSED++))
     else
-        echo -e "${RED}失败${NC} (期望 HTTP $expected_code, 实际 HTTP $http_code)"
+        echo -e "${RED}失败${NC} (期望业务码: $expected_business_code, 实际: $business_code)"
         echo "响应: $body"
         ((FAILED++))
     fi
