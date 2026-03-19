@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "cqmC7WMA7P7Wb/WZTdMwp8wuv43HlHXO4yASFaKVAl0=",
+  "Source": "LimsAuth.Api",
+  "BasePath": "_content/LimsAuth.Api",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}
