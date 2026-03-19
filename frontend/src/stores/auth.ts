@@ -58,7 +58,16 @@ export const useAuthStore = defineStore('auth', () => {
         return false
       }
     } catch (err: any) {
-      error.value = err.response?.data?.message || '登录失败，请检查网络连接'
+      // 优先显示后端返回的错误信息
+      if (err.response?.data?.message) {
+        error.value = err.response.data.message
+      } else if (err.response?.status === 401) {
+        error.value = '用户名或密码错误'
+      } else if (err.code === 'ECONNREFUSED' || err.code === 'ERR_NETWORK') {
+        error.value = '无法连接到服务器，请检查网络连接'
+      } else {
+        error.value = '登录失败，请稍后重试'
+      }
       return false
     } finally {
       loading.value = false
