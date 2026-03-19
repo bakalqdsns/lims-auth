@@ -66,7 +66,7 @@
     </div>
 
     <div class="login-footer">
-      <p>© 2024 高校实验室管理系统 - 版权所有</p>
+      <p>© 2026 数字媒体 实验室管理系统 - 版权所有</p>
     </div>
   </div>
 </template>
