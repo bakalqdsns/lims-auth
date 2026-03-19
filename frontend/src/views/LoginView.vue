@@ -1,6 +1,6 @@
 <template>
-  <div class="login-container">
-    <div class="login-box">
+  <div class="login-container" :class="{ 'login-success': loginSuccess }">
+    <div class="login-box" :class="{ 'fade-out': loginSuccess }">
       <div class="login-header">
         <el-icon size="48" color="#409EFF"><School /></el-icon>
         <h1>高校实验室管理系统</h1>
@@ -42,9 +42,17 @@
             size="large"
             class="login-button"
             :loading="authStore.loading"
+            :disabled="authStore.loading"
             @click="handleLogin"
           >
-            登 录
+            <template #loading>
+              <el-icon class="is-loading"><Loading /></el-icon>
+              <span>登录中...</span>
+            </template>
+            <template #default>
+              <el-icon><Key /></el-icon>
+              <span>登 录</span>
+            </template>
           </el-button>
         </el-form-item>
       </el-form>
@@ -67,12 +75,13 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { User, Lock, School } from '@element-plus/icons-vue'
+import { User, Lock, School, Key, Loading } from '@element-plus/icons-vue'
 import { useAuthStore } from '../stores/auth'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const formRef = ref()
+const loginSuccess = ref(false)
 
 const form = reactive({
   username: '',
@@ -98,13 +107,42 @@ const handleLogin = async () => {
       const success = await authStore.login(form.username, form.password)
       
       if (success) {
-        ElMessage.success('登录成功')
-        router.push('/home')
+        // 登录成功反馈
+        const userName = authStore.user?.fullName || authStore.user?.username
+        const roleText = getRoleText(authStore.user?.role || '')
+        
+        // 触发成功动画
+        loginSuccess.value = true
+        
+        ElMessage.success({
+          message: `欢迎回来，${userName} (${roleText})`,
+          duration: 2000,
+          showClose: true
+        })
+        
+        // 添加短暂延迟让用户看到成功提示和动画
+        setTimeout(() => {
+          router.push('/home')
+        }, 800)
       } else {
-        ElMessage.error(authStore.error || '登录失败')
+        ElMessage.error({
+          message: authStore.error || '登录失败',
+          duration: 3000,
+          showClose: true
+        })
       }
     }
   })
+}
+
+// 获取角色中文名称
+const getRoleText = (role: string): string => {
+  const roleMap: Record<string, string> = {
+    'Admin': '管理员',
+    'Teacher': '教师',
+    'Student': '学生'
+  }
+  return roleMap[role] || role
 }
 </script>
 
@@ -117,6 +155,20 @@ const handleLogin = async () => {
   align-items: center;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 20px;
+  transition: all 0.5s ease;
+}
+
+.login-container.login-success {
+  background: linear-gradient(135deg, #67c23a 0%, #409eff 100%);
+}
+
+.login-box {
+  transition: all 0.5s ease;
+}
+
+.login-box.fade-out {
+  transform: scale(0.95);
+  opacity: 0;
 }
 
 .login-box {
@@ -153,6 +205,11 @@ const handleLogin = async () => {
   width: 100%;
   font-size: 16px;
   font-weight: 500;
+}
+
+.login-button .el-icon {
+  margin-right: 6px;
+  vertical-align: middle;
 }
 
 .login-tips {
