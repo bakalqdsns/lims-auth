@@ -21,38 +21,32 @@ class _LoginScreenState extends State<LoginScreen> {
     _checkLoginStatus();
   }
 
-  // 检查是否已登录
   Future<void> _checkLoginStatus() async {
-    await AuthService.init();
-    if (AuthService.isLoggedIn) {
+    if (await AuthService.isLoggedIn()) {
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/home');
       }
     }
   }
 
-  // 登录
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     final result = await AuthService.login(
       _usernameController.text.trim(),
-      _passwordController.text,
+      _passwordController.text.trim(),
     );
 
-    setState(() {
-      _isLoading = false;
-    });
+    setState(() => _isLoading = false);
 
-    if (result.success) {
+    if (result['success']) {
+      final user = result['data']['user'];
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('欢迎回来，${result.user?['fullName'] ?? result.user?['username']}'),
+            content: Text('欢迎回来，${user['fullName'] ?? user['username']}'),
             backgroundColor: Colors.green,
           ),
         );
@@ -62,7 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result.message),
+            content: Text(result['message']),
             backgroundColor: Colors.red,
           ),
         );
@@ -97,15 +91,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Logo 和标题
-                        Icon(
+                        // Logo
+                        const Icon(
                           Icons.school,
                           size: 64,
-                          color: Theme.of(context).colorScheme.primary,
+                          color: Color(0xFF667eea),
                         ),
                         const SizedBox(height: 16),
                         const Text(
-                          '高校实验室管理系统',
+                          '实验室管理系统',
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -113,23 +107,20 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Laboratory Information Management System',
+                          'Laboratory Information Management',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 14,
                             color: Colors.grey[600],
                           ),
                         ),
                         const SizedBox(height: 32),
-
-                        // 用户名输入
+                        // Username
                         TextFormField(
                           controller: _usernameController,
-                          decoration: InputDecoration(
+                          decoration: const InputDecoration(
                             labelText: '用户名',
-                            prefixIcon: const Icon(Icons.person),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                            prefixIcon: Icon(Icons.person),
+                            border: OutlineInputBorder(),
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
@@ -139,8 +130,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           },
                         ),
                         const SizedBox(height: 16),
-
-                        // 密码输入
+                        // Password
                         TextFormField(
                           controller: _passwordController,
                           obscureText: _obscurePassword,
@@ -159,9 +149,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 });
                               },
                             ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                            border: const OutlineInputBorder(),
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
@@ -171,15 +159,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           },
                         ),
                         const SizedBox(height: 24),
-
-                        // 登录按钮
+                        // Login Button
                         SizedBox(
                           width: double.infinity,
                           height: 48,
                           child: ElevatedButton(
                             onPressed: _isLoading ? null : _login,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Theme.of(context).colorScheme.primary,
+                              backgroundColor: const Color(0xFF667eea),
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
@@ -191,7 +178,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     height: 24,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                      color: Colors.white,
                                     ),
                                   )
                                 : const Text(
@@ -200,35 +187,23 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                           ),
                         ),
-                        const SizedBox(height: 16),
-
-                        // 测试账号提示
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[100],
-                            borderRadius: BorderRadius.circular(8),
+                        const SizedBox(height: 24),
+                        // Test accounts
+                        const Text(
+                          '测试账号',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
                           ),
-                          child: Column(
-                            children: [
-                              Text(
-                                '测试账号',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Wrap(
-                                spacing: 8,
-                                children: [
-                                  _buildTestAccountChip('admin', Colors.blue),
-                                  _buildTestAccountChip('teacher', Colors.green),
-                                  _buildTestAccountChip('student', Colors.orange),
-                                ],
-                              ),
-                            ],
-                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          children: [
+                            _buildTestChip('admin', 'admin123'),
+                            _buildTestChip('teacher', 'teacher123'),
+                            _buildTestChip('student', 'student123'),
+                          ],
                         ),
                       ],
                     ),
@@ -242,16 +217,13 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildTestAccountChip(String label, Color color) {
-    return Chip(
-      label: Text(
-        '$label / ${label}123',
-        style: const TextStyle(fontSize: 11),
-      ),
-      backgroundColor: color.withOpacity(0.1),
-      side: BorderSide(color: color.withOpacity(0.3)),
-      padding: EdgeInsets.zero,
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+  Widget _buildTestChip(String username, String password) {
+    return ActionChip(
+      label: Text('$username / $password'),
+      onPressed: () {
+        _usernameController.text = username;
+        _passwordController.text = password;
+      },
     );
   }
 
