@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../config/api_config.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -12,13 +13,18 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _serverUrlController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
+  bool _showServerConfig = false;
+  String _currentServerUrl = '';
 
   @override
   void initState() {
     super.initState();
     _checkLoginStatus();
+    _currentServerUrl = ApiConfig.effectiveBaseUrl;
+    _serverUrlController.text = ApiConfig.baseUrl.replaceAll('/api/v1', '');
   }
 
   Future<void> _checkLoginStatus() async {
@@ -26,6 +32,22 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/home');
       }
+    }
+  }
+
+  void _updateServerUrl() {
+    final url = _serverUrlController.text.trim();
+    if (url.isNotEmpty) {
+      ApiConfig.customBaseUrl = url;
+      setState(() {
+        _currentServerUrl = ApiConfig.effectiveBaseUrl;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('服务器地址已更新: $url'),
+          backgroundColor: Colors.green,
+        ),
+      );
     }
   }
 
@@ -58,6 +80,14 @@ class _LoginScreenState extends State<LoginScreen> {
           SnackBar(
             content: Text(result['message']),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+            action: SnackBarAction(
+              label: '配置服务器',
+              textColor: Colors.white,
+              onPressed: () {
+                setState(() => _showServerConfig = true);
+              },
+            ),
           ),
         );
       }
@@ -187,7 +217,69 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 16),
+                        // Server Configuration
+                        ExpansionTile(
+                          title: const Text(
+                            '服务器配置',
+                            style: TextStyle(fontSize: 14, color: Colors.grey),
+                          ),
+                          initiallyExpanded: _showServerConfig,
+                          onExpansionChanged: (expanded) {
+                            setState(() => _showServerConfig = expanded);
+                          },
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '当前: $_currentServerUrl',
+                                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  TextFormField(
+                                    controller: _serverUrlController,
+                                    decoration: InputDecoration(
+                                      labelText: '服务器地址',
+                                      hintText: 'http://192.168.1.100:5047',
+                                      prefixIcon: const Icon(Icons.settings_ethernet),
+                                      suffixIcon: IconButton(
+                                        icon: const Icon(Icons.save),
+                                        onPressed: _updateServerUrl,
+                                        tooltip: '保存',
+                                      ),
+                                      border: const OutlineInputBorder(),
+                                      helperText: '真机测试时使用实际IP地址',
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Wrap(
+                                    spacing: 8,
+                                    children: [
+                                      ActionChip(
+                                        label: const Text('模拟器'),
+                                        onPressed: () {
+                                          _serverUrlController.text = 'http://10.0.2.2:5047';
+                                          _updateServerUrl();
+                                        },
+                                      ),
+                                      ActionChip(
+                                        label: const Text('本机'),
+                                        onPressed: () {
+                                          _serverUrlController.text = 'http://127.0.0.1:5047';
+                                          _updateServerUrl();
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
                         // Test accounts
                         const Text(
                           '测试账号',
@@ -231,6 +323,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();
+    _serverUrlController.dispose();
     super.dispose();
   }
 }
