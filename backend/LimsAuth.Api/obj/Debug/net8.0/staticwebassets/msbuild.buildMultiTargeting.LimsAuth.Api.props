@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="../build/LimsAuth.Api.props" />
-</Project>

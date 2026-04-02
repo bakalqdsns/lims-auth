@@ -7,8 +7,13 @@ const API_BASE_URL = '/api/v1'
 interface User {
   id: string
   username: string
-  role: string
-  fullName: string
+  email?: string
+  phone?: string
+  fullName?: string
+  avatarUrl?: string
+  isActive: boolean
+  roles: string[]
+  permissions: string[]
 }
 
 interface LoginResponse {
@@ -22,6 +27,12 @@ interface LoginResponse {
   }
 }
 
+interface ApiResponse<T> {
+  code: number
+  message: string
+  data: T
+}
+
 export const useAuthStore = defineStore('auth', () => {
   // State
   const token = ref<string | null>(localStorage.getItem('token'))
@@ -30,8 +41,31 @@ export const useAuthStore = defineStore('auth', () => {
   const error = ref<string | null>(null)
 
   // Getters
-  const isAuthenticated = computed(() => !!token.value)
-  const userRole = computed(() => user.value?.role || '')
+  const isAuthenticated = computed(() => !!token.value && !!user.value)
+  const userRole = computed(() => user.value?.roles?.[0] || '')
+  const userRoles = computed(() => user.value?.roles || [])
+  const userPermissions = computed(() => user.value?.permissions || [])
+
+  // 检查是否有指定权限
+  const hasPermission = (permission: string | string[]): boolean => {
+    if (!user.value?.permissions) return false
+    if (Array.isArray(permission)) {
+      return permission.some(p => user.value!.permissions.includes(p))
+    }
+    return user.value.permissions.includes(permission)
+  }
+
+  // 检查是否有指定角色
+  const hasRole = (role: string | string[]): boolean => {
+    if (!user.value?.roles) return false
+    if (Array.isArray(role)) {
+      return role.some(r => user.value!.roles.includes(r))
+    }
+    return user.value.roles.includes(role)
+  }
+
+  // 检查是否是超级管理员
+  const isSuperAdmin = computed(() => user.value?.roles?.includes('super_admin') || false)
 
   // Actions
   async function login(username: string, password: string): Promise<boolean> {
@@ -44,25 +78,22 @@ export const useAuthStore = defineStore('auth', () => {
         password
       })
 
-      // 检查业务状态码
       if (response.data.code === 200 && response.data.data) {
         token.value = response.data.data.token
         user.value = response.data.data.user
         localStorage.setItem('token', response.data.data.token)
-        
+
         // 设置 axios 默认 header
         axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.data.token}`
-        
+
         return true
       } else {
-        // 业务错误（如 401 用户名密码错误、400 参数错误）
         error.value = response.data.message || '登录失败'
         return false
       }
     } catch (err: any) {
-      // 网络错误或服务器错误
       console.error('登录请求失败:', err)
-      
+
       if (err.code === 'ECONNREFUSED' || err.code === 'ERR_NETWORK') {
         error.value = '无法连接到服务器，请检查网络连接'
       } else if (err.code === 'ETIMEDOUT') {
@@ -70,11 +101,28 @@ export const useAuthStore = defineStore('auth', () => {
       } else if (err.response?.status >= 500) {
         error.value = '服务器错误，请稍后重试'
       } else {
-        error.value = '登录失败，请稍后重试'
+        error.value = err.response?.data?.message || '登录失败，请稍后重试'
       }
       return false
     } finally {
       loading.value = false
+    }
+  }
+
+  // 获取当前用户信息
+  async function fetchCurrentUser(): Promise<boolean> {
+    if (!token.value) return false
+
+    try {
+      const response = await axios.get<ApiResponse<User>>(`${API_BASE_URL}/auth/me`)
+      if (response.data.code === 200) {
+        user.value = response.data.data
+        return true
+      }
+      return false
+    } catch (err) {
+      console.error('获取用户信息失败:', err)
+      return false
     }
   }
 
@@ -85,9 +133,10 @@ export const useAuthStore = defineStore('auth', () => {
     delete axios.defaults.headers.common['Authorization']
   }
 
-  // 初始化时如果有 token，设置 axios header
+  // 初始化时如果有 token，设置 axios header 并获取用户信息
   if (token.value) {
     axios.defaults.headers.common['Authorization'] = `Bearer ${token.value}`
+    fetchCurrentUser()
   }
 
   return {
@@ -97,7 +146,13 @@ export const useAuthStore = defineStore('auth', () => {
     error,
     isAuthenticated,
     userRole,
+    userRoles,
+    userPermissions,
+    isSuperAdmin,
+    hasPermission,
+    hasRole,
     login,
-    logout
+    logout,
+    fetchCurrentUser
   }
 })

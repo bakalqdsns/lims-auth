@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using LimsAuth.Api.Authorization;
 using LimsAuth.Api.Models.DTOs;
 using LimsAuth.Api.Services;
 
@@ -35,7 +36,6 @@ public class AuthController : ControllerBase
         }
 
         var response = await _authService.LoginAsync(request);
-        // 始终返回 200 HTTP 状态码，业务错误码在 body 中
         return Ok(response);
     }
 
@@ -49,10 +49,27 @@ public class AuthController : ControllerBase
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
         {
-            return Unauthorized(new { Code = 401, Message = "未授权" });
+            return Unauthorized(ApiResponse<UserInfo>.Error(401, "未授权"));
         }
 
         var response = await _authService.GetCurrentUserAsync(userId);
+        return StatusCode(response.Code, response);
+    }
+
+    /// <summary>
+    /// 刷新 Token
+    /// </summary>
+    [HttpPost("refresh")]
+    [Authorize]
+    public async Task<IActionResult> RefreshToken()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(ApiResponse<LoginData>.Error(401, "未授权"));
+        }
+
+        var response = await _authService.RefreshTokenAsync(userId);
         return StatusCode(response.Code, response);
     }
 

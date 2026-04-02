@@ -2,6 +2,7 @@
 frontend/node_modules/
 backend/*/bin/
 backend/*/obj/
+backend/*/Migrations/
 
 # Build outputs
 backend/*/publish/
@@ -20,6 +21,8 @@ logs/
 # Database
 *.db
 *.sqlite
+*.db-shm
+*.db-wal
 
 # Environment
 .env
@@ -28,3 +31,17 @@ logs/
 # OS
 .DS_Store
 Thumbs.db
+
+# Mobile
+mobile/.dart_tool/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.packages
+mobile/pubspec.lock
+
+# Android
+mobile-android/.gradle/
+mobile-android/.idea/
+mobile-android/*.iml
+mobile-android/local.properties
+mobile-android/app/build/

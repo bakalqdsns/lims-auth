@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using LimsAuth.Api.Data;
 using LimsAuth.Api.Models;
@@ -12,19 +13,35 @@ public class AuthService
 {
     private readonly AppDbContext _dbContext;
     private readonly JwtService _jwtService;
+    private readonly UserService _userService;
     private readonly ILogger<AuthService> _logger;
 
-    public AuthService(AppDbContext dbContext, JwtService jwtService, ILogger<AuthService> logger)
+    public AuthService(AppDbContext dbContext, JwtService jwtService, UserService userService, ILogger<AuthService> logger)
     {
         _dbContext = dbContext;
         _jwtService = jwtService;
+        _userService = userService;
         _logger = logger;
     }
 
+    /// <summary>
+    /// 用户登录
+    /// </summary>
     public async Task<LoginResponse> LoginAsync(LoginRequest request)
     {
+        if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
+        {
+            return new LoginResponse
+            {
+                Code = 400,
+                Message = "用户名和密码不能为空"
+            };
+        }
+
         // 查找用户
         var user = await _dbContext.Users
+            .Include(u => u.UserRoles)
+            .ThenInclude(ur => ur.Role)
             .FirstOrDefaultAsync(u => u.Username == request.Username && u.IsActive);
 
         if (user == null)
@@ -36,9 +53,8 @@ public class AuthService
             };
         }
 
-        // 验证密码 (简化版使用明文比较，生产环境应使用 BCrypt)
-        // 这里为了演示方便，使用简单验证
-        if (!VerifyPassword(request.Password, user.PasswordHash))
+        // 验证密码
+        if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
         {
             return new LoginResponse
             {
@@ -51,8 +67,12 @@ public class AuthService
         user.LastLoginAt = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync();
 
+        // 获取用户角色和权限
+        var roles = await _userService.GetUserRolesAsync(user.Id);
+        var permissions = await _userService.GetUserPermissionsAsync(user.Id);
+
         // 生成 JWT Token
-        var token = _jwtService.GenerateToken(user);
+        var token = _jwtService.GenerateToken(user, roles, permissions);
 
         _logger.LogInformation("用户 {Username} 登录成功", user.Username);
 
@@ -69,76 +89,86 @@ public class AuthService
                 {
                     Id = user.Id,
                     Username = user.Username,
-                    Role = user.Role,
-                    FullName = user.FullName
+                    Email = user.Email,
+                    Phone = user.Phone,
+                    FullName = user.FullName,
+                    AvatarUrl = user.AvatarUrl,
+                    IsActive = user.IsActive,
+                    Roles = roles,
+                    Permissions = permissions
                 }
             }
         };
     }
 
-    public async Task<ApiResponse<UserInfo?>> GetCurrentUserAsync(Guid userId)
+    /// <summary>
+    /// 获取当前用户信息
+    /// </summary>
+    public async Task<ApiResponse<UserInfo>> GetCurrentUserAsync(Guid userId)
     {
         var user = await _dbContext.Users
+            .Include(u => u.Department)
             .FirstOrDefaultAsync(u => u.Id == userId && u.IsActive);
 
         if (user == null)
         {
-            return ApiResponse<UserInfo?>.Error(404, "用户不存在");
+            return ApiResponse<UserInfo>.Error(404, "用户不存在");
         }
 
-        return ApiResponse<UserInfo?>.Success(new UserInfo
+        var roles = await _userService.GetUserRolesAsync(user.Id);
+        var permissions = await _userService.GetUserPermissionsAsync(user.Id);
+
+        return ApiResponse<UserInfo>.Success(new UserInfo
         {
             Id = user.Id,
             Username = user.Username,
-            Role = user.Role,
-            FullName = user.FullName
+            Email = user.Email,
+            Phone = user.Phone,
+            FullName = user.FullName,
+            AvatarUrl = user.AvatarUrl,
+            IsActive = user.IsActive,
+            Roles = roles,
+            Permissions = permissions
         });
     }
 
     /// <summary>
-    /// 初始化种子数据（用于测试）
+    /// 刷新 Token
     /// </summary>
-    public async Task SeedDataAsync()
+    public async Task<ApiResponse<LoginData>> RefreshTokenAsync(Guid userId)
     {
-        if (!await _dbContext.Users.AnyAsync())
+        var user = await _dbContext.Users
+            .Include(u => u.UserRoles)
+            .ThenInclude(ur => ur.Role)
+            .FirstOrDefaultAsync(u => u.Id == userId && u.IsActive);
+
+        if (user == null)
         {
-            var users = new[]
-            {
-                new User
-                {
-                    Id = Guid.NewGuid(),
-                    Username = "teacher",
-                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("teacher123"),
-                    Role = "Teacher",
-                    FullName = "张老师",
-                    IsActive = true
-                },
-                new User
-                {
-                    Id = Guid.NewGuid(),
-                    Username = "student",
-                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("student123"),
-                    Role = "Student",
-                    FullName = "李同学",
-                    IsActive = true
-                }
-            };
-
-            await _dbContext.Users.AddRangeAsync(users);
-            await _dbContext.SaveChangesAsync();
-            _logger.LogInformation("种子数据初始化完成");
+            return ApiResponse<LoginData>.Error(404, "用户不存在");
         }
-    }
 
-    private static string HashPassword(string password)
-    {
-        // 使用 BCrypt 进行密码哈希
-        return BCrypt.Net.BCrypt.HashPassword(password);
-    }
+        var roles = await _userService.GetUserRolesAsync(user.Id);
+        var permissions = await _userService.GetUserPermissionsAsync(user.Id);
 
-    private static bool VerifyPassword(string password, string hash)
-    {
-        // 使用 BCrypt 验证密码
-        return BCrypt.Net.BCrypt.Verify(password, hash);
+        var token = _jwtService.GenerateToken(user, roles, permissions);
+
+        return ApiResponse<LoginData>.Success(new LoginData
+        {
+            Token = token,
+            TokenType = "Bearer",
+            ExpiresIn = 3600,
+            User = new UserInfo
+            {
+                Id = user.Id,
+                Username = user.Username,
+                Email = user.Email,
+                Phone = user.Phone,
+                FullName = user.FullName,
+                AvatarUrl = user.AvatarUrl,
+                IsActive = user.IsActive,
+                Roles = roles,
+                Permissions = permissions
+            }
+        });
     }
 }

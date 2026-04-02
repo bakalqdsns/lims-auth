@@ -1,196 +1,318 @@
 <template>
   <div class="home-container">
-    <el-header class="header">
-      <div class="header-left">
-        <el-icon size="28" color="#409EFF"><School /></el-icon>
-        <span class="title">高校实验室管理系统</span>
-      </div>
-      <div class="header-right">
-        <el-dropdown @command="handleCommand">
-          <span class="user-info">
-            <el-avatar :size="32" :icon="UserFilled" />
-            <span class="username">{{ authStore.user?.fullName || authStore.user?.username }}</span>
-            <el-icon><ArrowDown /></el-icon>
-          </span>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item command="profile">个人信息</el-dropdown-item>
-              <el-dropdown-item divided command="logout">退出登录</el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
-      </div>
-    </el-header>
+    <el-container class="layout-container">
+      <!-- 侧边栏 -->
+      <el-aside width="220px" class="sidebar">
+        <div class="logo">
+          <el-icon class="logo-icon"><Collection /></el-icon>
+          <span class="logo-text">LIMS 系统</span>
+        </div>
 
-    <el-container class="main-container">
-      <el-aside width="200px" class="sidebar">
         <el-menu
-          default-active="1"
-          class="menu"
+          :default-active="activeMenu"
+          class="sidebar-menu"
+          router
           background-color="#304156"
           text-color="#bfcbd9"
           active-text-color="#409EFF"
         >
-          <el-menu-item index="1">
+          <el-menu-item index="/home">
             <el-icon><HomeFilled /></el-icon>
             <span>首页</span>
           </el-menu-item>
-          <el-menu-item index="2">
-            <el-icon><User /></el-icon>
-            <span>用户管理</span>
-          </el-menu-item>
-          <el-menu-item index="3">
-            <el-icon><OfficeBuilding /></el-icon>
-            <span>实验室管理</span>
-          </el-menu-item>
-          <el-menu-item index="4">
-            <el-icon><Tools /></el-icon>
-            <span>设备管理</span>
-          </el-menu-item>
+
+          <el-sub-menu index="/system" v-if="canAccessSystem">
+            <template #title>
+              <el-icon><Setting /></el-icon>
+              <span>系统管理</span>
+            </template>
+            <el-menu-item v-if="hasPermission('user:read')" index="/system/users">
+              <el-icon><User /></el-icon>
+              <span>用户管理</span>
+            </el-menu-item>
+            <el-menu-item v-if="hasPermission('role:read')" index="/system/roles">
+              <el-icon><UserFilled /></el-icon>
+              <span>角色管理</span>
+            </el-menu-item>
+            <el-menu-item v-if="hasPermission('department:read')" index="/system/departments">
+              <el-icon><OfficeBuilding /></el-icon>
+              <span>部门管理</span>
+            </el-menu-item>
+          </el-sub-menu>
+
+          <el-sub-menu index="/teaching">
+            <template #title>
+              <el-icon><School /></el-icon>
+              <span>教学管理</span>
+            </template>
+            <el-menu-item index="/teaching/semesters">
+              <el-icon><Calendar /></el-icon>
+              <span>学期管理</span>
+            </el-menu-item>
+            <el-menu-item index="/teaching/courses">
+              <el-icon><Reading /></el-icon>
+              <span>课程管理</span>
+            </el-menu-item>
+            <el-menu-item index="/teaching/majors">
+              <el-icon><School /></el-icon>
+              <span>专业管理</span>
+            </el-menu-item>
+            <el-menu-item index="/teaching/classes">
+              <el-icon><UserFilled /></el-icon>
+              <span>班级管理</span>
+            </el-menu-item>
+            <el-menu-item index="/teaching/tasks">
+              <el-icon><Timer /></el-icon>
+              <span>教学任务</span>
+            </el-menu-item>
+            <el-menu-item index="/teaching/periods">
+              <el-icon><Timer /></el-icon>
+              <span>节次时间</span>
+            </el-menu-item>
+          </el-sub-menu>
         </el-menu>
       </el-aside>
 
-      <el-main class="main-content">
-        <div class="welcome-card">
-          <el-card>
-            <template #header>
-              <div class="card-header">
-                <span>欢迎回来</span>
-                <el-tag :type="roleType">{{ roleText }}</el-tag>
-              </div>
-            </template>
-            <div class="user-details">
-              <p><strong>用户名：</strong>{{ authStore.user?.username }}</p>
-              <p><strong>姓名：</strong>{{ authStore.user?.fullName }}</p>
-              <p><strong>角色：</strong>{{ roleText }}</p>
-              <p><strong>登录时间：</strong>{{ currentTime }}</p>
-            </div>
-          </el-card>
-        </div>
+      <el-container>
+        <!-- 顶部导航 -->
+        <el-header class="header">
+          <div class="header-left">
+            <breadcrumb />
+          </div>
+          <div class="header-right">
+            <el-dropdown @command="handleCommand">
+              <span class="user-info">
+                <el-avatar :size="32" :icon="UserFilled" />
+                <span class="username">{{ authStore.user?.fullName || authStore.user?.username }}</span>
+                <el-icon><ArrowDown /></el-icon>
+              </span>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="profile">个人资料</el-dropdown-item>
+                  <el-dropdown-item command="password">修改密码</el-dropdown-item>
+                  <el-dropdown-item divided command="logout">退出登录</el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </div>
+        </el-header>
 
-        <div class="stats-row">
-          <el-row :gutter="20">
-            <el-col :span="8">
-              <el-card class="stat-card">
-                <div class="stat-icon blue">
-                  <el-icon><OfficeBuilding /></el-icon>
-                </div>
-                <div class="stat-info">
-                  <div class="stat-value">12</div>
-                  <div class="stat-label">实验室</div>
-                </div>
-              </el-card>
-            </el-col>
-            <el-col :span="8">
-              <el-card class="stat-card">
-                <div class="stat-icon green">
-                  <el-icon><Tools /></el-icon>
-                </div>
-                <div class="stat-info">
-                  <div class="stat-value">156</div>
-                  <div class="stat-label">设备数量</div>
-                </div>
-              </el-card>
-            </el-col>
-            <el-col :span="8">
-              <el-card class="stat-card">
-                <div class="stat-icon orange">
-                  <el-icon><User /></el-icon>
-                </div>
-                <div class="stat-info">
-                  <div class="stat-value">89</div>
-                  <div class="stat-label">在线用户</div>
-                </div>
-              </el-card>
-            </el-col>
-          </el-row>
-        </div>
-      </el-main>
+        <!-- 主内容区 -->
+        <el-main class="main-content">
+          <router-view />
+        </el-main>
+      </el-container>
     </el-container>
+
+    <!-- 修改密码对话框 -->
+    <el-dialog
+      v-model="passwordDialogVisible"
+      title="修改密码"
+      width="400px"
+      destroy-on-close
+    >
+      <el-form
+        ref="passwordFormRef"
+        :model="passwordForm"
+        :rules="passwordRules"
+        label-width="100px"
+      >
+        <el-form-item label="原密码" prop="oldPassword">
+          <el-input
+            v-model="passwordForm.oldPassword"
+            type="password"
+            placeholder="请输入原密码"
+            show-password
+          />
+        </el-form-item>
+        <el-form-item label="新密码" prop="newPassword">
+          <el-input
+            v-model="passwordForm.newPassword"
+            type="password"
+            placeholder="请输入新密码"
+            show-password
+          />
+        </el-form-item>
+        <el-form-item label="确认密码" prop="confirmPassword">
+          <el-input
+            v-model="passwordForm.confirmPassword"
+            type="password"
+            placeholder="请再次输入新密码"
+            show-password
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="passwordDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="changingPassword" @click="handleChangePassword">
+          确定
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { computed, ref, reactive } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import {
-  School,
-  UserFilled,
-  ArrowDown,
   HomeFilled,
+  Setting,
   User,
+  UserFilled,
   OfficeBuilding,
-  Tools
+  Collection,
+  ArrowDown,
+  Calendar,
+  Reading,
+  School,
+  Timer
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '../stores/auth'
+import { userApi } from '../api/system'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
-const currentTime = ref(new Date().toLocaleString())
 
-const roleText = computed(() => {
-  const roles: Record<string, string> = {
-    Admin: '系统管理员',
-    Teacher: '教师',
-    Student: '学生'
-  }
-  return roles[authStore.userRole] || authStore.userRole
+const hasPermission = authStore.hasPermission
+
+// 当前激活的菜单
+const activeMenu = computed(() => route.path)
+
+// 是否可以访问系统管理
+const canAccessSystem = computed(() => {
+  return hasPermission('user:read') ||
+         hasPermission('role:read') ||
+         hasPermission('department:read')
 })
 
-const roleType = computed(() => {
-  const types: Record<string, any> = {
-    Admin: 'danger',
-    Teacher: 'success',
-    Student: 'info'
-  }
-  return types[authStore.userRole] || 'info'
-})
-
+// 用户菜单命令
 const handleCommand = (command: string) => {
-  if (command === 'logout') {
-    ElMessageBox.confirm('确定要退出登录吗？', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }).then(() => {
+  switch (command) {
+    case 'profile':
+      ElMessage.info('个人资料功能开发中...')
+      break
+    case 'password':
+      passwordDialogVisible.value = true
+      break
+    case 'logout':
       authStore.logout()
-      ElMessage.success('已退出登录')
       router.push('/')
-    })
-  } else if (command === 'profile') {
-    ElMessage.info('个人信息功能开发中...')
+      break
+  }
+}
+
+// 修改密码
+const passwordDialogVisible = ref(false)
+const changingPassword = ref(false)
+const passwordFormRef = ref<FormInstance>()
+
+const passwordForm = reactive({
+  oldPassword: '',
+  newPassword: '',
+  confirmPassword: ''
+})
+
+const validateConfirmPassword = (rule: any, value: string, callback: any) => {
+  if (value !== passwordForm.newPassword) {
+    callback(new Error('两次输入的密码不一致'))
+  } else {
+    callback()
+  }
+}
+
+const passwordRules: FormRules = {
+  oldPassword: [
+    { required: true, message: '请输入原密码', trigger: 'blur' }
+  ],
+  newPassword: [
+    { required: true, message: '请输入新密码', trigger: 'blur' },
+    { min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur' }
+  ],
+  confirmPassword: [
+    { required: true, message: '请再次输入新密码', trigger: 'blur' },
+    { validator: validateConfirmPassword, trigger: 'blur' }
+  ]
+}
+
+const handleChangePassword = async () => {
+  const valid = await passwordFormRef.value?.validate().catch(() => false)
+  if (!valid) return
+
+  changingPassword.value = true
+  try {
+    const res = await userApi.changePassword(passwordForm.oldPassword, passwordForm.newPassword)
+    if (res.data.code === 200) {
+      ElMessage.success('密码修改成功，请重新登录')
+      passwordDialogVisible.value = false
+      authStore.logout()
+      router.push('/')
+    } else {
+      ElMessage.error(res.data.message)
+    }
+  } catch (error) {
+    ElMessage.error('密码修改失败')
+  } finally {
+    changingPassword.value = false
   }
 }
 </script>
 
 <style scoped>
 .home-container {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  height: 100vh;
 }
 
-.header {
+.layout-container {
+  height: 100%;
+}
+
+/* 侧边栏 */
+.sidebar {
+  background-color: #304156;
+  color: #fff;
+}
+
+.logo {
   height: 60px;
-  background: white;
-  border-bottom: 1px solid #e4e7ed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #2b3649;
+  border-bottom: 1px solid #1f2d3d;
+}
+
+.logo-icon {
+  font-size: 28px;
+  color: #409EFF;
+  margin-right: 10px;
+}
+
+.logo-text {
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.sidebar-menu {
+  border-right: none;
+}
+
+/* 顶部导航 */
+.header {
+  background-color: #fff;
+  box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
+  padding: 0 20px;
 }
 
 .header-left {
   display: flex;
   align-items: center;
-  gap: 12px;
-}
-
-.header-left .title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #303133;
 }
 
 .header-right {
@@ -201,107 +323,20 @@ const handleCommand = (command: string) => {
 .user-info {
   display: flex;
   align-items: center;
-  gap: 8px;
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: background 0.3s;
-}
-
-.user-info:hover {
-  background: #f5f7fa;
+  padding: 0 10px;
 }
 
 .username {
+  margin: 0 8px;
   font-size: 14px;
   color: #606266;
 }
 
-.main-container {
-  flex: 1;
-  display: flex;
-}
-
-.sidebar {
-  background: #304156;
-}
-
-.menu {
-  border-right: none;
-  height: 100%;
-}
-
+/* 主内容区 */
 .main-content {
-  background: #f0f2f5;
+  background-color: #f0f2f5;
   padding: 20px;
-}
-
-.welcome-card {
-  margin-bottom: 20px;
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.user-details p {
-  margin: 12px 0;
-  color: #606266;
-}
-
-.stats-row {
-  margin-top: 20px;
-}
-
-.stat-card {
-  display: flex;
-  align-items: center;
-  padding: 20px;
-}
-
-.stat-icon {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  margin-right: 16px;
-}
-
-.stat-icon.blue {
-  background: #ecf5ff;
-  color: #409eff;
-}
-
-.stat-icon.green {
-  background: #f0f9eb;
-  color: #67c23a;
-}
-
-.stat-icon.orange {
-  background: #fdf6ec;
-  color: #e6a23c;
-}
-
-.stat-info {
-  flex: 1;
-}
-
-.stat-value {
-  font-size: 24px;
-  font-weight: 600;
-  color: #303133;
-}
-
-.stat-label {
-  font-size: 14px;
-  color: #909399;
-  margin-top: 4px;
+  overflow-y: auto;
 }
 </style>
