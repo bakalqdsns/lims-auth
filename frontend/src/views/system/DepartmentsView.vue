@@ -21,7 +21,7 @@
         default-expand-all
         :expand-on-click-node="false"
       >
-        <template #default="{ node, data }">
+        <template #default="{ node: _node, data }">
           <div class="custom-tree-node">
             <span class="node-label">
               {{ data.name }}

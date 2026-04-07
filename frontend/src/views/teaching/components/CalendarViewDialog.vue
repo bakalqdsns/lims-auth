@@ -73,7 +73,7 @@ const handleGenerate = async () => {
 }
 
 const getCalendarDay = (dateStr: string): AcademicCalendarDto | undefined => {
-  return calendarData.value.find(d => d.date.split('T')[0] === dateStr)
+  return calendarData.value.find((d: any) => d.date.split('T')[0] === dateStr)
 }
 
 const getCellClass = (dateStr: string): string => {

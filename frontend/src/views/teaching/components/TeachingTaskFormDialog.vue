@@ -172,10 +172,10 @@ const loadClasses = async () => {
 
 const loadTeachers = async () => {
   try {
-    const res = await userApi.getList({ page: 1, pageSize: 1000 })
+    const res = await userApi.getUsers({ page: 1, pageSize: 1000 })
     if (res.data.code === 200) {
       teachers.value = res.data.data.items.filter((u: any) =>
-        u.roles?.includes('teacher') || u.roles?.includes('super_admin')
+        u.roles?.some((r: any) => r.code === 'teacher' || r.code === 'super_admin')
       )
     }
   } catch (error) {

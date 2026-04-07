@@ -82,7 +82,7 @@ const fetchPermissions = async () => {
 
     if (modulesRes.data.code === 200) {
       permissionModules.value = modulesRes.data.data
-      activeModules.value = modulesRes.data.data.map(m => m.module)
+      activeModules.value = modulesRes.data.data.map((m: any) => m.module)
     }
 
     if (roleRes?.data.code === 200) {

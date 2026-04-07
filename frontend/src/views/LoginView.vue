@@ -109,7 +109,7 @@ const handleLogin = async () => {
       if (success) {
         // 登录成功反馈
         const userName = authStore.user?.fullName || authStore.user?.username
-        const roleText = getRoleText(authStore.user?.role || '')
+        const roleText = getRoleText(authStore.user?.roles?.[0]?.code || '')
         
         // 触发成功动画
         loginSuccess.value = true

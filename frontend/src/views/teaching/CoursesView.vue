@@ -55,6 +55,12 @@
             </el-tooltip>
           </template>
         </el-table-column>
+        <el-table-column prop="managerName" label="课程负责人" width="120">
+          <template #default="{ row }">
+            <span v-if="row.managerName">{{ row.managerName }}</span>
+            <span v-else class="text-gray">-</span>
+          </template>
+        </el-table-column>
         <el-table-column label="状态" width="100">
           <template #default="{ row }">
             <el-switch v-model="row.isActive" @change="(val: boolean) => handleStatusChange(row, val)" />

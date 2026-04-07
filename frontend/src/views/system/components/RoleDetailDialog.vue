@@ -47,7 +47,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import { roleApi, type RoleDetailDto, type PermissionDto } from '../../../api/system'
+import { roleApi, type RoleDetailDto, type PermissionBrief } from '../../../api/system'
 
 interface Props {
   modelValue: boolean
@@ -68,7 +68,7 @@ const role = ref<RoleDetailDto | null>(null)
 const groupedPermissions = computed(() => {
   if (!role.value?.permissions) return []
 
-  const groups: Record<string, { module: string; moduleName: string; permissions: PermissionDto[] }> = {}
+  const groups: Record<string, { module: string; moduleName: string; permissions: PermissionBrief[] }> = {}
 
   const moduleNames: Record<string, string> = {
     user: '用户管理',

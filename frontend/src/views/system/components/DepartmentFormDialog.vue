@@ -145,7 +145,7 @@ const fetchUsers = async () => {
   try {
     const res = await userApi.getUsers({ pageSize: 1000 })
     if (res.data.code === 200) {
-      users.value = res.data.data.items.map(u => ({
+      users.value = res.data.data.items.map((u: any) => ({
         id: u.id,
         username: u.username,
         fullName: u.fullName

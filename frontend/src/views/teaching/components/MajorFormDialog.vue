@@ -108,7 +108,7 @@ const rules: FormRules = {
 
 const loadDepartments = async () => {
   try {
-    const res = await departmentApi.getList()
+    const res = await departmentApi.getAllDepartments()
     if (res.data.code === 200) {
       departments.value = res.data.data
     }

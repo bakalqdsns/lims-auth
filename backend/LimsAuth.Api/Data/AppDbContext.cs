@@ -119,6 +119,12 @@ public class AppDbContext : DbContext
             .HasForeignKey(c => c.DepartmentId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        modelBuilder.Entity<Course>()
+            .HasOne(c => c.Manager)
+            .WithMany()
+            .HasForeignKey(c => c.ManagerId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         modelBuilder.Entity<Major>()
             .HasOne(m => m.Department)
             .WithMany()

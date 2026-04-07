@@ -163,6 +163,7 @@ export interface CreateCourseRequest {
   onlineHours: number
   semesterType: number
   departmentId?: string
+  managerId?: string
   description?: string
 }
 
@@ -258,6 +259,8 @@ export interface CourseDto {
   semesterType: number
   departmentId?: string
   departmentName?: string
+  managerId?: string
+  managerName?: string
   description?: string
   isActive: boolean
   createdAt: string
@@ -307,11 +310,12 @@ export interface TeachingTaskDto {
   description?: string
   isActive: boolean
   createdAt: string
+  studentCount: number
 }
 
 export interface TaskTeacherDto {
-  teacherId: string
-  teacherName?: string
+  id: string
+  name: string
   isMainTeacher: boolean
 }
 

@@ -92,7 +92,7 @@ const searchStudents = async (query: string) => {
   if (query.length < 1) return
   searching.value = true
   try {
-    const res = await userApi.getList({
+    const res = await userApi.getUsers({
       keyword: query,
       page: 1,
       pageSize: 20
@@ -101,7 +101,7 @@ const searchStudents = async (query: string) => {
       // 过滤掉已在班级中的学生
       const existingIds = new Set(classStudents.value.map(s => s.id))
       availableStudents.value = res.data.data.items.filter(
-        (u: any) => !existingIds.has(u.id) && u.roles?.includes('student')
+        (u: any) => !existingIds.has(u.id) && u.roles?.some((r: any) => r.code === 'student')
       )
     }
   } catch (error) {

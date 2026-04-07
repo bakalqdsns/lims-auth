@@ -4,6 +4,12 @@ import axios from 'axios'
 
 const API_BASE_URL = '/api/v1'
 
+interface Role {
+  id: string
+  code: string
+  name: string
+}
+
 interface User {
   id: string
   username: string
@@ -12,7 +18,7 @@ interface User {
   fullName?: string
   avatarUrl?: string
   isActive: boolean
-  roles: string[]
+  roles: Role[]
   permissions: string[]
 }
 
@@ -42,7 +48,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   // Getters
   const isAuthenticated = computed(() => !!token.value && !!user.value)
-  const userRole = computed(() => user.value?.roles?.[0] || '')
+  const userRole = computed(() => user.value?.roles?.[0]?.code || '')
   const userRoles = computed(() => user.value?.roles || [])
   const userPermissions = computed(() => user.value?.permissions || [])
 
@@ -58,14 +64,15 @@ export const useAuthStore = defineStore('auth', () => {
   // 检查是否有指定角色
   const hasRole = (role: string | string[]): boolean => {
     if (!user.value?.roles) return false
+    const userRoleCodes = user.value.roles.map((r: Role) => r.code)
     if (Array.isArray(role)) {
-      return role.some(r => user.value!.roles.includes(r))
+      return role.some(r => userRoleCodes.includes(r))
     }
-    return user.value.roles.includes(role)
+    return userRoleCodes.includes(role)
   }
 
   // 检查是否是超级管理员
-  const isSuperAdmin = computed(() => user.value?.roles?.includes('super_admin') || false)
+  const isSuperAdmin = computed(() => user.value?.roles?.some((r: Role) => r.code === 'super_admin') || false)
 
   // Actions
   async function login(username: string, password: string): Promise<boolean> {

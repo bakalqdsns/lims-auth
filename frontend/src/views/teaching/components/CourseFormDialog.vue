@@ -83,6 +83,27 @@
           </el-form-item>
         </el-col>
       </el-row>
+
+      <el-row :gutter="20">
+        <el-col :span="12">
+          <el-form-item label="课程负责人">
+            <el-select
+              v-model="form.managerId"
+              placeholder="选择课程负责人"
+              clearable
+              filterable
+              style="width: 100%"
+            >
+              <el-option
+                v-for="teacher in teachers"
+                :key="teacher.id"
+                :label="teacher.fullName || teacher.username"
+                :value="teacher.id"
+              />
+            </el-select>
+          </el-form-item>
+        </el-col>
+      </el-row>
       
       <el-form-item label="课程描述">
         <el-input v-model="form.description" type="textarea" :rows="3" placeholder="请输入课程描述" />
@@ -99,7 +120,8 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
-import { courseApi, departmentApi, type CourseDto } from '@/api/teaching'
+import { courseApi, type CourseDto } from '@/api/teaching'
+import { departmentApi, userApi } from '@/api/system'
 
 interface Props {
   modelValue: boolean
@@ -120,6 +142,7 @@ const dialogTitle = computed(() => props.type === 'create' ? '新增课程' : '�
 const formRef = ref<FormInstance>()
 const submitting = ref(false)
 const departments = ref<{ id: string; name: string }[]>([])
+const teachers = ref<{ id: string; fullName?: string; username: string }[]>([])
 
 const form = reactive({
   code: '',
@@ -134,6 +157,7 @@ const form = reactive({
   onlineHours: 0,
   semesterType: 1,
   departmentId: undefined as string | undefined,
+  managerId: undefined as string | undefined,
   description: ''
 })
 
@@ -161,6 +185,19 @@ const fetchDepartments = async () => {
   }
 }
 
+const fetchTeachers = async () => {
+  try {
+    const res = await userApi.getUsers({ page: 1, pageSize: 1000 })
+    if (res.data.code === 200) {
+      teachers.value = res.data.data.items.filter((u: any) =>
+        u.roles?.some((r: any) => r.code === 'teacher' || r.code === 'super_admin')
+      )
+    }
+  } catch (error) {
+    console.error('获取教师列表失败', error)
+  }
+}
+
 const resetForm = () => {
   form.code = ''
   form.name = ''
@@ -174,6 +211,7 @@ const resetForm = () => {
   form.onlineHours = 0
   form.semesterType = 1
   form.departmentId = undefined
+  form.managerId = undefined
   form.description = ''
 }
 
@@ -191,6 +229,7 @@ const fillForm = () => {
     form.onlineHours = props.courseData.onlineHours
     form.semesterType = props.courseData.semesterType
     form.departmentId = props.courseData.departmentId
+    form.managerId = props.courseData.managerId
     form.description = props.courseData.description || ''
   }
 }
@@ -214,6 +253,7 @@ const handleSubmit = async () => {
       onlineHours: form.onlineHours,
       semesterType: form.semesterType,
       departmentId: form.departmentId,
+      managerId: form.managerId,
       description: form.description || undefined
     }
 
@@ -246,7 +286,13 @@ watch(() => props.modelValue, (val) => {
       fillForm()
     }
     fetchDepartments()
+    fetchTeachers()
   }
+})
+
+onMounted(() => {
+  fetchDepartments()
+  fetchTeachers()
 })
 
 onMounted(() => {

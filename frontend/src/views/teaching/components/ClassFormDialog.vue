@@ -142,6 +142,7 @@ const form = reactive({
   name: '',
   grade: String(currentYear),
   majorId: '',
+  departmentId: '',
   headTeacherId: '',
   adminStudentId: ''
 })
@@ -176,10 +177,10 @@ const loadMajors = async () => {
 
 const loadTeachers = async () => {
   try {
-    const res = await userApi.getList({ page: 1, pageSize: 1000 })
+    const res = await userApi.getUsers({ page: 1, pageSize: 1000 })
     if (res.data.code === 200) {
       teachers.value = res.data.data.items.filter((u: any) =>
-        u.roles?.includes('teacher') || u.roles?.includes('super_admin')
+        u.roles?.some((r: any) => r.code === 'teacher' || r.code === 'super_admin')
       )
     }
   } catch (error) {
@@ -189,10 +190,10 @@ const loadTeachers = async () => {
 
 const loadStudents = async () => {
   try {
-    const res = await userApi.getList({ page: 1, pageSize: 1000 })
+    const res = await userApi.getUsers({ page: 1, pageSize: 1000 })
     if (res.data.code === 200) {
       students.value = res.data.data.items.filter((u: any) =>
-        u.roles?.includes('student')
+        u.roles?.some((r: any) => r.code === 'student')
       )
     }
   } catch (error) {
@@ -206,9 +207,16 @@ const handleSubmit = async () => {
 
   submitting.value = true
   try {
+    // 从选中的专业获取 departmentId
+    const selectedMajor = majors.value.find(m => m.id === form.majorId)
+    const submitData = {
+      ...form,
+      departmentId: selectedMajor?.departmentId || ''
+    }
+
     const api = isEdit.value
-      ? () => classApi.update(props.classData!.id, form)
-      : () => classApi.create(form)
+      ? () => classApi.update(props.classData!.id, submitData)
+      : () => classApi.create(submitData)
 
     const res = await api()
     if (res.data.code === 200) {

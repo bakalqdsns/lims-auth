@@ -23,9 +23,11 @@
               :key="teacher.id"
               size="small"
               class="mr-1"
+              :type="teacher.isMainTeacher ? 'success' : 'info'"
             >
-              {{ teacher.name }}
+              {{ teacher.name }}{{ teacher.isMainTeacher ? '(主讲)' : '' }}
             </el-tag>
+            <span v-if="!row.teachers || row.teachers.length === 0" class="text-gray">-</span>
           </template>
         </el-table-column>
         <el-table-column prop="studentCount" label="学生数" width="80" />

@@ -6,8 +6,8 @@ namespace LimsAuth.Api.Services;
 
 public interface ITeachingTaskService
 {
-    Task<List<TeachingTask>> GetListAsync(string? semesterId = null, string? courseId = null, string? classId = null, string? teacherId = null);
-    Task<TeachingTask?> GetByIdAsync(Guid id);
+    Task<List<TeachingTaskDto>> GetListAsync(string? semesterId = null, string? courseId = null, string? classId = null, string? teacherId = null);
+    Task<TeachingTaskDto?> GetByIdAsync(Guid id);
     Task<TeachingTask> CreateAsync(CreateTeachingTaskRequest request);
     Task<TeachingTask?> UpdateAsync(Guid id, UpdateTeachingTaskRequest request);
     Task<bool> DeleteAsync(Guid id);
@@ -25,9 +25,15 @@ public class TeachingTaskService : ITeachingTaskService
         _dbContext = dbContext;
     }
 
-    public async Task<List<TeachingTask>> GetListAsync(string? semesterId = null, string? courseId = null, string? classId = null, string? teacherId = null)
+    public async Task<List<TeachingTaskDto>> GetListAsync(string? semesterId = null, string? courseId = null, string? classId = null, string? teacherId = null)
     {
-        var query = _dbContext.TeachingTasks.AsQueryable();
+        var query = _dbContext.TeachingTasks
+            .Include(t => t.Semester)
+            .Include(t => t.Course)
+            .Include(t => t.Class)
+            .Include(t => t.Teachers)
+                .ThenInclude(tt => tt.Teacher)
+            .AsQueryable();
 
         if (!string.IsNullOrEmpty(semesterId) && Guid.TryParse(semesterId, out var semId))
         {
@@ -49,12 +55,66 @@ public class TeachingTaskService : ITeachingTaskService
             query = query.Where(t => t.Teachers.Any(tt => tt.TeacherId == tchId));
         }
 
-        return await query.OrderByDescending(t => t.CreatedAt).ToListAsync();
+        var tasks = await query.OrderByDescending(t => t.CreatedAt).ToListAsync();
+
+        return tasks.Select(t => new TeachingTaskDto
+        {
+            Id = t.Id,
+            SemesterId = t.SemesterId,
+            SemesterName = t.Semester?.Name ?? "",
+            CourseId = t.CourseId,
+            CourseName = t.Course?.Name ?? "",
+            CourseCode = t.Course?.Code ?? "",
+            ClassId = t.ClassId,
+            ClassName = t.Class?.Name ?? "",
+            TaskType = t.TaskType,
+            Description = t.Description,
+            IsActive = t.IsActive,
+            CreatedAt = t.CreatedAt,
+            Teachers = t.Teachers.Select(tt => new TaskTeacherDto
+            {
+                Id = tt.TeacherId,
+                Name = tt.Teacher?.FullName ?? tt.Teacher?.Username ?? "",
+                IsMainTeacher = tt.IsMainTeacher
+            }).ToList(),
+            StudentCount = t.Class?.StudentCount ?? 0
+        }).ToList();
     }
 
-    public async Task<TeachingTask?> GetByIdAsync(Guid id)
+    public async Task<TeachingTaskDto?> GetByIdAsync(Guid id)
     {
-        return await _dbContext.TeachingTasks.FindAsync(id);
+        var task = await _dbContext.TeachingTasks
+            .Include(t => t.Semester)
+            .Include(t => t.Course)
+            .Include(t => t.Class)
+            .Include(t => t.Teachers)
+                .ThenInclude(tt => tt.Teacher)
+            .FirstOrDefaultAsync(t => t.Id == id);
+
+        if (task == null) return null;
+
+        return new TeachingTaskDto
+        {
+            Id = task.Id,
+            SemesterId = task.SemesterId,
+            SemesterName = task.Semester?.Name ?? "",
+            CourseId = task.CourseId,
+            CourseName = task.Course?.Name ?? "",
+            CourseCode = task.Course?.Code ?? "",
+            ClassId = task.ClassId,
+            ClassName = task.Class?.Name ?? "",
+            TaskType = task.TaskType,
+            Description = task.Description,
+            IsActive = task.IsActive,
+            CreatedAt = task.CreatedAt,
+            Teachers = task.Teachers.Select(tt => new TaskTeacherDto
+            {
+                Id = tt.TeacherId,
+                Name = tt.Teacher?.FullName ?? tt.Teacher?.Username ?? "",
+                IsMainTeacher = tt.IsMainTeacher
+            }).ToList(),
+            StudentCount = task.Class?.StudentCount ?? 0
+        };
     }
 
     public async Task<TeachingTask> CreateAsync(CreateTeachingTaskRequest request)
@@ -187,6 +247,31 @@ public class TeachingTaskService : ITeachingTaskService
         await _dbContext.SaveChangesAsync();
         return true;
     }
+}
+
+public class TeachingTaskDto
+{
+    public Guid Id { get; set; }
+    public Guid SemesterId { get; set; }
+    public string SemesterName { get; set; } = string.Empty;
+    public Guid CourseId { get; set; }
+    public string CourseName { get; set; } = string.Empty;
+    public string CourseCode { get; set; } = string.Empty;
+    public Guid ClassId { get; set; }
+    public string ClassName { get; set; } = string.Empty;
+    public string TaskType { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public bool IsActive { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public List<TaskTeacherDto> Teachers { get; set; } = new();
+    public int StudentCount { get; set; }
+}
+
+public class TaskTeacherDto
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public bool IsMainTeacher { get; set; }
 }
 
 public class CreateTeachingTaskRequest

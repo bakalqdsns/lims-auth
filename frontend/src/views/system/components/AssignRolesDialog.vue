@@ -40,7 +40,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { roleApi, userApi, type RoleBrief } from '../../../api/system'
+import { roleApi, userApi, type RoleDto, type RoleBrief } from '../../../api/system'
 
 interface Props {
   modelValue: boolean
@@ -56,7 +56,7 @@ const visible = computed({
   set: (val) => emit('update:modelValue', val)
 })
 
-const allRoles = ref<RoleBrief[]>([])
+const allRoles = ref<RoleDto[]>([])
 const selectedRoles = ref<string[]>([])
 const submitting = ref(false)
 

@@ -16,11 +16,12 @@ function checkPermission(value: string | string[]): boolean {
 function checkRole(value: string | string[]): boolean {
   const authStore = useAuthStore()
   const roles = authStore.user?.roles || []
+  const roleCodes = roles.map((r: any) => r.code)
 
   if (Array.isArray(value)) {
-    return value.some(r => roles.includes(r))
+    return value.some(r => roleCodes.includes(r))
   }
-  return roles.includes(value)
+  return roleCodes.includes(value)
 }
 
 // 权限指令

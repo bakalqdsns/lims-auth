@@ -86,6 +86,12 @@ public class Course
     [Column("department_id")]
     public Guid? DepartmentId { get; set; }
 
+    /// <summary>
+    /// 课程负责人ID
+    /// </summary>
+    [Column("manager_id")]
+    public Guid? ManagerId { get; set; }
+
     [Column("description")]
     [MaxLength(1000)]
     public string? Description { get; set; }
@@ -98,5 +104,6 @@ public class Course
 
     // 导航属性
     public virtual Department? Department { get; set; }
+    public virtual User? Manager { get; set; }
     public virtual ICollection<TeachingTask> TeachingTasks { get; set; } = new List<TeachingTask>();
 }
