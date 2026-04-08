@@ -299,9 +299,52 @@ const handleEditDay = (dateStr: string) => {
       isTeachingDay: day.isTeachingDay ?? true,
       description: day.description || ''
     }
+    // 同步上方筛选与当前日期的事件类型
+    syncFilterWithEventType(day.eventType || 'Teaching')
     editDialogVisible.value = true
   }
 }
+
+// 同步上方筛选与事件类型
+const syncFilterWithEventType = (eventType: string) => {
+  switch (eventType) {
+    case 'Teaching':
+      filterType.value = 'teaching'
+      break
+    case 'Holiday':
+      filterType.value = 'holiday'
+      break
+    case 'Exam':
+      filterType.value = 'exam'
+      break
+    default:
+      filterType.value = 'all'
+  }
+}
+
+// 监听编辑表单事件类型变化，同步更新上方筛选
+watch(() => editForm.value.eventType, (newType) => {
+  if (editDialogVisible.value && newType) {
+    syncFilterWithEventType(newType)
+  }
+})
+
+// 监听上方筛选变化，同步更新编辑表单的事件类型
+watch(() => filterType.value, (newFilter) => {
+  if (editDialogVisible.value) {
+    switch (newFilter) {
+      case 'teaching':
+        editForm.value.eventType = 'Teaching'
+        break
+      case 'holiday':
+        editForm.value.eventType = 'Holiday'
+        break
+      case 'exam':
+        editForm.value.eventType = 'Exam'
+        break
+    }
+  }
+})
 
 const saveDayEdit = async () => {
   try {
