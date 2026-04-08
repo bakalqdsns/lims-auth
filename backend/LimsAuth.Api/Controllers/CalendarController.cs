@@ -17,11 +17,43 @@ public class CalendarController : ControllerBase
         _calendarService = calendarService;
     }
 
+    // 转换为DTO，避免循环引用
+    private static CalendarDto ToDto(AcademicCalendar c) => new()
+    {
+        Id = c.Id,
+        SemesterId = c.SemesterId,
+        Date = c.Date,
+        WeekNumber = c.WeekNumber,
+        DayOfWeek = c.DayOfWeek,
+        EventType = c.EventType.ToString(),
+        EventName = c.EventName,
+        EventPriority = c.EventPriority.ToString(),
+        IsHoliday = c.IsHoliday,
+        IsWorkday = c.IsWorkday,
+        IsTeachingDay = c.IsTeachingDay,
+        IsExamDay = c.IsExamDay,
+        IsAdjusted = c.IsAdjusted,
+        HolidayName = c.HolidayName,
+        HolidayType = c.HolidayType,
+        Description = c.Description,
+        Color = c.Color,
+        Icon = c.Icon,
+        AffectsCourseSelection = c.AffectsCourseSelection,
+        AffectsScheduling = c.AffectsScheduling,
+        AffectsGradeEntry = c.AffectsGradeEntry,
+        AffectsRegistration = c.AffectsRegistration,
+        AutoTriggerAction = c.AutoTriggerAction,
+        TriggeredAt = c.TriggeredAt,
+        CreatedAt = c.CreatedAt,
+        UpdatedAt = c.UpdatedAt
+    };
+
     [HttpGet]
     public async Task<IActionResult> GetBySemester([FromQuery] Guid semesterId)
     {
         var calendars = await _calendarService.GetBySemesterAsync(semesterId);
-        return Ok(new { code = 200, data = calendars });
+        var dtos = calendars.Select(ToDto).ToList();
+        return Ok(new { code = 200, data = dtos });
     }
 
     [HttpGet("today")]
@@ -31,7 +63,7 @@ public class CalendarController : ControllerBase
         var calendar = await _calendarService.GetTodayAsync();
         if (calendar == null)
             return NotFound(new { code = 404, message = "今天不在校历中" });
-        return Ok(new { code = 200, data = calendar });
+        return Ok(new { code = 200, data = ToDto(calendar) });
     }
 
     [HttpGet("date/{date}")]
@@ -40,7 +72,7 @@ public class CalendarController : ControllerBase
         var calendar = await _calendarService.GetByDateAsync(date);
         if (calendar == null)
             return NotFound(new { code = 404, message = "该日期不在校历中" });
-        return Ok(new { code = 200, data = calendar });
+        return Ok(new { code = 200, data = ToDto(calendar) });
     }
 
     [HttpGet("week-info")]
@@ -58,7 +90,7 @@ public class CalendarController : ControllerBase
         var calendar = await _calendarService.UpdateAsync(id, request);
         if (calendar == null)
             return NotFound(new { code = 404, message = "日历不存在" });
-        return Ok(new { code = 200, data = calendar, message = "更新成功" });
+        return Ok(new { code = 200, data = ToDto(calendar), message = "更新成功" });
     }
 
     [HttpGet("event-types")]
@@ -143,14 +175,14 @@ public class CalendarController : ControllerBase
         var calendars = await _calendarService.GetBySemesterAsync(semesterId);
         var holidays = calendars
             .Where(c => c.IsHoliday)
-            .Select(c => new
+            .Select(c => new HolidayDto
             {
-                c.Id,
-                c.Date,
-                c.HolidayName,
-                c.HolidayType,
-                c.IsWorkday,
-                c.Description
+                Id = c.Id,
+                Date = c.Date,
+                Name = c.HolidayName,
+                Type = c.HolidayType,
+                IsWorkday = c.IsWorkday,
+                Description = c.Description
             })
             .OrderBy(c => c.Date)
             .ToList();
@@ -181,7 +213,7 @@ public class CalendarController : ControllerBase
             Description = request.Description
         });
 
-        return Ok(new { code = 200, data = calendar, message = "节假日添加成功" });
+        return Ok(new { code = 200, data = ToDto(calendar), message = "节假日添加成功" });
     }
 
     [HttpPost("adjust-workday")]
@@ -204,7 +236,7 @@ public class CalendarController : ControllerBase
             Description = calendar.Description
         });
 
-        return Ok(new { code = 200, data = calendar, message = "调休设置成功" });
+        return Ok(new { code = 200, data = ToDto(calendar), message = "调休设置成功" });
     }
 
     [HttpGet("by-event-type")]
@@ -212,9 +244,49 @@ public class CalendarController : ControllerBase
     public async Task<IActionResult> GetByEventType([FromQuery] Guid semesterId, [FromQuery] CalendarEventType eventType)
     {
         var calendars = await _calendarService.GetBySemesterAsync(semesterId);
-        var filtered = calendars.Where(c => c.EventType == eventType).ToList();
+        var filtered = calendars.Where(c => c.EventType == eventType).Select(ToDto).ToList();
         return Ok(new { code = 200, data = filtered });
     }
+}
+
+public class CalendarDto
+{
+    public Guid Id { get; set; }
+    public Guid SemesterId { get; set; }
+    public DateTime Date { get; set; }
+    public int WeekNumber { get; set; }
+    public int DayOfWeek { get; set; }
+    public string EventType { get; set; } = string.Empty;
+    public string? EventName { get; set; }
+    public string EventPriority { get; set; } = string.Empty;
+    public bool IsHoliday { get; set; }
+    public bool IsWorkday { get; set; }
+    public bool IsTeachingDay { get; set; }
+    public bool IsExamDay { get; set; }
+    public bool IsAdjusted { get; set; }
+    public string? HolidayName { get; set; }
+    public string? HolidayType { get; set; }
+    public string? Description { get; set; }
+    public string? Color { get; set; }
+    public string? Icon { get; set; }
+    public bool AffectsCourseSelection { get; set; }
+    public bool AffectsScheduling { get; set; }
+    public bool AffectsGradeEntry { get; set; }
+    public bool AffectsRegistration { get; set; }
+    public string? AutoTriggerAction { get; set; }
+    public DateTime? TriggeredAt { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+
+public class HolidayDto
+{
+    public Guid Id { get; set; }
+    public DateTime Date { get; set; }
+    public string? Name { get; set; }
+    public string? Type { get; set; }
+    public bool IsWorkday { get; set; }
+    public string? Description { get; set; }
 }
 
 public class AddHolidayRequest
