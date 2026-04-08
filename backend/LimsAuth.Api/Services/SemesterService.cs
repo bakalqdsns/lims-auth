@@ -398,6 +398,8 @@ public class SemesterService : ISemesterService
 
         // 获取节假日配置（如果有）
         var holidays = request?.Holidays ?? new List<HolidayConfig>();
+        // 获取特殊事件配置（如果有）
+        var specialEvents = request?.SpecialEvents ?? new List<SpecialEventConfig>();
 
         while (currentDate <= endDate)
         {
@@ -408,8 +410,11 @@ public class SemesterService : ISemesterService
             var holiday = holidays.FirstOrDefault(h => h.Date.Date == currentDate);
             var isHoliday = holiday != null;
 
+            // 检查是否为特殊事件日
+            var specialEvent = specialEvents.FirstOrDefault(e => e.Date.Date == currentDate);
+
             // 确定事件类型
-            var eventType = CalendarEventType.Teaching;
+            var eventType = specialEvent?.EventType ?? CalendarEventType.Teaching;
             if (isHoliday)
             {
                 eventType = CalendarEventType.Holiday;
@@ -423,6 +428,14 @@ public class SemesterService : ISemesterService
                 }
             }
 
+            // 确定是否为工作日
+            var isWorkday = !isHoliday || (holiday?.IsWorkday ?? false);
+            
+            // 确定是否为教学日
+            var isTeachingDay = isWorkday && dayOfWeek <= 5 && 
+                !(semester.ExamWeekStart.HasValue && currentDate >= semester.ExamWeekStart.Value.Date &&
+                  semester.ExamWeekEnd.HasValue && currentDate <= semester.ExamWeekEnd.Value.Date);
+
             var calendar = new AcademicCalendar
             {
                 SemesterId = semesterId,
@@ -430,15 +443,21 @@ public class SemesterService : ISemesterService
                 WeekNumber = weekNumber,
                 DayOfWeek = dayOfWeek,
                 EventType = eventType,
+                EventName = specialEvent?.EventName ?? holiday?.Name,
+                EventPriority = specialEvent?.Priority ?? CalendarEventPriority.Normal,
                 IsHoliday = isHoliday,
-                IsWorkday = !isHoliday || (holiday?.IsWorkday ?? false),
-                IsTeachingDay = !isHoliday && dayOfWeek <= 5 && 
-                    !(semester.ExamWeekStart.HasValue && currentDate >= semester.ExamWeekStart.Value.Date &&
-                      semester.ExamWeekEnd.HasValue && currentDate <= semester.ExamWeekEnd.Value.Date),
+                IsWorkday = isWorkday,
+                IsTeachingDay = isTeachingDay,
                 IsExamDay = eventType == CalendarEventType.Exam,
                 HolidayName = holiday?.Name,
                 HolidayType = holiday?.Type,
-                Description = holiday?.Description
+                Description = specialEvent?.Description ?? holiday?.Description,
+                Color = specialEvent?.Color,
+                AffectsCourseSelection = specialEvent?.AffectsCourseSelection ?? false,
+                AffectsScheduling = specialEvent?.AffectsScheduling ?? false,
+                AffectsGradeEntry = specialEvent?.AffectsGradeEntry ?? false,
+                AffectsRegistration = specialEvent?.AffectsRegistration ?? false,
+                AutoTriggerAction = specialEvent?.AutoTriggerAction
             };
 
             calendars.Add(calendar);
@@ -769,6 +788,22 @@ public class UpdateSemesterRequest
 public class GenerateCalendarRequest
 {
     public List<HolidayConfig>? Holidays { get; set; }
+    public List<SpecialEventConfig>? SpecialEvents { get; set; }
+}
+
+public class SpecialEventConfig
+{
+    public DateTime Date { get; set; }
+    public CalendarEventType EventType { get; set; } = CalendarEventType.Custom;
+    public string? EventName { get; set; }
+    public CalendarEventPriority Priority { get; set; } = CalendarEventPriority.Normal;
+    public string? Description { get; set; }
+    public string? Color { get; set; }
+    public bool AffectsCourseSelection { get; set; } = false;
+    public bool AffectsScheduling { get; set; } = false;
+    public bool AffectsGradeEntry { get; set; } = false;
+    public bool AffectsRegistration { get; set; } = false;
+    public string? AutoTriggerAction { get; set; }
 }
 
 public class HolidayConfig

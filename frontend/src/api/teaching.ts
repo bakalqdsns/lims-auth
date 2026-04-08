@@ -18,8 +18,8 @@ export const semesterApi = {
     axios.post(`${API_BASE_URL}/semesters/${id}/set-current`),
   getCurrent: () =>
     axios.get(`${API_BASE_URL}/semesters/current`),
-  generateCalendar: (id: string) =>
-    axios.post(`${API_BASE_URL}/semesters/${id}/generate-calendar`)
+  generateCalendar: (id: string, data?: GenerateCalendarRequest) =>
+    axios.post(`${API_BASE_URL}/semesters/${id}/generate-calendar`, data)
 }
 
 // 校历管理 API
@@ -35,7 +35,11 @@ export const calendarApi = {
   getByDate: (date: string) =>
     axios.get(`${API_BASE_URL}/calendar/date/${date}`),
   getWeekInfo: (semesterId: string, weekNumber: number) =>
-    axios.get(`${API_BASE_URL}/calendar/week-info`, { params: { semesterId, weekNumber } })
+    axios.get(`${API_BASE_URL}/calendar/week-info`, { params: { semesterId, weekNumber } }),
+  getEventTypes: () =>
+    axios.get(`${API_BASE_URL}/calendar/event-types`),
+  checkPermission: (semesterId: string, businessType: string) =>
+    axios.get(`${API_BASE_URL}/calendar/check-permission`, { params: { semesterId, businessType } })
 }
 
 // 课程管理 API
@@ -239,9 +243,51 @@ export interface AcademicCalendarDto {
   date: string
   weekNumber: number
   dayOfWeek: number
+  eventType?: string
+  eventName?: string
   isHoliday: boolean
+  isWorkday: boolean
+  isTeachingDay: boolean
   holidayName?: string
   description?: string
+  color?: string
+  affectsCourseSelection?: boolean
+  affectsScheduling?: boolean
+  affectsGradeEntry?: boolean
+  affectsRegistration?: boolean
+}
+
+export interface GenerateCalendarRequest {
+  holidays?: HolidayConfig[]
+  specialEvents?: SpecialEventConfig[]
+}
+
+export interface HolidayConfig {
+  date: string
+  name: string
+  type?: string
+  isWorkday?: boolean
+  description?: string
+}
+
+export interface SpecialEventConfig {
+  date: string
+  eventType: string
+  eventName?: string
+  priority?: string
+  description?: string
+  color?: string
+  affectsCourseSelection?: boolean
+  affectsScheduling?: boolean
+  affectsGradeEntry?: boolean
+  affectsRegistration?: boolean
+  autoTriggerAction?: string
+}
+
+export interface CalendarEventTypeDto {
+  code: string
+  name: string
+  color: string
 }
 
 export interface CourseDto {
