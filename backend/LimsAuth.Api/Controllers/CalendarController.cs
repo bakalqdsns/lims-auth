@@ -85,9 +85,28 @@ public class CalendarController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateCalendarRequest request)
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateCalendarJsonRequest request)
     {
-        var calendar = await _calendarService.UpdateAsync(id, request);
+        // 转换字符串枚举到实际枚举类型
+        CalendarEventType? eventType = null;
+        if (!string.IsNullOrEmpty(request.EventType) && Enum.TryParse<CalendarEventType>(request.EventType, out var parsedType))
+        {
+            eventType = parsedType;
+        }
+
+        var updateRequest = new UpdateCalendarRequest
+        {
+            EventType = eventType,
+            EventName = request.EventName,
+            IsHoliday = request.IsHoliday,
+            IsWorkday = request.IsWorkday,
+            IsTeachingDay = request.IsTeachingDay,
+            HolidayName = request.HolidayName,
+            Description = request.Description,
+            Color = request.Color
+        };
+
+        var calendar = await _calendarService.UpdateAsync(id, updateRequest);
         if (calendar == null)
             return NotFound(new { code = 404, message = "日历不存在" });
         return Ok(new { code = 200, data = ToDto(calendar), message = "更新成功" });
@@ -304,4 +323,16 @@ public class AdjustWorkdayRequest
     public bool IsWorkday { get; set; }
     public DateTime? AdjustedFrom { get; set; }
     public string? Description { get; set; }
+}
+
+public class UpdateCalendarJsonRequest
+{
+    public string? EventType { get; set; }
+    public string? EventName { get; set; }
+    public bool? IsHoliday { get; set; }
+    public bool? IsWorkday { get; set; }
+    public bool? IsTeachingDay { get; set; }
+    public string? HolidayName { get; set; }
+    public string? Description { get; set; }
+    public string? Color { get; set; }
 }
