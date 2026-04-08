@@ -103,6 +103,24 @@ builder.Services.AddAuthorization(options =>
     // Calendar permissions
     options.AddPolicy("Permission:calendar:read", policy => policy.RequirePermission("calendar:read"));
     options.AddPolicy("Permission:calendar:update", policy => policy.RequirePermission("calendar:update"));
+
+    // Period time permissions
+    options.AddPolicy("Permission:period_time:create", policy => policy.RequirePermission("period_time:create"));
+    options.AddPolicy("Permission:period_time:read", policy => policy.RequirePermission("period_time:read"));
+    options.AddPolicy("Permission:period_time:update", policy => policy.RequirePermission("period_time:update"));
+    options.AddPolicy("Permission:period_time:delete", policy => policy.RequirePermission("period_time:delete"));
+
+    // Major permissions
+    options.AddPolicy("Permission:major:create", policy => policy.RequirePermission("major:create"));
+    options.AddPolicy("Permission:major:read", policy => policy.RequirePermission("major:read"));
+    options.AddPolicy("Permission:major:update", policy => policy.RequirePermission("major:update"));
+    options.AddPolicy("Permission:major:delete", policy => policy.RequirePermission("major:delete"));
+
+    // Class permissions
+    options.AddPolicy("Permission:class:create", policy => policy.RequirePermission("class:create"));
+    options.AddPolicy("Permission:class:read", policy => policy.RequirePermission("class:read"));
+    options.AddPolicy("Permission:class:update", policy => policy.RequirePermission("class:update"));
+    options.AddPolicy("Permission:class:delete", policy => policy.RequirePermission("class:delete"));
 });
 
 // CORS
