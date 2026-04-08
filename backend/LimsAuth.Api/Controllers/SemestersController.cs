@@ -61,7 +61,7 @@ public class SemestersController : ControllerBase
     /// 创建学期
     /// </summary>
     [HttpPost]
-    [Authorize(Policy = "Permission")]
+    [Authorize]
     public async Task<IActionResult> Create([FromBody] CreateSemesterRequest request)
     {
         try
@@ -87,7 +87,7 @@ public class SemestersController : ControllerBase
     /// 更新学期
     /// </summary>
     [HttpPut("{id}")]
-    [Authorize(Policy = "Permission")]
+    [Authorize]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateSemesterRequest request)
     {
         try
@@ -108,7 +108,7 @@ public class SemestersController : ControllerBase
     /// 删除学期
     /// </summary>
     [HttpDelete("{id}")]
-    [Authorize(Policy = "Permission")]
+    [Authorize]
     public async Task<IActionResult> Delete(Guid id)
     {
         try
@@ -132,7 +132,7 @@ public class SemestersController : ControllerBase
     /// 设为当前学期
     /// </summary>
     [HttpPost("{id}/set-current")]
-    [Authorize(Policy = "Permission")]
+    [Authorize]
     public async Task<IActionResult> SetCurrent(Guid id)
     {
         try
@@ -152,7 +152,7 @@ public class SemestersController : ControllerBase
     /// 更新学期状态
     /// </summary>
     [HttpPost("{id}/status")]
-    [Authorize(Policy = "Permission")]
+    [Authorize]
     public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateStatusRequest request)
     {
         try
@@ -173,7 +173,7 @@ public class SemestersController : ControllerBase
     /// 归档学期
     /// </summary>
     [HttpPost("{id}/archive")]
-    [Authorize(Policy = "Permission")]
+    [Authorize]
     public async Task<IActionResult> Archive(Guid id)
     {
         try
@@ -194,7 +194,7 @@ public class SemestersController : ControllerBase
     /// 自动状态流转（定时任务调用）
     /// </summary>
     [HttpPost("auto-transition")]
-    [Authorize(Policy = "Permission")]
+    [Authorize]
     public async Task<IActionResult> AutoTransition()
     {
         await _semesterService.AutoTransitionStatusAsync();
@@ -209,7 +209,7 @@ public class SemestersController : ControllerBase
     /// 校验学期数据
     /// </summary>
     [HttpPost("validate")]
-    [Authorize(Policy = "Permission")]
+    [Authorize]
     public async Task<IActionResult> Validate([FromBody] CreateSemesterRequest request)
     {
         var result = await _semesterService.ValidateAsync(request);
@@ -220,7 +220,7 @@ public class SemestersController : ControllerBase
     /// 检查时间重叠
     /// </summary>
     [HttpGet("check-overlap")]
-    [Authorize(Policy = "Permission")]
+    [Authorize]
     public async Task<IActionResult> CheckOverlap(
         [FromQuery] DateTime startDate, 
         [FromQuery] DateTime endDate, 
@@ -238,7 +238,7 @@ public class SemestersController : ControllerBase
     /// 生成校历
     /// </summary>
     [HttpPost("{id}/generate-calendar")]
-    [Authorize(Policy = "Permission")]
+    [Authorize]
     public async Task<IActionResult> GenerateCalendar(Guid id, [FromBody] GenerateCalendarRequest? request)
     {
         try
@@ -332,7 +332,7 @@ public class SemestersController : ControllerBase
     /// 从模板复制学期
     /// </summary>
     [HttpPost("copy-from-template")]
-    [Authorize(Policy = "Permission")]
+    [Authorize]
     public async Task<IActionResult> CopyFromTemplate([FromBody] CopyFromTemplateRequest request)
     {
         try
@@ -360,7 +360,7 @@ public class SemestersController : ControllerBase
     /// 从学期复制
     /// </summary>
     [HttpPost("copy-from-semester")]
-    [Authorize(Policy = "Permission")]
+    [Authorize]
     public async Task<IActionResult> CopyFromSemester([FromBody] CopyFromSemesterRequest request)
     {
         try
@@ -393,7 +393,7 @@ public class SemestersController : ControllerBase
     /// 创建沙箱
     /// </summary>
     [HttpPost("{id}/sandbox")]
-    [Authorize(Policy = "Permission")]
+    [Authorize]
     public async Task<IActionResult> CreateSandbox(Guid id, [FromBody] CreateSandboxRequest request)
     {
         try
@@ -412,7 +412,7 @@ public class SemestersController : ControllerBase
     /// 应用沙箱
     /// </summary>
     [HttpPost("sandbox/{sandboxId}/apply")]
-    [Authorize(Policy = "Permission")]
+    [Authorize]
     public async Task<IActionResult> ApplySandbox(Guid sandboxId)
     {
         try
@@ -433,7 +433,7 @@ public class SemestersController : ControllerBase
     /// 废弃沙箱
     /// </summary>
     [HttpDelete("sandbox/{sandboxId}")]
-    [Authorize(Policy = "Permission")]
+    [Authorize]
     public async Task<IActionResult> DiscardSandbox(Guid sandboxId)
     {
         var result = await _semesterService.DiscardSandboxAsync(sandboxId);
@@ -450,7 +450,7 @@ public class SemestersController : ControllerBase
     /// 获取学期操作日志
     /// </summary>
     [HttpGet("{id}/logs")]
-    [Authorize(Policy = "Permission")]
+    [Authorize]
     public async Task<IActionResult> GetLogs(Guid id)
     {
         var logs = await _semesterService.GetLogsAsync(id);
