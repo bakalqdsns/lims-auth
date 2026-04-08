@@ -39,7 +39,15 @@ export const calendarApi = {
   getEventTypes: () =>
     axios.get(`${API_BASE_URL}/calendar/event-types`),
   checkPermission: (semesterId: string, businessType: string) =>
-    axios.get(`${API_BASE_URL}/calendar/check-permission`, { params: { semesterId, businessType } })
+    axios.get(`${API_BASE_URL}/calendar/check-permission`, { params: { semesterId, businessType } }),
+  getHolidays: (semesterId: string) =>
+    axios.get(`${API_BASE_URL}/calendar/holidays`, { params: { semesterId } }),
+  addHoliday: (data: AddHolidayRequest) =>
+    axios.post(`${API_BASE_URL}/calendar/holidays`, data),
+  adjustWorkday: (data: AdjustWorkdayRequest) =>
+    axios.post(`${API_BASE_URL}/calendar/adjust-workday`, data),
+  getByEventType: (semesterId: string, eventType: string) =>
+    axios.get(`${API_BASE_URL}/calendar/by-event-type`, { params: { semesterId, eventType } })
 }
 
 // 课程管理 API
@@ -149,9 +157,14 @@ export interface UpdateSemesterRequest {
 }
 
 export interface UpdateCalendarRequest {
+  eventType?: string
+  eventName?: string
   isHoliday?: boolean
+  isWorkday?: boolean
+  isTeachingDay?: boolean
   holidayName?: string
   description?: string
+  color?: string
 }
 
 export interface CreateCourseRequest {
@@ -288,6 +301,21 @@ export interface CalendarEventTypeDto {
   code: string
   name: string
   color: string
+}
+
+export interface AddHolidayRequest {
+  date: string
+  name: string
+  type?: string
+  isWorkday?: boolean
+  description?: string
+}
+
+export interface AdjustWorkdayRequest {
+  date: string
+  isWorkday: boolean
+  adjustedFrom?: string
+  description?: string
 }
 
 export interface CourseDto {

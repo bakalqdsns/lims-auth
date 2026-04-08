@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using LimsAuth.Api.Services;
+using LimsAuth.Api.Models;
 
 namespace LimsAuth.Api.Controllers;
 
@@ -134,4 +135,101 @@ public class CalendarController : ControllerBase
 
         return Ok(new { code = 200, data = new { isAllowed, message, reason, currentDate = today, weekNumber = calendar.WeekNumber, dayOfWeek = calendar.DayOfWeek } });
     }
+
+    [HttpGet("holidays")]
+    [Authorize(Policy = "Permission:calendar:read")]
+    public async Task<IActionResult> GetHolidays([FromQuery] Guid semesterId)
+    {
+        var calendars = await _calendarService.GetBySemesterAsync(semesterId);
+        var holidays = calendars
+            .Where(c => c.IsHoliday)
+            .Select(c => new
+            {
+                c.Id,
+                c.Date,
+                c.HolidayName,
+                c.HolidayType,
+                c.IsWorkday,
+                c.Description
+            })
+            .OrderBy(c => c.Date)
+            .ToList();
+        return Ok(new { code = 200, data = holidays });
+    }
+
+    [HttpPost("holidays")]
+    [Authorize(Policy = "Permission:calendar:update")]
+    public async Task<IActionResult> AddHoliday([FromBody] AddHolidayRequest request)
+    {
+        var calendar = await _calendarService.GetByDateAsync(request.Date);
+        if (calendar == null)
+            return NotFound(new { code = 404, message = "该日期不在校历范围内" });
+
+        calendar.IsHoliday = true;
+        calendar.HolidayName = request.Name;
+        calendar.HolidayType = request.Type;
+        calendar.IsWorkday = request.IsWorkday;
+        calendar.IsTeachingDay = false;
+        calendar.EventType = CalendarEventType.Holiday;
+        calendar.Description = request.Description;
+        calendar.Color = "#F56C6C";
+
+        await _calendarService.UpdateAsync(calendar.Id, new UpdateCalendarRequest
+        {
+            IsHoliday = true,
+            HolidayName = request.Name,
+            Description = request.Description
+        });
+
+        return Ok(new { code = 200, data = calendar, message = "节假日添加成功" });
+    }
+
+    [HttpPost("adjust-workday")]
+    [Authorize(Policy = "Permission:calendar:update")]
+    public async Task<IActionResult> AdjustWorkday([FromBody] AdjustWorkdayRequest request)
+    {
+        var calendar = await _calendarService.GetByDateAsync(request.Date);
+        if (calendar == null)
+            return NotFound(new { code = 404, message = "该日期不在校历范围内" });
+
+        calendar.IsWorkday = request.IsWorkday;
+        calendar.IsTeachingDay = request.IsWorkday && calendar.DayOfWeek <= 5;
+        calendar.IsAdjusted = true;
+        calendar.AdjustedFrom = request.AdjustedFrom;
+        calendar.Description = request.Description ?? $"调休调整：{(request.IsWorkday ? "设为工作日" : "设为休息日")}";
+
+        await _calendarService.UpdateAsync(calendar.Id, new UpdateCalendarRequest
+        {
+            IsWorkday = request.IsWorkday,
+            Description = calendar.Description
+        });
+
+        return Ok(new { code = 200, data = calendar, message = "调休设置成功" });
+    }
+
+    [HttpGet("by-event-type")]
+    [Authorize(Policy = "Permission:calendar:read")]
+    public async Task<IActionResult> GetByEventType([FromQuery] Guid semesterId, [FromQuery] CalendarEventType eventType)
+    {
+        var calendars = await _calendarService.GetBySemesterAsync(semesterId);
+        var filtered = calendars.Where(c => c.EventType == eventType).ToList();
+        return Ok(new { code = 200, data = filtered });
+    }
+}
+
+public class AddHolidayRequest
+{
+    public DateTime Date { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Type { get; set; } = "法定假日";
+    public bool IsWorkday { get; set; } = false;
+    public string? Description { get; set; }
+}
+
+public class AdjustWorkdayRequest
+{
+    public DateTime Date { get; set; }
+    public bool IsWorkday { get; set; }
+    public DateTime? AdjustedFrom { get; set; }
+    public string? Description { get; set; }
 }
