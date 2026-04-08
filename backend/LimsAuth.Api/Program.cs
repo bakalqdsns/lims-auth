@@ -92,6 +92,17 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("Permission:equipment:read", policy => policy.RequirePermission("equipment:read"));
     options.AddPolicy("Permission:equipment:update", policy => policy.RequirePermission("equipment:update"));
     options.AddPolicy("Permission:equipment:delete", policy => policy.RequirePermission("equipment:delete"));
+
+    // Course permissions
+    options.AddPolicy("Permission:course:create", policy => policy.RequirePermission("course:create"));
+    options.AddPolicy("Permission:course:read", policy => policy.RequirePermission("course:read"));
+    options.AddPolicy("Permission:course:update", policy => policy.RequirePermission("course:update"));
+    options.AddPolicy("Permission:course:delete", policy => policy.RequirePermission("course:delete"));
+    options.AddPolicy("Permission:course:schedule", policy => policy.RequirePermission("course:schedule"));
+
+    // Calendar permissions
+    options.AddPolicy("Permission:calendar:read", policy => policy.RequirePermission("calendar:read"));
+    options.AddPolicy("Permission:calendar:update", policy => policy.RequirePermission("calendar:update"));
 });
 
 // CORS
