@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using LimsAuth.Api.Services;
+using LimsAuth.Api.Models.DTOs;
 
 namespace LimsAuth.Api.Controllers;
 
@@ -17,6 +18,7 @@ public class PeriodTimesController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Policy = "Permission:period_time:read")]
     public async Task<IActionResult> GetList()
     {
         var periods = await _periodTimeService.GetListAsync();
@@ -24,6 +26,7 @@ public class PeriodTimesController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [Authorize(Policy = "Permission:period_time:read")]
     public async Task<IActionResult> GetById(Guid id)
     {
         var period = await _periodTimeService.GetByIdAsync(id);
@@ -33,6 +36,7 @@ public class PeriodTimesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = "Permission:period_time:create")]
     public async Task<IActionResult> Create([FromBody] CreatePeriodTimeRequest request)
     {
         var period = await _periodTimeService.CreateAsync(request);
@@ -40,6 +44,7 @@ public class PeriodTimesController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Policy = "Permission:period_time:update")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdatePeriodTimeRequest request)
     {
         var period = await _periodTimeService.UpdateAsync(id, request);
@@ -49,6 +54,7 @@ public class PeriodTimesController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Policy = "Permission:period_time:delete")]
     public async Task<IActionResult> Delete(Guid id)
     {
         var result = await _periodTimeService.DeleteAsync(id);
@@ -58,6 +64,7 @@ public class PeriodTimesController : ControllerBase
     }
 
     [HttpPatch("{id}/status")]
+    [Authorize(Policy = "Permission:period_time:update")]
     public async Task<IActionResult> ToggleStatus(Guid id, [FromBody] ToggleStatusRequest request)
     {
         var result = await _periodTimeService.ToggleStatusAsync(id, request.IsActive);

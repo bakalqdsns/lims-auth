@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using LimsAuth.Api.Services;
+using LimsAuth.Api.Models.DTOs;
 
 namespace LimsAuth.Api.Controllers;
 

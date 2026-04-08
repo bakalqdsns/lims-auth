@@ -70,6 +70,21 @@
               <span>节次时间</span>
             </el-menu-item>
           </el-sub-menu>
+
+          <el-sub-menu index="/lab" v-if="hasPermission('lab:read') || hasPermission('equipment:read')">
+            <template #title>
+              <el-icon><OfficeBuilding /></el-icon>
+              <span>实验室管理</span>
+            </template>
+            <el-menu-item v-if="hasPermission('lab:read')" index="/lab/labs">
+              <el-icon><OfficeBuilding /></el-icon>
+              <span>实验室管理</span>
+            </el-menu-item>
+            <el-menu-item v-if="hasPermission('equipment:read')" index="/lab/equipments">
+              <el-icon><Tools /></el-icon>
+              <span>设备管理</span>
+            </el-menu-item>
+          </el-sub-menu>
         </el-menu>
       </el-aside>
 
@@ -167,7 +182,8 @@ import {
   Calendar,
   Reading,
   School,
-  Timer
+  Timer,
+  Tools
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '../stores/auth'
 import { userApi } from '../api/system'

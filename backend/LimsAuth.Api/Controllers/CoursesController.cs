@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using LimsAuth.Api.Services;
+using LimsAuth.Api.Models.DTOs;
 
 namespace LimsAuth.Api.Controllers;
 
@@ -69,9 +70,4 @@ public class CoursesController : ControllerBase
             return NotFound(new { code = 404, message = "课程不存在" });
         return Ok(new { code = 200, message = "状态更新成功" });
     }
-}
-
-public class ToggleStatusRequest
-{
-    public bool IsActive { get; set; }
 }

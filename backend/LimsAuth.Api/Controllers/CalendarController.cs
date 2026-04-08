@@ -24,6 +24,7 @@ public class CalendarController : ControllerBase
     }
 
     [HttpGet("today")]
+    [Authorize(Policy = "Permission:calendar:read")]
     public async Task<IActionResult> GetToday()
     {
         var calendar = await _calendarService.GetTodayAsync();

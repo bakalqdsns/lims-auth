@@ -263,3 +263,13 @@ public class RoleListQuery
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = 20;
 }
+
+// ==================== 通用请求 ====================
+
+/// <summary>
+/// 切换状态请求
+/// </summary>
+public class ToggleStatusRequest
+{
+    public bool IsActive { get; set; }
+}

@@ -87,6 +87,26 @@ const router = createRouter({
           meta: { requiresAuth: true }
         }
       ]
+    },
+    {
+      path: '/lab',
+      name: 'lab',
+      component: HomeView,
+      meta: { requiresAuth: true },
+      children: [
+        {
+          path: 'labs',
+          name: 'labs',
+          component: () => import('../views/lab/LabsView.vue'),
+          meta: { requiresAuth: true, permission: 'lab:read' }
+        },
+        {
+          path: 'equipments',
+          name: 'equipments',
+          component: () => import('../views/lab/EquipmentsView.vue'),
+          meta: { requiresAuth: true, permission: 'equipment:read' }
+        }
+      ]
     }
   ]
 })

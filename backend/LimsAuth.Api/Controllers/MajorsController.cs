@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using LimsAuth.Api.Services;
+using LimsAuth.Api.Models.DTOs;
 
 namespace LimsAuth.Api.Controllers;
 
@@ -65,6 +66,7 @@ public class MajorsController : ControllerBase
     }
 
     [HttpPatch("{id}/status")]
+    [Authorize(Policy = "Permission:major:update")]
     public async Task<IActionResult> ToggleStatus(Guid id, [FromBody] ToggleStatusRequest request)
     {
         var result = await _majorService.ToggleStatusAsync(id, request.IsActive);

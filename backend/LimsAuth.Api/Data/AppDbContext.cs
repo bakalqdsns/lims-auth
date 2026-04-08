@@ -22,6 +22,8 @@ public class AppDbContext : DbContext
     // 教学管理相关
     public DbSet<Semester> Semesters => Set<Semester>();
     public DbSet<AcademicCalendar> AcademicCalendars => Set<AcademicCalendar>();
+    public DbSet<CalendarTemplate> CalendarTemplates => Set<CalendarTemplate>();
+    public DbSet<SemesterLog> SemesterLogs => Set<SemesterLog>();
     public DbSet<Course> Courses => Set<Course>();
     public DbSet<Major> Majors => Set<Major>();
     public DbSet<Class> Classes => Set<Class>();
@@ -29,6 +31,10 @@ public class AppDbContext : DbContext
     public DbSet<TeachingTask> TeachingTasks => Set<TeachingTask>();
     public DbSet<TeachingTaskTeacher> TeachingTaskTeachers => Set<TeachingTaskTeacher>();
     public DbSet<PeriodTime> PeriodTimes => Set<PeriodTime>();
+
+    // 实验室设备管理
+    public DbSet<Lab> Labs => Set<Lab>();
+    public DbSet<Equipment> Equipments => Set<Equipment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -197,14 +203,40 @@ public class AppDbContext : DbContext
             .HasForeignKey(ttt => ttt.TeacherId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        // 学期管理 - 外键关系
+        modelBuilder.Entity<Semester>()
+            .HasOne(s => s.ParentSemester)
+            .WithMany(s => s.ChildSemesters)
+            .HasForeignKey(s => s.ParentSemesterId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         // 唯一索引
         modelBuilder.Entity<Semester>()
             .HasIndex(s => s.Name)
             .IsUnique();
 
+        modelBuilder.Entity<Semester>()
+            .HasIndex(s => s.Code)
+            .IsUnique();
+
+        modelBuilder.Entity<Semester>()
+            .HasIndex(s => new { s.IsCurrent, s.IsActive });
+
+        modelBuilder.Entity<Semester>()
+            .HasIndex(s => s.Status);
+
         modelBuilder.Entity<AcademicCalendar>()
             .HasIndex(ac => new { ac.SemesterId, ac.Date })
             .IsUnique();
+
+        modelBuilder.Entity<AcademicCalendar>()
+            .HasIndex(ac => new { ac.SemesterId, ac.WeekNumber });
+
+        modelBuilder.Entity<AcademicCalendar>()
+            .HasIndex(ac => ac.EventType);
+
+        modelBuilder.Entity<CalendarTemplate>()
+            .HasIndex(ct => ct.IsDefault);
 
         modelBuilder.Entity<Course>()
             .HasIndex(c => c.Code)
@@ -220,6 +252,34 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<PeriodTime>()
             .HasIndex(pt => pt.PeriodNumber)
+            .IsUnique();
+
+        // 实验室设备管理 - 外键关系
+        modelBuilder.Entity<Lab>()
+            .HasOne(l => l.Department)
+            .WithMany()
+            .HasForeignKey(l => l.DepartmentId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Lab>()
+            .HasOne(l => l.Manager)
+            .WithMany()
+            .HasForeignKey(l => l.ManagerId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Equipment>()
+            .HasOne(e => e.Lab)
+            .WithMany(l => l.Equipments)
+            .HasForeignKey(e => e.LabId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // 唯一索引
+        modelBuilder.Entity<Lab>()
+            .HasIndex(l => l.Code)
+            .IsUnique();
+
+        modelBuilder.Entity<Equipment>()
+            .HasIndex(e => e.Code)
             .IsUnique();
 
         // SQLite seed data
@@ -513,16 +573,72 @@ public class AppDbContext : DbContext
 
         // ========== 教学管理种子数据 ==========
 
-        // 种子数据 - 学期
+        // 种子数据 - 学期（完整版）
         var semesterId = Guid.Parse("dddddddd-dddd-dddd-dddd-dddddddddddd");
         modelBuilder.Entity<Semester>().HasData(
             new Semester
             {
                 Id = semesterId,
                 Name = "2024-2025学年第一学期",
+                Code = "2024-2025-1",
+                AcademicYear = "2024-2025",
+                SemesterType = SemesterType.Regular,
                 StartDate = new DateTime(2024, 9, 1),
                 EndDate = new DateTime(2025, 1, 19),
+                TeachingStartDate = new DateTime(2024, 9, 2),
+                TeachingEndDate = new DateTime(2025, 1, 10),
+                TotalWeeks = 20,
+                TeachingWeeks = 18,
+                // 选课时间
+                CourseSelectionStart = new DateTime(2024, 8, 20),
+                CourseSelectionEnd = new DateTime(2024, 9, 5),
+                CourseSelectionEndWithdraw = new DateTime(2024, 9, 15),
+                // 排课时间
+                SchedulingStart = new DateTime(2024, 7, 1),
+                SchedulingEnd = new DateTime(2024, 8, 15),
+                SchedulePublishTime = new DateTime(2024, 8, 25),
+                // 考试时间
+                ExamWeekStart = new DateTime(2025, 1, 6),
+                ExamWeekEnd = new DateTime(2025, 1, 17),
+                GradeEntryStart = new DateTime(2025, 1, 6),
+                GradeEntryEnd = new DateTime(2025, 1, 24),
+                GradePublishTime = new DateTime(2025, 1, 26),
+                // 注册缴费
+                RegistrationStart = new DateTime(2024, 8, 25),
+                RegistrationEnd = new DateTime(2024, 9, 1),
+                TuitionPaymentStart = new DateTime(2024, 8, 20),
+                TuitionPaymentEnd = new DateTime(2024, 9, 5),
+                // 状态
+                Status = SemesterStatus.InProgress,
                 IsCurrent = true,
+                IsActive = true,
+                IsEditable = true,
+                IsDeletable = false,
+                Description = "2024-2025学年第一学期（秋季学期）",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            }
+        );
+
+        // 种子数据 - 校历模板
+        modelBuilder.Entity<CalendarTemplate>().HasData(
+            new CalendarTemplate
+            {
+                Id = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1"),
+                Name = "标准学期模板（20周）",
+                Description = "适用于常规春秋学期，包含18周教学+2周考试",
+                IsDefault = true,
+                TemplateData = "{\"totalWeeks\":20,\"teachingWeeks\":18,\"examWeeks\":2,\"schedule\":[{\"week\":1,\"type\":\"teaching\"},{\"week\":19,\"type\":\"exam\"},{\"week\":20,\"type\":\"exam\"}]}",
+                IsActive = true,
+                CreatedAt = seedDate
+            },
+            new CalendarTemplate
+            {
+                Id = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2"),
+                Name = "短学期模板（4周）",
+                Description = "适用于小学期或暑期课程",
+                IsDefault = false,
+                TemplateData = "{\"totalWeeks\":4,\"teachingWeeks\":3,\"examWeeks\":1}",
                 IsActive = true,
                 CreatedAt = seedDate
             }
@@ -618,6 +734,188 @@ public class AppDbContext : DbContext
         // 种子数据 - 教学任务教师关联
         modelBuilder.Entity<TeachingTaskTeacher>().HasData(
             new TeachingTaskTeacher { TeachingTaskId = taskId, TeacherId = teacherUserId, IsMainTeacher = true, AssignedAt = seedDate }
+        );
+
+        // ========== 实验室和设备种子数据 ==========
+
+        // 种子数据 - 实验室
+        var lab1Id = Guid.Parse("f0000000-0000-0000-0000-000000000001");
+        var lab2Id = Guid.Parse("f0000000-0000-0000-0000-000000000002");
+        var lab3Id = Guid.Parse("f0000000-0000-0000-0000-000000000003");
+
+        modelBuilder.Entity<Lab>().HasData(
+            new Lab
+            {
+                Id = lab1Id,
+                Code = "LAB001",
+                Name = "计算机基础实验室",
+                DepartmentId = csDeptId,
+                Location = "实验楼A101",
+                Capacity = 60,
+                LabType = "计算机实验室",
+                SafetyLevel = "一般",
+                ManagerId = teacherUserId,
+                Description = "配备高性能计算机，用于程序设计、数据结构等课程实验",
+                IsActive = true,
+                CreatedAt = seedDate
+            },
+            new Lab
+            {
+                Id = lab2Id,
+                Code = "LAB002",
+                Name = "网络工程实验室",
+                DepartmentId = csDeptId,
+                Location = "实验楼A102",
+                Capacity = 40,
+                LabType = "网络实验室",
+                SafetyLevel = "一般",
+                ManagerId = teacherUserId,
+                Description = "配备网络交换机和路由器，用于计算机网络课程实验",
+                IsActive = true,
+                CreatedAt = seedDate
+            },
+            new Lab
+            {
+                Id = lab3Id,
+                Code = "LAB003",
+                Name = "嵌入式系统实验室",
+                DepartmentId = csDeptId,
+                Location = "实验楼A103",
+                Capacity = 30,
+                LabType = "嵌入式实验室",
+                SafetyLevel = "较高",
+                ManagerId = teacherUserId,
+                Description = "配备嵌入式开发板和示波器，用于嵌入式系统课程实验",
+                IsActive = true,
+                CreatedAt = seedDate
+            }
+        );
+
+        // 种子数据 - 设备
+        modelBuilder.Entity<Equipment>().HasData(
+            new Equipment
+            {
+                Id = Guid.Parse("f1000000-0000-0000-0000-000000000001"),
+                Code = "PC001",
+                Name = "高性能计算机",
+                Model = "Dell OptiPlex 7090",
+                Manufacturer = "Dell",
+                SerialNumber = "SN123456789",
+                LabId = lab1Id,
+                Category = "计算机设备",
+                Status = "正常",
+                PurchaseDate = new DateTime(2023, 9, 1),
+                WarrantyMonths = 36,
+                Price = 8000,
+                Location = "实验楼A101-01",
+                RequiresBooking = false,
+                Description = "i7处理器，32GB内存，512GB SSD",
+                IsActive = true,
+                CreatedAt = seedDate
+            },
+            new Equipment
+            {
+                Id = Guid.Parse("f1000000-0000-0000-0000-000000000002"),
+                Code = "PC002",
+                Name = "高性能计算机",
+                Model = "Dell OptiPlex 7090",
+                Manufacturer = "Dell",
+                SerialNumber = "SN123456790",
+                LabId = lab1Id,
+                Category = "计算机设备",
+                Status = "正常",
+                PurchaseDate = new DateTime(2023, 9, 1),
+                WarrantyMonths = 36,
+                Price = 8000,
+                Location = "实验楼A101-02",
+                RequiresBooking = false,
+                Description = "i7处理器，32GB内存，512GB SSD",
+                IsActive = true,
+                CreatedAt = seedDate
+            },
+            new Equipment
+            {
+                Id = Guid.Parse("f1000000-0000-0000-0000-000000000003"),
+                Code = "SW001",
+                Name = "三层交换机",
+                Model = "H3C S5120V3-28P-SI",
+                Manufacturer = "H3C",
+                SerialNumber = "SN987654321",
+                LabId = lab2Id,
+                Category = "网络设备",
+                Status = "正常",
+                PurchaseDate = new DateTime(2023, 6, 15),
+                WarrantyMonths = 24,
+                Price = 5000,
+                Location = "实验楼A102机柜A",
+                RequiresBooking = true,
+                MaxBookingHours = 4,
+                Description = "24口千兆交换机，支持VLAN和路由功能",
+                IsActive = true,
+                CreatedAt = seedDate
+            },
+            new Equipment
+            {
+                Id = Guid.Parse("f1000000-0000-0000-0000-000000000004"),
+                Code = "RT001",
+                Name = "企业级路由器",
+                Model = "H3C MSR3600-28",
+                Manufacturer = "H3C",
+                SerialNumber = "SN987654322",
+                LabId = lab2Id,
+                Category = "网络设备",
+                Status = "正常",
+                PurchaseDate = new DateTime(2023, 6, 15),
+                WarrantyMonths = 24,
+                Price = 12000,
+                Location = "实验楼A102机柜A",
+                RequiresBooking = true,
+                MaxBookingHours = 4,
+                Description = "多业务路由器，支持多种路由协议",
+                IsActive = true,
+                CreatedAt = seedDate
+            },
+            new Equipment
+            {
+                Id = Guid.Parse("f1000000-0000-0000-0000-000000000005"),
+                Code = "OSC001",
+                Name = "数字示波器",
+                Model = "Rigol DS1054Z",
+                Manufacturer = "Rigol",
+                SerialNumber = "SN555566667",
+                LabId = lab3Id,
+                Category = "测试仪器",
+                Status = "正常",
+                PurchaseDate = new DateTime(2023, 3, 10),
+                WarrantyMonths = 24,
+                Price = 3500,
+                Location = "实验楼A103仪器柜",
+                RequiresBooking = true,
+                MaxBookingHours = 2,
+                Description = "4通道，50MHz带宽，1GSa/s采样率",
+                IsActive = true,
+                CreatedAt = seedDate
+            },
+            new Equipment
+            {
+                Id = Guid.Parse("f1000000-0000-0000-0000-000000000006"),
+                Code = "DEV001",
+                Name = "STM32开发板",
+                Model = "STM32F407VGT6",
+                Manufacturer = "ST",
+                SerialNumber = "SN777788889",
+                LabId = lab3Id,
+                Category = "开发板",
+                Status = "正常",
+                PurchaseDate = new DateTime(2023, 9, 1),
+                WarrantyMonths = 12,
+                Price = 200,
+                Location = "实验楼A103储物柜",
+                RequiresBooking = false,
+                Description = "ARM Cortex-M4内核，1MB Flash，192KB SRAM",
+                IsActive = true,
+                CreatedAt = seedDate
+            }
         );
     }
 }

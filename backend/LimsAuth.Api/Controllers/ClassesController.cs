@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using LimsAuth.Api.Services;
+using LimsAuth.Api.Models.DTOs;
 
 namespace LimsAuth.Api.Controllers;
 
@@ -83,6 +84,7 @@ public class ClassesController : ControllerBase
     }
 
     [HttpDelete("{id}/students/{studentId}")]
+    [Authorize(Policy = "Permission:class:update")]
     public async Task<IActionResult> RemoveStudent(Guid id, Guid studentId)
     {
         var result = await _classService.RemoveStudentAsync(id, studentId);
