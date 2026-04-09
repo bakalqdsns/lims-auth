@@ -7,6 +7,8 @@ backend/*/Migrations/
 # Build outputs
 backend/*/publish/
 frontend/dist/
+#vs
+.Vs/
 
 # IDE
 .vscode/
