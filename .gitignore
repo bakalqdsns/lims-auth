@@ -47,3 +47,8 @@ mobile-android/.idea/
 mobile-android/*.iml
 mobile-android/local.properties
 mobile-android/app/build/
+/frontend/node_modules
+/.vs
+/frontend/node_modules
+/frontend/node_modules
+/frontend/node_modules
