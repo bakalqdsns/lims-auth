@@ -18,9 +18,9 @@ public class LabsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetList([FromQuery] string? keyword, [FromQuery] string? departmentId, [FromQuery] string? labType)
+    public async Task<IActionResult> GetList([FromQuery] string? keyword, [FromQuery] string? departmentId, [FromQuery] string? labType, [FromQuery] Guid? buildingId)
     {
-        var labs = await _labService.GetListAsync(keyword, departmentId, labType);
+        var labs = await _labService.GetListAsync(keyword, departmentId, labType, buildingId);
         return Ok(new { code = 200, data = labs });
     }
 

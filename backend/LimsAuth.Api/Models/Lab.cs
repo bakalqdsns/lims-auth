@@ -30,7 +30,26 @@ public class Lab
     public Guid? DepartmentId { get; set; }
 
     /// <summary>
-    /// 实验室地点
+    /// 所属楼宇ID
+    /// </summary>
+    [Column("building_id")]
+    public Guid? BuildingId { get; set; }
+
+    /// <summary>
+    /// 所在楼层
+    /// </summary>
+    [Column("floor")]
+    public int? Floor { get; set; }
+
+    /// <summary>
+    /// 房间号
+    /// </summary>
+    [Column("room_number")]
+    [MaxLength(50)]
+    public string? RoomNumber { get; set; }
+
+    /// <summary>
+    /// 实验室地点（保留兼容）
     /// </summary>
     [Column("location")]
     [MaxLength(200)]
@@ -74,6 +93,7 @@ public class Lab
 
     // 导航属性
     public virtual Department? Department { get; set; }
+    public virtual Building? Building { get; set; }
     public virtual User? Manager { get; set; }
     public virtual ICollection<Equipment> Equipments { get; set; } = new List<Equipment>();
 }

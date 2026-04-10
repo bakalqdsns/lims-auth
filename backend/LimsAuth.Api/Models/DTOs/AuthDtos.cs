@@ -273,3 +273,110 @@ public class ToggleStatusRequest
 {
     public bool IsActive { get; set; }
 }
+
+// ==================== 校区管理 ====================
+
+public class CreateCampusRequest
+{
+    public string Code { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string? Address { get; set; }
+    public decimal? Area { get; set; }
+    public string CampusType { get; set; } = "主校区";
+    public string? ContactPhone { get; set; }
+    public Guid? ManagerId { get; set; }
+    public string? Description { get; set; }
+}
+
+public class UpdateCampusRequest
+{
+    public string? Name { get; set; }
+    public string? Address { get; set; }
+    public decimal? Area { get; set; }
+    public string? CampusType { get; set; }
+    public string? ContactPhone { get; set; }
+    public Guid? ManagerId { get; set; }
+    public string? Description { get; set; }
+    public bool? IsActive { get; set; }
+}
+
+public class CampusDto
+{
+    public Guid Id { get; set; }
+    public string Code { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string? Address { get; set; }
+    public decimal? Area { get; set; }
+    public string CampusType { get; set; } = string.Empty;
+    public string? ContactPhone { get; set; }
+    public Guid? ManagerId { get; set; }
+    public string? ManagerName { get; set; }
+    public string? Description { get; set; }
+    public bool IsActive { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public int BuildingCount { get; set; }
+}
+
+public class CampusBriefDto
+{
+    public Guid Id { get; set; }
+    public string Code { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+}
+
+// ==================== 楼宇管理 ====================
+
+public class CreateBuildingRequest
+{
+    public string Code { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public Guid CampusId { get; set; }
+    public string? Address { get; set; }
+    public int FloorCount { get; set; } = 1;
+    public decimal? BuildingArea { get; set; }
+    public string BuildingType { get; set; } = "实验楼";
+    public int? BuiltYear { get; set; }
+    public Guid? ManagerId { get; set; }
+    public string? Description { get; set; }
+}
+
+public class UpdateBuildingRequest
+{
+    public string? Name { get; set; }
+    public string? Address { get; set; }
+    public int? FloorCount { get; set; }
+    public decimal? BuildingArea { get; set; }
+    public string? BuildingType { get; set; }
+    public int? BuiltYear { get; set; }
+    public Guid? ManagerId { get; set; }
+    public string? Description { get; set; }
+    public bool? IsActive { get; set; }
+}
+
+public class BuildingDto
+{
+    public Guid Id { get; set; }
+    public string Code { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public Guid CampusId { get; set; }
+    public string CampusName { get; set; } = string.Empty;
+    public string? Address { get; set; }
+    public int FloorCount { get; set; }
+    public decimal? BuildingArea { get; set; }
+    public string BuildingType { get; set; } = string.Empty;
+    public int? BuiltYear { get; set; }
+    public Guid? ManagerId { get; set; }
+    public string? ManagerName { get; set; }
+    public string? Description { get; set; }
+    public bool IsActive { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public int LabCount { get; set; }
+}
+
+public class BuildingBriefDto
+{
+    public Guid Id { get; set; }
+    public string Code { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string CampusName { get; set; } = string.Empty;
+}

@@ -36,6 +36,10 @@ public class AppDbContext : DbContext
     public DbSet<Lab> Labs => Set<Lab>();
     public DbSet<Equipment> Equipments => Set<Equipment>();
 
+    // 校区楼宇管理
+    public DbSet<Campus> Campuses => Set<Campus>();
+    public DbSet<Building> Buildings => Set<Building>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -262,6 +266,12 @@ public class AppDbContext : DbContext
             .OnDelete(DeleteBehavior.SetNull);
 
         modelBuilder.Entity<Lab>()
+            .HasOne(l => l.Building)
+            .WithMany(b => b.Labs)
+            .HasForeignKey(l => l.BuildingId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Lab>()
             .HasOne(l => l.Manager)
             .WithMany()
             .HasForeignKey(l => l.ManagerId)
@@ -280,6 +290,34 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Equipment>()
             .HasIndex(e => e.Code)
+            .IsUnique();
+
+        // 校区楼宇管理 - 外键关系
+        modelBuilder.Entity<Building>()
+            .HasOne(b => b.Campus)
+            .WithMany(c => c.Buildings)
+            .HasForeignKey(b => b.CampusId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Building>()
+            .HasOne(b => b.Manager)
+            .WithMany()
+            .HasForeignKey(b => b.ManagerId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Campus>()
+            .HasOne(c => c.Manager)
+            .WithMany()
+            .HasForeignKey(c => c.ManagerId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        // 唯一索引
+        modelBuilder.Entity<Campus>()
+            .HasIndex(c => c.Code)
+            .IsUnique();
+
+        modelBuilder.Entity<Building>()
+            .HasIndex(b => b.Code)
             .IsUnique();
 
         // SQLite seed data
@@ -422,6 +460,18 @@ public class AppDbContext : DbContext
             new Permission { Id = Guid.Parse("60000000-0000-0000-0000-000000000003"), Code = "lab:update", Name = "编辑实验室", Module = "lab", Description = "编辑实验室信息", CreatedAt = seedDate },
             new Permission { Id = Guid.Parse("60000000-0000-0000-0000-000000000004"), Code = "lab:delete", Name = "删除实验室", Module = "lab", Description = "删除实验室", CreatedAt = seedDate },
 
+            // 校区管理权限
+            new Permission { Id = Guid.Parse("61000000-0000-0000-0000-000000000001"), Code = "campus:create", Name = "创建校区", Module = "campus", Description = "创建新校区", CreatedAt = seedDate },
+            new Permission { Id = Guid.Parse("61000000-0000-0000-0000-000000000002"), Code = "campus:read", Name = "查看校区", Module = "campus", Description = "查看校区信息", CreatedAt = seedDate },
+            new Permission { Id = Guid.Parse("61000000-0000-0000-0000-000000000003"), Code = "campus:update", Name = "编辑校区", Module = "campus", Description = "编辑校区信息", CreatedAt = seedDate },
+            new Permission { Id = Guid.Parse("61000000-0000-0000-0000-000000000004"), Code = "campus:delete", Name = "删除校区", Module = "campus", Description = "删除校区", CreatedAt = seedDate },
+
+            // 楼宇管理权限
+            new Permission { Id = Guid.Parse("62000000-0000-0000-0000-000000000001"), Code = "building:create", Name = "创建楼宇", Module = "building", Description = "创建新楼宇", CreatedAt = seedDate },
+            new Permission { Id = Guid.Parse("62000000-0000-0000-0000-000000000002"), Code = "building:read", Name = "查看楼宇", Module = "building", Description = "查看楼宇信息", CreatedAt = seedDate },
+            new Permission { Id = Guid.Parse("62000000-0000-0000-0000-000000000003"), Code = "building:update", Name = "编辑楼宇", Module = "building", Description = "编辑楼宇信息", CreatedAt = seedDate },
+            new Permission { Id = Guid.Parse("62000000-0000-0000-0000-000000000004"), Code = "building:delete", Name = "删除楼宇", Module = "building", Description = "删除楼宇", CreatedAt = seedDate },
+
             // 课程管理权限
             new Permission { Id = Guid.Parse("70000000-0000-0000-0000-000000000001"), Code = "course:create", Name = "创建课程", Module = "course", Description = "创建新课程", CreatedAt = seedDate },
             new Permission { Id = Guid.Parse("70000000-0000-0000-0000-000000000002"), Code = "course:read", Name = "查看课程", Module = "course", Description = "查看课程信息", CreatedAt = seedDate },
@@ -454,6 +504,8 @@ public class AppDbContext : DbContext
         {
             "equipment:create", "equipment:read", "equipment:update", "equipment:delete", "equipment:borrow",
             "lab:create", "lab:read", "lab:update", "lab:delete",
+            "campus:create", "campus:read", "campus:update", "campus:delete",
+            "building:create", "building:read", "building:update", "building:delete",
             "department:read"
         };
         rolePermissions.AddRange(permissions
@@ -471,7 +523,8 @@ public class AppDbContext : DbContext
             "course:create", "course:read", "course:update", "course:delete", "course:schedule",
             "report:read", "report:approve",
             "equipment:read", "equipment:borrow",
-            "lab:read"
+            "lab:read",
+            "campus:read", "building:read"
         };
         rolePermissions.AddRange(permissions
             .Where(p => teacherPermissions.Contains(p.Code))
@@ -488,7 +541,8 @@ public class AppDbContext : DbContext
             "course:read",
             "report:create", "report:read",
             "equipment:read", "equipment:borrow",
-            "lab:read"
+            "lab:read",
+            "campus:read", "building:read"
         };
         rolePermissions.AddRange(permissions
             .Where(p => studentPermissions.Contains(p.Code))
@@ -504,6 +558,7 @@ public class AppDbContext : DbContext
         {
             "user:read", "role:read", "permission:read",
             "equipment:read", "lab:read", "course:read", "report:read",
+            "campus:read", "building:read",
             "system:log"
         };
         rolePermissions.AddRange(permissions
@@ -736,6 +791,102 @@ public class AppDbContext : DbContext
             new TeachingTaskTeacher { TeachingTaskId = taskId, TeacherId = teacherUserId, IsMainTeacher = true, AssignedAt = seedDate }
         );
 
+        // ========== 校区和楼宇种子数据 ==========
+
+        var mainCampusId = Guid.Parse("c0000000-0000-0000-0000-000000000001");
+        var eastCampusId = Guid.Parse("c0000000-0000-0000-0000-000000000002");
+
+        modelBuilder.Entity<Campus>().HasData(
+            new Campus
+            {
+                Id = mainCampusId,
+                Code = "MAIN",
+                Name = "主校区",
+                Address = "XX市XX区XX路1号",
+                Area = 1500000,
+                CampusType = "主校区",
+                ContactPhone = "010-12345678",
+                ManagerId = adminUserId,
+                Description = "学校主校区，包含大部分教学和实验设施",
+                IsActive = true,
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            },
+            new Campus
+            {
+                Id = eastCampusId,
+                Code = "EAST",
+                Name = "东校区",
+                Address = "XX市XX区XX路2号",
+                Area = 800000,
+                CampusType = "分校区",
+                ContactPhone = "010-87654321",
+                ManagerId = adminUserId,
+                Description = "东校区，主要用于研究生教学和部分实验",
+                IsActive = true,
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            }
+        );
+
+        var buildingAId = Guid.Parse("b0000000-0000-0000-0000-000000000001");
+        var buildingBId = Guid.Parse("b0000000-0000-0000-0000-000000000002");
+        var buildingCId = Guid.Parse("b0000000-0000-0000-0000-000000000003");
+
+        modelBuilder.Entity<Building>().HasData(
+            new Building
+            {
+                Id = buildingAId,
+                Code = "BLD-A",
+                Name = "实验楼A座",
+                CampusId = mainCampusId,
+                Address = "主校区北区",
+                FloorCount = 5,
+                BuildingArea = 12000,
+                BuildingType = "实验楼",
+                BuiltYear = 2018,
+                ManagerId = teacherUserId,
+                Description = "计算机学院实验楼，配备各类计算机实验室",
+                IsActive = true,
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            },
+            new Building
+            {
+                Id = buildingBId,
+                Code = "BLD-B",
+                Name = "实验楼B座",
+                CampusId = mainCampusId,
+                Address = "主校区北区",
+                FloorCount = 4,
+                BuildingArea = 8000,
+                BuildingType = "实验楼",
+                BuiltYear = 2020,
+                ManagerId = teacherUserId,
+                Description = "物理、化学实验室",
+                IsActive = true,
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            },
+            new Building
+            {
+                Id = buildingCId,
+                Code = "BLD-E1",
+                Name = "东校区实验楼",
+                CampusId = eastCampusId,
+                Address = "东校区中心",
+                FloorCount = 6,
+                BuildingArea = 15000,
+                BuildingType = "实验楼",
+                BuiltYear = 2022,
+                ManagerId = teacherUserId,
+                Description = "东校区主要实验楼",
+                IsActive = true,
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            }
+        );
+
         // ========== 实验室和设备种子数据 ==========
 
         // 种子数据 - 实验室
@@ -750,7 +901,10 @@ public class AppDbContext : DbContext
                 Code = "LAB001",
                 Name = "计算机基础实验室",
                 DepartmentId = csDeptId,
-                Location = "实验楼A101",
+                BuildingId = buildingAId,
+                Floor = 1,
+                RoomNumber = "A101",
+                Location = "实验楼A座1层A101",
                 Capacity = 60,
                 LabType = "计算机实验室",
                 SafetyLevel = "一般",
@@ -765,7 +919,10 @@ public class AppDbContext : DbContext
                 Code = "LAB002",
                 Name = "网络工程实验室",
                 DepartmentId = csDeptId,
-                Location = "实验楼A102",
+                BuildingId = buildingAId,
+                Floor = 1,
+                RoomNumber = "A102",
+                Location = "实验楼A座1层A102",
                 Capacity = 40,
                 LabType = "网络实验室",
                 SafetyLevel = "一般",
@@ -780,7 +937,10 @@ public class AppDbContext : DbContext
                 Code = "LAB003",
                 Name = "嵌入式系统实验室",
                 DepartmentId = csDeptId,
-                Location = "实验楼A103",
+                BuildingId = buildingAId,
+                Floor = 2,
+                RoomNumber = "A201",
+                Location = "实验楼A座2层A201",
                 Capacity = 30,
                 LabType = "嵌入式实验室",
                 SafetyLevel = "较高",

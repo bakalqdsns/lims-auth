@@ -39,6 +39,10 @@ builder.Services.AddScoped<IAcademicCalendarService, AcademicCalendarService>();
 builder.Services.AddScoped<ILabService, LabService>();
 builder.Services.AddScoped<IEquipmentService, EquipmentService>();
 
+// Campus & Building Services
+builder.Services.AddScoped<ICampusService, CampusService>();
+builder.Services.AddScoped<IBuildingService, BuildingService>();
+
 // JWT Authentication
 var secretKey = builder.Configuration["Jwt:SecretKey"] ?? "your-super-secret-key-min-32-chars-long!!";
 
@@ -121,6 +125,18 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("Permission:class:read", policy => policy.RequirePermission("class:read"));
     options.AddPolicy("Permission:class:update", policy => policy.RequirePermission("class:update"));
     options.AddPolicy("Permission:class:delete", policy => policy.RequirePermission("class:delete"));
+
+    // Campus permissions
+    options.AddPolicy("Permission:campus:create", policy => policy.RequirePermission("campus:create"));
+    options.AddPolicy("Permission:campus:read", policy => policy.RequirePermission("campus:read"));
+    options.AddPolicy("Permission:campus:update", policy => policy.RequirePermission("campus:update"));
+    options.AddPolicy("Permission:campus:delete", policy => policy.RequirePermission("campus:delete"));
+
+    // Building permissions
+    options.AddPolicy("Permission:building:create", policy => policy.RequirePermission("building:create"));
+    options.AddPolicy("Permission:building:read", policy => policy.RequirePermission("building:read"));
+    options.AddPolicy("Permission:building:update", policy => policy.RequirePermission("building:update"));
+    options.AddPolicy("Permission:building:delete", policy => policy.RequirePermission("building:delete"));
 });
 
 // CORS
