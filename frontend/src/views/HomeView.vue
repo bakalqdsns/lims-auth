@@ -71,16 +71,24 @@
             </el-menu-item>
           </el-sub-menu>
 
-          <el-sub-menu index="/lab" v-if="hasPermission('lab:read') || hasPermission('equipment:read')">
+          <el-sub-menu index="/venue" v-if="hasPermission('lab:read') || hasPermission('equipment:read') || hasPermission('campus:read') || hasPermission('building:read')">
             <template #title>
               <el-icon><OfficeBuilding /></el-icon>
-              <span>实验室管理</span>
+              <span>场馆信息管理</span>
             </template>
-            <el-menu-item v-if="hasPermission('lab:read')" index="/lab/labs">
+            <el-menu-item v-if="hasPermission('campus:read')" index="/venue/campuses">
+              <el-icon><School /></el-icon>
+              <span>校区管理</span>
+            </el-menu-item>
+            <el-menu-item v-if="hasPermission('building:read')" index="/venue/buildings">
               <el-icon><OfficeBuilding /></el-icon>
+              <span>楼宇管理</span>
+            </el-menu-item>
+            <el-menu-item v-if="hasPermission('lab:read')" index="/venue/labs">
+              <el-icon><HomeFilled /></el-icon>
               <span>实验室管理</span>
             </el-menu-item>
-            <el-menu-item v-if="hasPermission('equipment:read')" index="/lab/equipments">
+            <el-menu-item v-if="hasPermission('equipment:read')" index="/venue/equipments">
               <el-icon><Tools /></el-icon>
               <span>设备管理</span>
             </el-menu-item>

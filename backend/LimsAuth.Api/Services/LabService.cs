@@ -28,7 +28,7 @@ public class LabService : ILabService
         var query = _dbContext.Labs
             .Include(l => l.Department)
             .Include(l => l.Building)
-            .ThenInclude(b => b != null ? b.Campus : null)
+            .ThenInclude(b => b.Campus)
             .Include(l => l.Manager)
             .Include(l => l.Equipments)
             .AsQueryable();
@@ -64,7 +64,7 @@ public class LabService : ILabService
             DepartmentName = l.Department?.Name,
             BuildingId = l.BuildingId,
             BuildingName = l.Building?.Name,
-            CampusName = l.Building?.Campus?.Name,
+            CampusName = l.Building?.Campus?.Name ?? null,
             Floor = l.Floor,
             RoomNumber = l.RoomNumber,
             Location = l.Location,
@@ -85,7 +85,7 @@ public class LabService : ILabService
         var lab = await _dbContext.Labs
             .Include(l => l.Department)
             .Include(l => l.Building)
-            .ThenInclude(b => b != null ? b.Campus : null)
+            .ThenInclude(b => b.Campus)
             .Include(l => l.Manager)
             .Include(l => l.Equipments)
             .FirstOrDefaultAsync(l => l.Id == id);
@@ -101,7 +101,7 @@ public class LabService : ILabService
             DepartmentName = lab.Department?.Name,
             BuildingId = lab.BuildingId,
             BuildingName = lab.Building?.Name,
-            CampusName = lab.Building?.Campus?.Name,
+            CampusName = lab.Building?.Campus?.Name ?? null,
             Floor = lab.Floor,
             RoomNumber = lab.RoomNumber,
             Location = lab.Location,

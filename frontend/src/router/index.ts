@@ -89,21 +89,33 @@ const router = createRouter({
       ]
     },
     {
-      path: '/lab',
-      name: 'lab',
+      path: '/venue',
+      name: 'venue',
       component: HomeView,
       meta: { requiresAuth: true },
       children: [
         {
+          path: 'campuses',
+          name: 'campuses',
+          component: () => import('../views/venue/CampusesView.vue'),
+          meta: { requiresAuth: true, permission: 'campus:read' }
+        },
+        {
+          path: 'buildings',
+          name: 'buildings',
+          component: () => import('../views/venue/BuildingsView.vue'),
+          meta: { requiresAuth: true, permission: 'building:read' }
+        },
+        {
           path: 'labs',
           name: 'labs',
-          component: () => import('../views/lab/LabsView.vue'),
+          component: () => import('../views/venue/LabsView.vue'),
           meta: { requiresAuth: true, permission: 'lab:read' }
         },
         {
           path: 'equipments',
           name: 'equipments',
-          component: () => import('../views/lab/EquipmentsView.vue'),
+          component: () => import('../views/venue/EquipmentsView.vue'),
           meta: { requiresAuth: true, permission: 'equipment:read' }
         }
       ]

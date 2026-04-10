@@ -109,6 +109,12 @@ public class AppDbContext : DbContext
             .HasForeignKey(d => d.ParentId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        modelBuilder.Entity<Department>()
+            .HasOne(d => d.Manager)
+            .WithMany()
+            .HasForeignKey(d => d.ManagerId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         // 教学管理 - 复合主键
         modelBuilder.Entity<ClassStudent>()
             .HasKey(cs => new { cs.ClassId, cs.StudentId });
