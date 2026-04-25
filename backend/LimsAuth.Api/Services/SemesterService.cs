@@ -515,8 +515,10 @@ public class SemesterService : ISemesterService
         var template = await _dbContext.CalendarTemplates.FindAsync(templateId);
         if (template == null) throw new Exception("模板不存在");
 
-        // 解析模板数据
-        var templateData = JsonSerializer.Deserialize<TemplateData>(template.TemplateData);
+        // 解析模板数据（TemplateData 可能为空）
+        var templateData = string.IsNullOrWhiteSpace(template.TemplateData)
+            ? null
+            : JsonSerializer.Deserialize<TemplateData>(template.TemplateData);
 
         var semester = new Semester
         {

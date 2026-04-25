@@ -648,42 +648,42 @@ public class AppDbContext : DbContext
             new Semester
             {
                 Id = semesterId,
-                Name = "2024-2025学年第一学期",
-                Code = "2024-2025-1",
-                AcademicYear = "2024-2025",
+                Name = "2026-2027学年第一学期",
+                Code = "2026-2027-1",
+                AcademicYear = "2026-2027",
                 SemesterType = SemesterType.Regular,
-                StartDate = new DateTime(2024, 9, 1),
-                EndDate = new DateTime(2025, 1, 19),
-                TeachingStartDate = new DateTime(2024, 9, 2),
-                TeachingEndDate = new DateTime(2025, 1, 10),
+                StartDate = new DateTime(2026, 9, 1),
+                EndDate = new DateTime(2027, 1, 19),
+                TeachingStartDate = new DateTime(2026, 9, 2),
+                TeachingEndDate = new DateTime(2027, 1, 10),
                 TotalWeeks = 20,
                 TeachingWeeks = 18,
                 // 选课时间
-                CourseSelectionStart = new DateTime(2024, 8, 20),
-                CourseSelectionEnd = new DateTime(2024, 9, 5),
-                CourseSelectionEndWithdraw = new DateTime(2024, 9, 15),
+                CourseSelectionStart = new DateTime(2026, 8, 20),
+                CourseSelectionEnd = new DateTime(2026, 9, 5),
+                CourseSelectionEndWithdraw = new DateTime(2026, 9, 15),
                 // 排课时间
-                SchedulingStart = new DateTime(2024, 7, 1),
-                SchedulingEnd = new DateTime(2024, 8, 15),
-                SchedulePublishTime = new DateTime(2024, 8, 25),
+                SchedulingStart = new DateTime(2026, 7, 12),
+                SchedulingEnd = new DateTime(2026, 8, 15),
+                SchedulePublishTime = new DateTime(2026, 8, 25),
                 // 考试时间
-                ExamWeekStart = new DateTime(2025, 1, 6),
-                ExamWeekEnd = new DateTime(2025, 1, 17),
-                GradeEntryStart = new DateTime(2025, 1, 6),
-                GradeEntryEnd = new DateTime(2025, 1, 24),
-                GradePublishTime = new DateTime(2025, 1, 26),
+                ExamWeekStart = new DateTime(2027, 1, 6),
+                ExamWeekEnd = new DateTime(2027, 1, 17),
+                GradeEntryStart = new DateTime(2027, 1, 6),
+                GradeEntryEnd = new DateTime(2027, 1, 24),
+                GradePublishTime = new DateTime(2027, 1, 26),
                 // 注册缴费
-                RegistrationStart = new DateTime(2024, 8, 25),
-                RegistrationEnd = new DateTime(2024, 9, 1),
-                TuitionPaymentStart = new DateTime(2024, 8, 20),
-                TuitionPaymentEnd = new DateTime(2024, 9, 5),
+                RegistrationStart = new DateTime(2026, 8, 25),
+                RegistrationEnd = new DateTime(2026, 9, 1),
+                TuitionPaymentStart = new DateTime(2026, 8, 20),
+                TuitionPaymentEnd = new DateTime(2026, 9, 5),
                 // 状态
                 Status = SemesterStatus.InProgress,
                 IsCurrent = true,
                 IsActive = true,
                 IsEditable = true,
                 IsDeletable = false,
-                Description = "2024-2025学年第一学期（秋季学期）",
+                Description = "2026-2027学年第一学期（秋季学期）",
                 CreatedAt = seedDate,
                 UpdatedAt = seedDate
             }
@@ -1089,7 +1089,168 @@ public class AppDbContext : DbContext
             }
         );
 
-// ========== 实验/实践/实训模块 ==========
+        // =========================
+        // 实验教学任务
+        // =========================
+
+        var tasksId = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
+
+        modelBuilder.Entity<ExperimentTeachingTask>().HasData(
+            new ExperimentTeachingTask
+            {
+                Id = tasksId,
+                SemesterId = semesterId,
+                MajorId = majorId,
+                ClassId = classId,
+
+                StudentCount = 30,
+                StudentLevel = "本科",
+
+                CourseName = "计算机网络实验",
+                CourseType = "专业课",
+                IsIndependentCourse = true,
+
+                TotalExperimentHours = 32,
+                CurrentSemesterExperimentHours = 16,
+
+                TotalPracticeHours = 20,
+                CurrentSemesterPracticeHours = 10,
+
+                TotalTrainingHours = 10,
+                CurrentSemesterTrainingHours = 5,
+
+                InstitutionId = null,
+                DepartmentId = csDeptId,
+
+                TeacherIds = "teacher-001,teacher-002",
+                TeacherTitles = "教授,讲师",
+
+                TechnicalStaff = "实验员A",
+                TechnicalTitle = "工程师",
+
+                TextbookName = "计算机网络实验指导书",
+                ExperimentGuideName = "网络实验手册",
+
+                Status = "Active",
+                SortOrder = 1,
+
+                Description = "网络实验课程教学任务",
+
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            }
+        );
+
+        // =========================
+        // 实验项目
+        // =========================
+
+        var itemId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+
+        modelBuilder.Entity<ExperimentItem>().HasData(
+            new ExperimentItem
+            {
+                Id = itemId,
+                CourseCode = "NET-EXP-01",
+                ExperimentName = "网络拓扑搭建实验",
+                ExperimentHours = 4,
+                ExperimentType = "基础实验",
+                ExperimentRequirement = "必修",
+
+                Status = "Active",
+                SortOrder = 1,
+
+                Description = "学习基本网络拓扑结构",
+
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            }
+        );
+
+        // =========================
+        // 实验安排
+        // =========================
+
+        var scheduleId = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccccc");
+
+        modelBuilder.Entity<ExperimentItemSchedule>().HasData(
+            new ExperimentItemSchedule
+            {
+                Id = scheduleId,
+                ExperimentTaskId = tasksId,
+                ExperimentItemId = itemId,
+                LabId = lab2Id,
+
+                WeekNumber = 1,
+                DayOfWeek = 2,
+                PeriodNumber = 3,
+
+                ParallelGroups = 2,
+                StudentsPerGroup = 15,
+                CycleCount = 1,
+
+                ExperimentRequirement = "必做",
+                Location = "实验楼A-101",
+
+                IsConducted = false,
+
+                Status = "Active",
+                SortOrder = 1,
+
+                Description = "第一周实验安排",
+
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            }
+        );
+
+        // =========================
+        // 教学质量评估
+        // =========================
+
+        var assessmentId = Guid.Parse("dddddddd-dddd-dddd-dddd-dddddddddddd");
+
+        modelBuilder.Entity<ExperimentQualityAssessment>().HasData(
+            new ExperimentQualityAssessment
+            {
+                Id = assessmentId,
+                ExperimentTaskId = tasksId,
+
+                InstitutionId = null,
+
+                CourseName = "计算机网络实验",
+                ExperimentHours = 16,
+                IsIndependentCourse = true,
+
+                MainTeacher = "张三",
+                TeacherTitle = "教授",
+
+                TechnicalStaff = "实验员A",
+                TechnicalTitle = "工程师",
+
+                ClassName = "计科1班",
+                ClassStudentCount = 30,
+
+                PlannedExperimentCount = 5,
+                ActualExperimentCount = 5,
+
+                MissedExperimentItems = "",
+
+                AssessmentMethod = "报告+操作",
+                AssessmentStudentCount = 30,
+                AssessmentTime = "第18周",
+
+                Status = "Active",
+                SortOrder = 1,
+
+                Description = "教学质量良好",
+
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            }
+        );
+
+        // ========== 实验/实践/实训模块 ==========
 
         // SysInstitution 自引用（层级结构）
         modelBuilder.Entity<SysInstitution>()
@@ -1107,6 +1268,204 @@ public class AppDbContext : DbContext
                 .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasIndex(r => new { r.BuildingId, r.RoomNumber }).IsUnique();
+        });
+
+        // =========================
+        // ExperimentTeachingTask
+        // =========================
+        modelBuilder.Entity<ExperimentTeachingTask>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id).HasMaxLength(36);
+
+            // 索引（非常重要）
+            entity.HasIndex(e => e.SemesterId);
+            entity.HasIndex(e => e.MajorId);
+            entity.HasIndex(e => e.ClassId);
+            entity.HasIndex(e => e.Status);
+
+            // 关系（手动补）
+            entity.HasOne(e => e.Semester)
+                .WithMany()
+                .HasForeignKey(e => e.SemesterId)
+                .HasPrincipalKey(s => s.Id)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Major)
+                .WithMany()
+                .HasForeignKey(e => e.MajorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Class)
+                .WithMany()
+                .HasForeignKey(e => e.ClassId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Department)
+                .WithMany()
+                .HasForeignKey(e => e.DepartmentId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // 一对多：Schedule
+            entity.HasMany(e => e.Schedules)
+                .WithOne(s => s.ExperimentTask)
+                .HasForeignKey(s => s.ExperimentTaskId);
+
+            // 一对一：质量评估
+            entity.HasOne(e => e.QualityAssessment)
+                .WithOne(q => q.ExperimentTask)
+                .HasForeignKey<ExperimentQualityAssessment>(q => q.ExperimentTaskId);
+        });
+
+
+        // =========================
+        // ExperimentItem
+        // =========================
+        modelBuilder.Entity<ExperimentItem>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id).HasMaxLength(36);
+
+            entity.HasIndex(e => e.CourseCode);
+            entity.HasIndex(e => e.ExperimentType);
+            entity.HasIndex(e => e.Status);
+
+            entity.HasMany(e => e.Schedules)
+                .WithOne(s => s.ExperimentItem)
+                .HasForeignKey(s => s.ExperimentItemId);
+        });
+
+
+        // =========================
+        // ExperimentItemSchedule
+        // =========================
+        modelBuilder.Entity<ExperimentItemSchedule>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id).HasMaxLength(36);
+
+            entity.HasIndex(e => e.ExperimentTaskId);
+            entity.HasIndex(e => e.ExperimentItemId);
+            entity.HasIndex(e => e.LabId);
+            entity.HasIndex(e => new { e.WeekNumber, e.DayOfWeek });
+
+            entity.HasOne(e => e.ExperimentTask)
+                .WithMany(t => t.Schedules)
+                .HasForeignKey(e => e.ExperimentTaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.ExperimentItem)
+                .WithMany(i => i.Schedules)
+                .HasForeignKey(e => e.ExperimentItemId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Lab)
+                .WithMany(l => l.ExperimentSchedules)
+                .HasForeignKey(e => e.LabId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+
+        // =========================
+        // ExperimentQualityAssessment
+        // =========================
+        modelBuilder.Entity<ExperimentQualityAssessment>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id).HasMaxLength(36);
+
+            entity.HasIndex(e => e.ExperimentTaskId);
+            entity.HasIndex(e => e.Status);
+
+            entity.HasOne(e => e.ExperimentTask)
+                .WithOne(t => t.QualityAssessment)
+                .HasForeignKey<ExperimentQualityAssessment>(e => e.ExperimentTaskId);
+
+            entity.HasOne(e => e.Institution)
+                .WithMany()
+                .HasForeignKey(e => e.InstitutionId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+
+        // =========================
+        // TrainingTeachingPlan
+        // =========================
+        modelBuilder.Entity<TrainingTeachingPlan>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id).HasMaxLength(36);
+
+            entity.HasIndex(e => e.CourseId);
+            entity.HasIndex(e => e.Status);
+
+            entity.HasOne(e => e.Course)
+                .WithMany()
+                .HasForeignKey(e => e.CourseId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+
+        // =========================
+        // VenBuilding
+        // =========================
+        modelBuilder.Entity<VenBuilding>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id).HasMaxLength(36);
+
+            entity.HasIndex(e => e.Code).IsUnique();
+            entity.HasIndex(e => e.Status);
+
+            entity.HasMany(e => e.Rooms)
+                .WithOne(r => r.Building)
+                .HasForeignKey(r => r.BuildingId);
+        });
+
+
+        // =========================
+        // VenRoom
+        // =========================
+        modelBuilder.Entity<VenRoom>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id).HasMaxLength(36);
+
+            entity.HasIndex(e => e.BuildingId);
+            entity.HasIndex(e => e.RoomType);
+            entity.HasIndex(e => e.Status);
+
+            entity.HasOne(e => e.Building)
+                .WithMany(b => b.Rooms)
+                .HasForeignKey(e => e.BuildingId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+
+        // =========================
+        // SysInstitution（树结构）
+        // =========================
+        modelBuilder.Entity<SysInstitution>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Id).HasMaxLength(36);
+
+            entity.HasIndex(e => e.Code).IsUnique();
+            entity.HasIndex(e => e.ParentId);
+            entity.HasIndex(e => e.Status);
+
+            entity.HasOne(e => e.Parent)
+                .WithMany(e => e.Children)
+                .HasForeignKey(e => e.ParentId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

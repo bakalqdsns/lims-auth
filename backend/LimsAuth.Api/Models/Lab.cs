@@ -96,6 +96,7 @@ public class Lab
     public virtual Building? Building { get; set; }
     public virtual User? Manager { get; set; }
     public virtual ICollection<Equipment> Equipments { get; set; } = new List<Equipment>();
+    public virtual ICollection<ExperimentItemSchedule> ExperimentSchedules { get; set; } = new List<ExperimentItemSchedule>();
 }
 
 /// <summary>

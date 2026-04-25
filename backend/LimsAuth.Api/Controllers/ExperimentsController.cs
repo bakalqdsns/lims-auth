@@ -39,13 +39,13 @@ public class ExperimentsController : ControllerBase
             .AsQueryable();
 
         if (semesterId.HasValue)
-            query = query.Where(e => e.SemesterId == semesterId.ToString());
+            query = query.Where(e => e.SemesterId == semesterId.Value);
         
         if (majorId.HasValue)
-            query = query.Where(e => e.MajorId == majorId.ToString());
+            query = query.Where(e => e.MajorId == majorId.Value);
         
         if (classId.HasValue)
-            query = query.Where(e => e.ClassId == classId.ToString());
+            query = query.Where(e => e.ClassId == classId.Value);
 
         return await query.OrderByDescending(e => e.CreatedAt).ToListAsync();
     }
@@ -54,7 +54,7 @@ public class ExperimentsController : ControllerBase
     /// 获取单个实验教学任务
     /// </summary>
     [HttpGet("tasks/{id}")]
-    public async Task<ActionResult<ExperimentTeachingTask>> GetExperimentTask(string id)
+    public async Task<ActionResult<ExperimentTeachingTask>> GetExperimentTask(Guid id)
     {
         var task = await _context.ExperimentTeachingTasks
             .Include(e => e.Semester)
@@ -77,7 +77,7 @@ public class ExperimentsController : ControllerBase
     [HttpPost("tasks")]
     public async Task<ActionResult<ExperimentTeachingTask>> CreateExperimentTask(ExperimentTeachingTask task)
     {
-        task.Id = Guid.NewGuid().ToString();
+        task.Id = Guid.NewGuid();
         task.CreatedAt = DateTime.UtcNow;
         task.UpdatedAt = DateTime.UtcNow;
 
@@ -91,7 +91,7 @@ public class ExperimentsController : ControllerBase
     /// 更新实验教学任务
     /// </summary>
     [HttpPut("tasks/{id}")]
-    public async Task<IActionResult> UpdateExperimentTask(string id, ExperimentTeachingTask task)
+    public async Task<IActionResult> UpdateExperimentTask(Guid id, ExperimentTeachingTask task)
     {
         if (id != task.Id)
             return BadRequest();
@@ -117,7 +117,7 @@ public class ExperimentsController : ControllerBase
     /// 删除实验教学任务
     /// </summary>
     [HttpDelete("tasks/{id}")]
-    public async Task<IActionResult> DeleteExperimentTask(string id)
+    public async Task<IActionResult> DeleteExperimentTask(Guid id)
     {
         var task = await _context.ExperimentTeachingTasks.FindAsync(id);
         if (task == null)
@@ -156,7 +156,7 @@ public class ExperimentsController : ControllerBase
     /// 获取单个实验项目
     /// </summary>
     [HttpGet("items/{id}")]
-    public async Task<ActionResult<ExperimentItem>> GetExperimentItem(string id)
+    public async Task<ActionResult<ExperimentItem>> GetExperimentItem(Guid id)
     {
         var item = await _context.ExperimentItems
             .Include(e => e.Schedules)
@@ -174,7 +174,7 @@ public class ExperimentsController : ControllerBase
     [HttpPost("items")]
     public async Task<ActionResult<ExperimentItem>> CreateExperimentItem(ExperimentItem item)
     {
-        item.Id = Guid.NewGuid().ToString();
+        item.Id = Guid.NewGuid();
         item.CreatedAt = DateTime.UtcNow;
         item.UpdatedAt = DateTime.UtcNow;
 
@@ -188,7 +188,7 @@ public class ExperimentsController : ControllerBase
     /// 更新实验项目
     /// </summary>
     [HttpPut("items/{id}")]
-    public async Task<IActionResult> UpdateExperimentItem(string id, ExperimentItem item)
+    public async Task<IActionResult> UpdateExperimentItem(Guid id, ExperimentItem item)
     {
         if (id != item.Id)
             return BadRequest();
@@ -214,7 +214,7 @@ public class ExperimentsController : ControllerBase
     /// 删除实验项目
     /// </summary>
     [HttpDelete("items/{id}")]
-    public async Task<IActionResult> DeleteExperimentItem(string id)
+    public async Task<IActionResult> DeleteExperimentItem(Guid id)
     {
         var item = await _context.ExperimentItems.FindAsync(id);
         if (item == null)
@@ -235,16 +235,18 @@ public class ExperimentsController : ControllerBase
     /// </summary>
     [HttpGet("schedules")]
     public async Task<ActionResult<IEnumerable<ExperimentItemSchedule>>> GetExperimentSchedules(
-        [FromQuery] string? taskId,
+        [FromQuery] Guid? taskId,
         [FromQuery] int? weekNumber)
     {
         var query = _context.ExperimentItemSchedules
             .Include(e => e.ExperimentTask)
             .Include(e => e.ExperimentItem)
+            .Include(e => e.Lab)
+            .ThenInclude(l => l!.Building)
             .AsQueryable();
 
-        if (!string.IsNullOrEmpty(taskId))
-            query = query.Where(e => e.ExperimentTaskId == taskId);
+        if (taskId.HasValue)
+            query = query.Where(e => e.ExperimentTaskId == taskId.Value);
         
         if (weekNumber.HasValue)
             query = query.Where(e => e.WeekNumber == weekNumber);
@@ -256,11 +258,13 @@ public class ExperimentsController : ControllerBase
     /// 获取单个实验安排
     /// </summary>
     [HttpGet("schedules/{id}")]
-    public async Task<ActionResult<ExperimentItemSchedule>> GetExperimentSchedule(string id)
+    public async Task<ActionResult<ExperimentItemSchedule>> GetExperimentSchedule(Guid id)
     {
         var schedule = await _context.ExperimentItemSchedules
             .Include(e => e.ExperimentTask)
             .Include(e => e.ExperimentItem)
+            .Include(e => e.Lab)
+            .ThenInclude(l => l!.Building)
             .FirstOrDefaultAsync(e => e.Id == id);
 
         if (schedule == null)
@@ -275,7 +279,7 @@ public class ExperimentsController : ControllerBase
     [HttpPost("schedules")]
     public async Task<ActionResult<ExperimentItemSchedule>> CreateExperimentSchedule(ExperimentItemSchedule schedule)
     {
-        schedule.Id = Guid.NewGuid().ToString();
+        schedule.Id = Guid.NewGuid();
         schedule.CreatedAt = DateTime.UtcNow;
         schedule.UpdatedAt = DateTime.UtcNow;
 
@@ -289,7 +293,7 @@ public class ExperimentsController : ControllerBase
     /// 更新实验安排
     /// </summary>
     [HttpPut("schedules/{id}")]
-    public async Task<IActionResult> UpdateExperimentSchedule(string id, ExperimentItemSchedule schedule)
+    public async Task<IActionResult> UpdateExperimentSchedule(Guid id, ExperimentItemSchedule schedule)
     {
         if (id != schedule.Id)
             return BadRequest();
@@ -315,7 +319,7 @@ public class ExperimentsController : ControllerBase
     /// 删除实验安排
     /// </summary>
     [HttpDelete("schedules/{id}")]
-    public async Task<IActionResult> DeleteExperimentSchedule(string id)
+    public async Task<IActionResult> DeleteExperimentSchedule(Guid id)
     {
         var schedule = await _context.ExperimentItemSchedules.FindAsync(id);
         if (schedule == null)
@@ -348,7 +352,7 @@ public class ExperimentsController : ControllerBase
     /// 获取单个质量评估
     /// </summary>
     [HttpGet("quality/{id}")]
-    public async Task<ActionResult<ExperimentQualityAssessment>> GetQualityAssessment(string id)
+    public async Task<ActionResult<ExperimentQualityAssessment>> GetQualityAssessment(Guid id)
     {
         var assessment = await _context.ExperimentQualityAssessments
             .Include(e => e.ExperimentTask)
@@ -366,7 +370,7 @@ public class ExperimentsController : ControllerBase
     [HttpPost("quality")]
     public async Task<ActionResult<ExperimentQualityAssessment>> CreateQualityAssessment(ExperimentQualityAssessment assessment)
     {
-        assessment.Id = Guid.NewGuid().ToString();
+        assessment.Id = Guid.NewGuid();
         assessment.CreatedAt = DateTime.UtcNow;
         assessment.UpdatedAt = DateTime.UtcNow;
 
@@ -380,7 +384,7 @@ public class ExperimentsController : ControllerBase
     /// 更新质量评估
     /// </summary>
     [HttpPut("quality/{id}")]
-    public async Task<IActionResult> UpdateQualityAssessment(string id, ExperimentQualityAssessment assessment)
+    public async Task<IActionResult> UpdateQualityAssessment(Guid id, ExperimentQualityAssessment assessment)
     {
         if (id != assessment.Id)
             return BadRequest();
@@ -418,7 +422,7 @@ public class ExperimentsController : ControllerBase
             .AsQueryable();
 
         if (courseId.HasValue)
-            query = query.Where(e => e.CourseId == courseId.ToString());
+            query = query.Where(e => e.CourseId == courseId.Value);
 
         return await query.OrderBy(e => e.Course!.Code).ToListAsync();
     }
@@ -427,7 +431,7 @@ public class ExperimentsController : ControllerBase
     /// 获取单个实训计划
     /// </summary>
     [HttpGet("training-plans/{id}")]
-    public async Task<ActionResult<TrainingTeachingPlan>> GetTrainingPlan(string id)
+    public async Task<ActionResult<TrainingTeachingPlan>> GetTrainingPlan(Guid id)
     {
         var plan = await _context.TrainingTeachingPlans
             .Include(e => e.Course)
@@ -445,7 +449,7 @@ public class ExperimentsController : ControllerBase
     [HttpPost("training-plans")]
     public async Task<ActionResult<TrainingTeachingPlan>> CreateTrainingPlan(TrainingTeachingPlan plan)
     {
-        plan.Id = Guid.NewGuid().ToString();
+        plan.Id = Guid.NewGuid();
         plan.CreatedAt = DateTime.UtcNow;
         plan.UpdatedAt = DateTime.UtcNow;
 
@@ -459,7 +463,7 @@ public class ExperimentsController : ControllerBase
     /// 更新实训计划
     /// </summary>
     [HttpPut("training-plans/{id}")]
-    public async Task<IActionResult> UpdateTrainingPlan(string id, TrainingTeachingPlan plan)
+    public async Task<IActionResult> UpdateTrainingPlan(Guid id, TrainingTeachingPlan plan)
     {
         if (id != plan.Id)
             return BadRequest();
@@ -502,15 +506,15 @@ public class ExperimentsController : ControllerBase
     /// </summary>
     [HttpGet("rooms")]
     public async Task<ActionResult<IEnumerable<VenRoom>>> GetRooms(
-        [FromQuery] string? buildingId,
+        [FromQuery] Guid? buildingId,
         [FromQuery] string? roomType)
     {
         var query = _context.VenRooms
             .Include(r => r.Building)
             .AsQueryable();
 
-        if (!string.IsNullOrEmpty(buildingId))
-            query = query.Where(r => r.BuildingId == buildingId);
+        if (buildingId.HasValue)
+            query = query.Where(r => r.BuildingId == buildingId.Value);
         
         if (!string.IsNullOrEmpty(roomType))
             query = query.Where(r => r.RoomType == roomType);

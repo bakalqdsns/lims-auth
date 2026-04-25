@@ -89,6 +89,44 @@ const router = createRouter({
       ]
     },
     {
+      path: '/experiment',
+      name: 'experiment',
+      component: HomeView,
+      meta: { requiresAuth: true },
+      children: [
+        {
+          path: 'tasks',
+          name: 'experimentTasks',
+          component: () => import('../views/experiment/ExperimentTasksView.vue'),
+          meta: { requiresAuth: true }
+        },
+        {
+          path: 'items',
+          name: 'experimentItems',
+          component: () => import('../views/experiment/ExperimentItemsView.vue'),
+          meta: { requiresAuth: true }
+        },
+        {
+          path: 'schedules',
+          name: 'experimentSchedules',
+          component: () => import('../views/experiment/ExperimentSchedulesView.vue'),
+          meta: { requiresAuth: true }
+        },
+        {
+          path: 'quality',
+          name: 'experimentQuality',
+          component: () => import('../views/experiment/ExperimentQualityView.vue'),
+          meta: { requiresAuth: true }
+        },
+        {
+          path: 'plans',
+          name: 'experimentPlans',
+          component: () => import('../views/experiment/TrainingPlansView.vue'),
+          meta: { requiresAuth: true }
+        }
+      ]
+    },
+    {
       path: '/venue',
       name: 'venue',
       component: HomeView,

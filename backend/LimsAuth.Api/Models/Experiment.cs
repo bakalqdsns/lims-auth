@@ -11,19 +11,19 @@ public class ExperimentTeachingTask
 {
     [Key]
     [Column("id")]
-    public string Id { get; set; } = Guid.NewGuid().ToString();
+    public Guid Id { get; set; } = Guid.NewGuid();
 
     [Required]
     [Column("semester_id")]
-    public string SemesterId { get; set; } = string.Empty;
+    public Guid SemesterId { get; set; }
 
     [Required]
     [Column("major_id")]
-    public string MajorId { get; set; } = string.Empty;
+    public Guid MajorId { get; set; }
 
     [Required]
     [Column("class_id")]
-    public string ClassId { get; set; } = string.Empty;
+    public Guid ClassId { get; set; }
 
     [Column("student_count")]
     public int StudentCount { get; set; }
@@ -63,10 +63,10 @@ public class ExperimentTeachingTask
     public int CurrentSemesterTrainingHours { get; set; }
 
     [Column("institution_id")]
-    public string? InstitutionId { get; set; }
+    public Guid? InstitutionId { get; set; }
 
     [Column("department_id")]
-    public string? DepartmentId { get; set; }
+    public Guid? DepartmentId { get; set; }
 
     [Column("teacher_ids")]
     [MaxLength(500)]
@@ -132,7 +132,7 @@ public class ExperimentItem
 {
     [Key]
     [Column("id")]
-    public string Id { get; set; } = Guid.NewGuid().ToString();
+    public Guid Id { get; set; } = Guid.NewGuid();
 
     [Required]
     [Column("course_code")]
@@ -190,15 +190,15 @@ public class ExperimentItemSchedule
 {
     [Key]
     [Column("id")]
-    public string Id { get; set; } = Guid.NewGuid().ToString();
+    public Guid Id { get; set; } = Guid.NewGuid();
 
     [Required]
     [Column("experiment_task_id")]
-    public string ExperimentTaskId { get; set; } = string.Empty;
+    public Guid ExperimentTaskId { get; set; }
 
     [Required]
     [Column("experiment_item_id")]
-    public string ExperimentItemId { get; set; } = string.Empty;
+    public Guid ExperimentItemId { get; set; }
 
     [Column("week_number")]
     public int? WeekNumber { get; set; }
@@ -225,6 +225,9 @@ public class ExperimentItemSchedule
     [Column("location")]
     [MaxLength(200)]
     public string? Location { get; set; }
+
+    [Column("lab_id")]
+    public Guid? LabId { get; set; }
 
     [Column("is_conducted")]
     public bool IsConducted { get; set; }
@@ -259,6 +262,7 @@ public class ExperimentItemSchedule
     // 导航属性
     public virtual ExperimentTeachingTask? ExperimentTask { get; set; }
     public virtual ExperimentItem? ExperimentItem { get; set; }
+    public virtual Lab? Lab { get; set; }
 }
 
 /// <summary>
@@ -269,14 +273,14 @@ public class ExperimentQualityAssessment
 {
     [Key]
     [Column("id")]
-    public string Id { get; set; } = Guid.NewGuid().ToString();
+    public Guid Id { get; set; } = Guid.NewGuid();
 
     [Required]
     [Column("experiment_task_id")]
-    public string ExperimentTaskId { get; set; } = string.Empty;
+    public Guid ExperimentTaskId { get; set; }
 
     [Column("institution_id")]
-    public string? InstitutionId { get; set; }
+    public Guid? InstitutionId { get; set; }
 
     [Required]
     [Column("course_name")]
@@ -369,11 +373,11 @@ public class TrainingTeachingPlan
 {
     [Key]
     [Column("id")]
-    public string Id { get; set; } = Guid.NewGuid().ToString();
+    public Guid Id { get; set; } = Guid.NewGuid();
 
     [Required]
     [Column("course_id")]
-    public string CourseId { get; set; } = string.Empty;
+    public Guid CourseId { get; set; }
 
     [Column("teaching_organization_method")]
     [MaxLength(200)]
@@ -446,7 +450,7 @@ public class VenBuilding
 {
     [Key]
     [Column("id")]
-    public string Id { get; set; } = Guid.NewGuid().ToString();
+    public Guid Id { get; set; } = Guid.NewGuid();
 
     [Required]
     [Column("code")]
@@ -514,7 +518,7 @@ public class VenRoom
 {
     [Key]
     [Column("id")]
-    public string Id { get; set; } = Guid.NewGuid().ToString();
+    public Guid Id { get; set; } = Guid.NewGuid();
 
     [Required]
     [Column("code")]
@@ -527,7 +531,7 @@ public class VenRoom
     public string Name { get; set; } = string.Empty;
 
     [Column("building_id")]
-    public string? BuildingId { get; set; }
+    public Guid? BuildingId { get; set; }
 
     [Column("floor_no")]
     public int? FloorNo { get; set; }
@@ -592,7 +596,7 @@ public class SysInstitution
 {
     [Key]
     [Column("id")]
-    public string Id { get; set; } = Guid.NewGuid().ToString();
+    public Guid Id { get; set; } = Guid.NewGuid();
 
     [Required]
     [Column("code")]
@@ -605,7 +609,7 @@ public class SysInstitution
     public string Name { get; set; } = string.Empty;
 
     [Column("parent_id")]
-    public string? ParentId { get; set; }
+    public Guid? ParentId { get; set; }
 
     [Column("institution_type")]
     [MaxLength(50)]

@@ -71,6 +71,28 @@
             </el-menu-item>
           </el-sub-menu>
 
+          <el-sub-menu index="/experiment">
+            <template #title>
+              <el-icon><Tools /></el-icon>
+              <span>实验教学管理</span>
+            </template>
+            <el-menu-item index="/experiment/tasks">
+              <span>教学任务</span>
+            </el-menu-item>
+            <el-menu-item index="/experiment/items">
+              <span>实验项目库</span>
+            </el-menu-item>
+            <el-menu-item index="/experiment/schedules">
+              <span>项目开出</span>
+            </el-menu-item>
+            <el-menu-item index="/experiment/quality">
+              <span>教学质量</span>
+            </el-menu-item>
+            <el-menu-item index="/experiment/plans">
+              <span>实训计划</span>
+            </el-menu-item>
+          </el-sub-menu>
+
           <el-sub-menu index="/venue" v-if="hasPermission('lab:read') || hasPermission('equipment:read') || hasPermission('campus:read') || hasPermission('building:read')">
             <template #title>
               <el-icon><OfficeBuilding /></el-icon>
@@ -195,6 +217,7 @@ import {
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '../stores/auth'
 import { userApi } from '../api/system'
+import Breadcrumb from '../components/Breadcrumb.vue'
 
 const router = useRouter()
 const route = useRoute()

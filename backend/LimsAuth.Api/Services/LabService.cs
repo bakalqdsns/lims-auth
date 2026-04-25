@@ -28,7 +28,7 @@ public class LabService : ILabService
         var query = _dbContext.Labs
             .Include(l => l.Department)
             .Include(l => l.Building)
-            .ThenInclude(b => b.Campus)
+            .ThenInclude(b => b!.Campus)
             .Include(l => l.Manager)
             .Include(l => l.Equipments)
             .AsQueryable();
@@ -85,7 +85,7 @@ public class LabService : ILabService
         var lab = await _dbContext.Labs
             .Include(l => l.Department)
             .Include(l => l.Building)
-            .ThenInclude(b => b.Campus)
+            .ThenInclude(b => b!.Campus)
             .Include(l => l.Manager)
             .Include(l => l.Equipments)
             .FirstOrDefaultAsync(l => l.Id == id);
