@@ -36,7 +36,15 @@ public class AppDbContext : DbContext
     public DbSet<Lab> Labs => Set<Lab>();
     public DbSet<Equipment> Equipments => Set<Equipment>();
 
-    // 校区楼宇管理
+    // 实验实训管理
+    public DbSet<ExperimentTeachingTask> ExperimentTeachingTasks => Set<ExperimentTeachingTask>();
+    public DbSet<ExperimentItem> ExperimentItems => Set<ExperimentItem>();
+    public DbSet<ExperimentItemSchedule> ExperimentItemSchedules => Set<ExperimentItemSchedule>();
+    public DbSet<ExperimentQualityAssessment> ExperimentQualityAssessments => Set<ExperimentQualityAssessment>();
+    public DbSet<TrainingTeachingPlan> TrainingTeachingPlans => Set<TrainingTeachingPlan>();
+    public DbSet<VenBuilding> VenBuildings => Set<VenBuilding>();
+    public DbSet<VenRoom> VenRooms => Set<VenRoom>();
+    public DbSet<SysInstitution> SysInstitutions => Set<SysInstitution>();
     public DbSet<Campus> Campuses => Set<Campus>();
     public DbSet<Building> Buildings => Set<Building>();
 
@@ -907,10 +915,7 @@ public class AppDbContext : DbContext
                 Code = "LAB001",
                 Name = "计算机基础实验室",
                 DepartmentId = csDeptId,
-                BuildingId = buildingAId,
-                Floor = 1,
-                RoomNumber = "A101",
-                Location = "实验楼A座1层A101",
+                Location = "实验楼A101",
                 Capacity = 60,
                 LabType = "计算机实验室",
                 SafetyLevel = "一般",
@@ -1083,5 +1088,25 @@ public class AppDbContext : DbContext
                 CreatedAt = seedDate
             }
         );
+
+// ========== 实验/实践/实训模块 ==========
+
+        // SysInstitution 自引用（层级结构）
+        modelBuilder.Entity<SysInstitution>()
+            .HasOne(i => i.Parent)
+            .WithMany()
+            .HasForeignKey(i => i.ParentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // VenRoom 关系
+        modelBuilder.Entity<VenRoom>(entity =>
+        {
+            entity.HasOne(r => r.Building)
+                .WithMany()
+                .HasForeignKey(r => r.BuildingId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(r => new { r.BuildingId, r.RoomNumber }).IsUnique();
+        });
     }
 }
