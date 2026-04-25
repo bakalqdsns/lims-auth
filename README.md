@@ -1,194 +1,226 @@
-# LIMS 实验室信息化管理系统
+# LIMS 项目文档
 
-高校实验室信息化管理系统 (Laboratory Information Management System) - 登录认证模块
 
-## 项目结构
+---
+
+## 📁 项目根目录
 
 ```
 lims-auth/
-├── backend/          # .NET 8.0 Web API 后端
-│   └── LimsAuth.Api/
-├── frontend/         # Vue 3 + Element Plus 前端
-├── mobile/           # Flutter 移动端 (跨平台)
-│   └── NETWORK_CONFIG.md  # 移动端网络配置指南
-├── mobile-android/   # Android 原生移动端 (Kotlin)
-│   └── README.md     # Android 项目说明
-└── tests/            # 测试用例
+├── backend/                    # .NET 8.0 后端
+├── frontend/                   # Vue 3 前端
+└── docs/                       # 项目文档
+    ├── KNOWN_ISSUES.md         # 已知缺陷清单
+    ├── RBAC_DESIGN.md          # 权限系统设计
+    ├── TEACHING_README.md      # 教学模块快速参考
+    ├── TEACHING_SYSTEM_DESIGN.md  # 教学系统设计
+    └── PROJECT_STRUCTURE.md    # 本文件
 ```
 
-## 技术栈
+---
 
-### 后端
-- **.NET 8.0** - Web API 框架
-- **Entity Framework Core** - ORM
-- **PostgreSQL** - 数据库
-- **JWT** - 身份认证
-- **Swagger** - API 文档
+## 🔧 后端结构 (backend/LimsAuth.Api/)
 
-### Web 前端
-- **Vue 3** - 前端框架
-- **Element Plus** - UI 组件库
-- **Pinia** - 状态管理
-- **Axios** - HTTP 客户端
-- **Vite** - 构建工具
+### 技术栈
+- **框架**: .NET 8.0 ASP.NET Core Web API
+- **数据库**: SQLite + Entity Framework Core 8.0
+- **认证**: JWT Bearer Token
+- **权限**: 自定义 RBAC
+- **API 文档**: Swagger
 
-### 移动端
+### 目录结构
 
-#### Flutter 版本 (mobile/)
-- **Flutter** - 跨平台框架
-- **http** - 网络请求
-- **shared_preferences** - 本地存储
+```
+backend/LimsAuth.Api/
+├── LimsAuth.Api.csproj         # 项目文件
+├── Program.cs                  # 应用入口 + 服务配置
+├── appsettings.json            # 配置文件
+├── lims.db                     # SQLite 数据库
+├── Authorization/              # 权限认证
+│   ├── PermissionHandler.cs    # 权限验证处理器
+│   ├── PermissionRequirement.cs
+│   ├── PermissionPolicy.cs
+│   └── PermissionAuthorizationExtensions.cs
+├── Controllers/                # API 控制器 (13个)
+│   ├── AuthController.cs
+│   ├── UsersController.cs
+│   ├── RolesController.cs
+│   ├── PermissionsController.cs
+│   ├── DepartmentsController.cs
+│   ├── SemestersController.cs
+│   ├── CalendarController.cs
+│   ├── CoursesController.cs
+│   ├── MajorsController.cs
+│   ├── ClassesController.cs
+│   ├── PeriodTimesController.cs
+│   ├── TeachingTasksController.cs
+│   ├── LabsController.cs
+│   └── EquipmentsController.cs
+├── Data/
+│   └── AppDbContext.cs         # EF Core 上下文 + 种子数据
+├── Models/                     # 实体模型
+│   ├── User.cs, Role.cs, Permission.cs
+│   ├── Department.cs
+│   ├── Semester.cs, AcademicCalendar.cs
+│   ├── Course.cs, Major.cs, Class.cs, ClassStudent.cs
+│   ├── TeachingTask.cs, TeachingTaskTeacher.cs
+│   ├── PeriodTime.cs
+│   ├── Lab.cs, Equipment.cs
+│   └── DTOs/
+│       └── AuthDtos.cs         # 请求/响应 DTO
+└── Services/                   # 业务逻辑层
+    ├── AuthService.cs
+    ├── JwtService.cs
+    ├── UserService.cs
+    ├── RoleService.cs
+    ├── PermissionService.cs
+    ├── DepartmentService.cs
+    ├── SemesterService.cs
+    ├── AcademicCalendarService.cs
+    ├── CourseService.cs
+    ├── MajorService.cs
+    ├── ClassService.cs
+    ├── TeachingTaskService.cs
+    ├── PeriodTimeService.cs
+    ├── LabService.cs
+    └── EquipmentService.cs
+```
 
-#### Android 原生版本 (mobile-android/)
-- **Kotlin** - 编程语言
-- **Retrofit2** - 网络请求
-- **OkHttp3** - HTTP 客户端
-- **DataStore** - 本地存储
-- **Material Design 3** - UI 组件
-- **MVVM** - 架构模式
+### 数据库实体 (18个表)
 
-## 快速开始
+| 模块 | 实体 |
+|------|------|
+| 系统管理 | users, roles, permissions, user_roles, role_permissions, departments |
+| 教学管理 | semesters, academic_calendars, courses, majors, classes, class_students, teaching_tasks, teaching_task_teachers, period_times |
+| 实验室管理 | labs, equipments |
 
-### 环境要求
-- .NET 8.0 SDK
-- Node.js 18+
-- PostgreSQL 14+
-- Flutter 3.0+ (Flutter 移动端)
-- Android Studio Hedgehog+ + JDK 17 (Android 原生移动端)
-
-### 1. 启动后端
+### 启动命令
 
 ```bash
 cd backend/LimsAuth.Api
-
-# 配置数据库连接字符串 (appsettings.json)
-# 默认: Host=127.0.0.1;Port=5432;Database=lims_db;Username=lims_user;Password=lims_password
-
-dotnet run
+dotnet run --urls "http://0.0.0.0:5047"
 ```
 
-后端服务将启动在 `http://localhost:5047`
+- API: http://localhost:5047
+- Swagger: http://localhost:5047/swagger
 
-### 2. 启动 Web 前端
+---
+
+## 🎨 前端结构 (frontend/)
+
+### 技术栈
+- **框架**: Vue 3 + TypeScript
+- **构建工具**: Vite 5
+- **UI 库**: Element Plus 2.5
+- **状态管理**: Pinia
+- **路由**: Vue Router 4
+- **HTTP**: Axios
+
+### 目录结构
+
+```
+frontend/
+├── package.json                # 依赖配置
+├── vite.config.ts              # Vite 配置
+├── tsconfig.json               # TypeScript 配置
+└── src/
+    ├── main.ts                 # 入口文件
+    ├── App.vue                 # 根组件
+    ├── api/                    # API 接口层
+    │   ├── lab.ts              # 实验室 API
+    │   ├── system.ts           # 系统管理 API
+    │   └── teaching.ts         # 教学管理 API
+    ├── stores/
+    │   └── auth.ts             # 认证状态 (Pinia)
+    ├── router/
+    │   └── index.ts            # 路由配置 + 守卫
+    ├── directives/
+    │   └── permission.ts       # 权限指令
+    └── views/                  # 页面视图
+        ├── LoginView.vue
+        ├── HomeView.vue        # 主页布局 (含侧边栏)
+        ├── system/             # 系统管理模块
+        │   ├── UsersView.vue
+        │   ├── RolesView.vue
+        │   ├── DepartmentsView.vue
+        │   └── components/     # 弹窗组件
+        ├── teaching/           # 教学管理模块
+        │   ├── SemestersView.vue
+        │   ├── CoursesView.vue
+        │   ├── MajorsView.vue
+        │   ├── ClassesView.vue
+        │   ├── TeachingTasksView.vue
+        │   ├── PeriodTimesView.vue
+        │   └── components/     # 8个表单弹窗
+        └── lab/                # 实验室管理模块
+            ├── LabsView.vue
+            ├── EquipmentsView.vue
+            └── components/
+```
+
+### 启动命令
 
 ```bash
 cd frontend
-npm install
 npm run dev
 ```
 
-前端开发服务器将启动在 `http://localhost:5173`
+- 前端: http://localhost:5173
 
-### 3. 启动 Flutter 移动端
+---
 
-```bash
-cd mobile
-flutter pub get
-flutter run
-```
+## 🔐 权限系统
 
-**注意**: 真机测试时需要配置服务器地址，详见 [mobile/NETWORK_CONFIG.md](mobile/NETWORK_CONFIG.md)
+### 权限编码规范
+格式: `{module}:{action}`
 
-### 4. 启动 Android 原生移动端
+| 模块 | 权限示例 |
+|------|---------|
+| user | user:create, user:read, user:update, user:delete |
+| role | role:create, role:read, role:update, role:delete, role:assign |
+| department | department:create, department:read, department:update, department:delete |
+| course | course:create, course:read, course:update, course:delete, course:schedule |
+| lab | lab:create, lab:read, lab:update, lab:delete |
+| equipment | equipment:create, equipment:read, equipment:update, equipment:delete, equipment:borrow |
 
-```bash
-cd mobile-android
-# 在 Android Studio 中打开项目
-# 或使用命令行构建
-./gradlew assembleDebug
-./gradlew installDebug
-```
+### 预定义角色
 
-**注意**: Android 原生版本使用 Kotlin + Retrofit + MVVM 架构，详见 [mobile-android/README.md](mobile-android/README.md)
+| 角色编码 | 角色名称 | 说明 |
+|----------|---------|------|
+| super_admin | 超级管理员 | 拥有所有权限 |
+| lab_admin | 实验室管理员 | 管理实验室、设备 |
+| teacher | 教师 | 课程管理、学生管理 |
+| student | 学生 | 预约设备、提交报告 |
+| auditor | 审计员 | 查看日志、报表 |
 
-## 测试账号
+---
 
-| 角色 | 用户名 | 密码 |
-|------|--------|------|
-| 管理员 | admin | admin123 |
-| 教师 | teacher | teacher123 |
-| 学生 | student | student123 |
+## 🧪 测试账号
 
-## API 接口
-
-### 认证接口
-
-| 方法 | 路径 | 描述 |
+| 账号 | 密码 | 角色 |
 |------|------|------|
-| POST | /api/v1/auth/login | 用户登录 |
-| GET | /api/v1/auth/me | 获取当前用户 |
+| admin | admin123 | 超级管理员 |
+| teacher | teacher123 | 教师 |
+| student | student123 | 学生 |
 
-### 登录请求示例
+---
 
-```bash
-curl -X POST http://localhost:5047/api/v1/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"admin123"}'
-```
+## ⚠️ 已知问题
 
-### 响应格式
+详见 `KNOWN_ISSUES.md`，主要包括：
 
-```json
-{
-  "code": 200,
-  "message": "登录成功",
-  "data": {
-    "token": "eyJhbGciOiJIUzI1NiIs...",
-    "tokenType": "Bearer",
-    "expiresIn": 3600,
-    "user": {
-      "id": "...",
-      "username": "admin",
-      "role": "Admin",
-      "fullName": "系统管理员"
-    }
-  }
-}
-```
+1. **权限控制漏洞** - Majors/Classes/PeriodTimes/Calendar 控制器缺少权限注解
+2. **并发数据冲突** - 学生计数非原子操作
+3. **事务缺失** - 多表操作无事务保护
+4. **外键约束缺失** - 删除数据未检查引用
+5. **N+1 查询性能问题**
+6. **无分页的大列表**
 
-## 端口配置
+---
 
-| 服务 | 端口 | 配置文件 |
-|------|------|----------|
-| 后端 API | 5047 | `launchSettings.json` |
-| Web 前端 | 5173 | `vite.config.ts` |
-| 前端代理 | 5047 | `vite.config.ts` |
+## 📚 相关文档
 
-## 移动端技术选型对比
-
-| 特性 | Flutter (mobile/) | Android 原生 (mobile-android/) |
-|------|-------------------|-------------------------------|
-| 开发语言 | Dart | Kotlin |
-| 架构模式 | StatefulWidget | MVVM + Repository |
-| 网络库 | http | Retrofit2 + OkHttp3 |
-| 本地存储 | shared_preferences | DataStore |
-| UI 框架 | Flutter Widgets | Material Design 3 |
-| 包大小 | 较大 | 较小 |
-| 启动速度 | 一般 | 快 |
-| 适用场景 | 跨平台需求 | 纯 Android 场景 |
-
-### 如何选择
-
-- **Flutter**: 需要同时支持 iOS 和 Android，追求开发效率
-- **Android 原生**: 仅需 Android 平台，追求性能和原生体验
-
-## 常见问题
-
-### Web 端登录提示"服务器错误"
-- 检查后端是否运行在 5047 端口
-- 检查 `vite.config.ts` 中的代理配置是否正确
-
-### 移动端提示"网络错误"
-- 检查手机和服务器是否在同一网络
-- 配置正确的服务器 IP 地址
-- 详见 [mobile/NETWORK_CONFIG.md](mobile/NETWORK_CONFIG.md)
-
-## 开发规范
-
-- 后端遵循 RESTful API 设计规范
-- 前端使用 Composition API 风格
-- 提交信息遵循 [Conventional Commits](https://www.conventionalcommits.org/)
-
-## 许可证
-
-MIT License
+- `TEACHING_README.md` - 教学模块快速参考
+- `TEACHING_SYSTEM_DESIGN.md` - 教学系统设计
+- `RBAC_DESIGN.md` - 权限系统设计
+- `KNOWN_ISSUES.md` - 已知缺陷清单
