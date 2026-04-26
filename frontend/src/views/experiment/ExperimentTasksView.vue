@@ -37,12 +37,22 @@
       </el-form>
 
       <el-table :data="list" v-loading="loading" stripe>
-        <el-table-column prop="semester.name" label="学期" min-width="140" />
-        <el-table-column prop="major.name" label="专业" min-width="120" />
-        <el-table-column prop="class.name" label="班级" min-width="120" />
+        <el-table-column prop="semester.name" label="学期" min-width="150" />
+        <el-table-column prop="major.name" label="专业" min-width="140" />
+        <el-table-column prop="class.name" label="班级" min-width="140" />
         <el-table-column prop="courseName" label="课程名称" min-width="160" />
-        <el-table-column prop="studentCount" label="人数" width="80" />
-        <el-table-column prop="studentLevel" label="层次" width="90" />
+        <el-table-column prop="courseType" label="课程类型" width="110" />
+        <el-table-column label="独立设课" width="90">
+          <template #default="{ row }"><el-tag :type="row.isIndependentCourse ? 'success' : 'info'" size="small">{{ row.isIndependentCourse ? '是' : '否' }}</el-tag></template>
+        </el-table-column>
+        <el-table-column label="实验/实践/实训学时" width="150">
+          <template #default="{ row }">{{ row.currentSemesterExperimentHours }} / {{ row.currentSemesterPracticeHours }} / {{ row.currentSemesterTrainingHours }}</template>
+        </el-table-column>
+        <el-table-column prop="studentCount" label="人数" width="70" />
+        <el-table-column prop="studentLevel" label="层次" width="80" />
+        <el-table-column prop="status" label="状态" width="80">
+          <template #default="{ row }"><el-tag size="small">{{ row.status }}</el-tag></template>
+        </el-table-column>
         <el-table-column label="操作" width="180" fixed="right">
           <template #default="{ row }">
             <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>

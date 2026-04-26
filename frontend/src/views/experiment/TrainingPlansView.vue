@@ -6,11 +6,16 @@
     </div>
     <el-card shadow="never">
       <el-table :data="list" v-loading="loading" stripe>
-        <el-table-column label="课程" min-width="180">
-          <template #default="{ row }">{{ row.course?.name || row.courseId }}</template>
+        <el-table-column prop="semester.name" label="学期" min-width="160" />
+        <el-table-column prop="course.name" label="课程" min-width="180">
+          <template #default="{ row }">{{ row.course?.name || row.courseName || row.courseId }}</template>
         </el-table-column>
-        <el-table-column prop="teachingOrganizationMethod" label="组织方式" min-width="150" />
-        <el-table-column prop="teachingLocation" label="教学地点" min-width="150" />
+        <el-table-column prop="major.name" label="专业" min-width="140" />
+        <el-table-column prop="class.name" label="班级" min-width="140" />
+        <el-table-column prop="studentCount" label="人数" width="70" />
+        <el-table-column prop="studentLevel" label="层次" width="80" />
+        <el-table-column prop="teachingOrganizationMethod" label="组织方式" min-width="120" />
+        <el-table-column prop="teachingLocation" label="教学地点" min-width="160" />
         <el-table-column prop="assessmentMethod" label="考核方式" min-width="120" />
         <el-table-column label="操作" width="120" fixed="right">
           <template #default="{ row }"><el-button link type="primary" @click="handleEdit(row)">编辑</el-button></template>

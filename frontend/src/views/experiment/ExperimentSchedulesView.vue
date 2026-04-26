@@ -28,14 +28,18 @@
       <el-table :data="list" v-loading="loading" stripe>
         <el-table-column prop="experimentTask.courseName" label="教学任务" min-width="180" />
         <el-table-column prop="experimentItem.experimentName" label="实验项目" min-width="160" />
-        <el-table-column prop="weekNumber" label="周次" width="70" />
-        <el-table-column prop="dayOfWeek" label="星期" width="70" />
-        <el-table-column prop="periodNumber" label="节次" width="70" />
-        <el-table-column label="地点" min-width="180">
+        <el-table-column prop="experimentRequirement" label="实验要求" width="80" />
+        <el-table-column label="周-星期-节次" width="120">
+          <template #default="{ row }">{{ row.weekNumber }}-{{ row.dayOfWeek }}-{{ row.periodNumber }}</template>
+        </el-table-column>
+        <el-table-column label="分组信息" width="120">
+          <template #default="{ row }">{{ row.parallelGroups }}组×{{ row.studentsPerGroup }}人</template>
+        </el-table-column>
+        <el-table-column label="地点" min-width="160">
           <template #default="{ row }">{{ formatLocation(row) }}</template>
         </el-table-column>
         <el-table-column label="是否开出" width="90">
-          <template #default="{ row }"><el-tag :type="row.isConducted ? 'success' : 'warning'">{{ row.isConducted ? '是' : '否' }}</el-tag></template>
+          <template #default="{ row }"><el-tag :type="row.isConducted ? 'success' : 'warning'" size="small">{{ row.isConducted ? '是' : '否' }}</el-tag></template>
         </el-table-column>
         <el-table-column label="操作" width="180" fixed="right">
           <template #default="{ row }">
@@ -78,7 +82,11 @@ const loadList = async () => {
   loading.value = true
   try {
     const res = await experimentApi.getSchedules()
-    list.value = res.data.data || []
+    let data = res.data.data || []
+    if (searchForm.semesterId) {
+      data = data.filter((s: any) => s.experimentTask?.semesterId === searchForm.semesterId)
+    }
+    list.value = data
   } finally {
     loading.value = false
   }

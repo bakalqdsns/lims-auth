@@ -36,6 +36,29 @@
             <el-input-number v-model="form.periodNumber" :min="1" style="width: 100%" />
           </el-form-item>
         </el-col>
+        <el-col :span="8">
+          <el-form-item label="并组数">
+            <el-input-number v-model="form.parallelGroups" :min="1" style="width: 100%" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="每组人数">
+            <el-input-number v-model="form.studentsPerGroup" :min="1" style="width: 100%" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
+          <el-form-item label="轮次">
+            <el-input-number v-model="form.cycleCount" :min="1" style="width: 100%" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="实验要求">
+            <el-select v-model="form.experimentRequirement" style="width: 100%">
+              <el-option label="必做" value="必做" />
+              <el-option label="选做" value="选做" />
+            </el-select>
+          </el-form-item>
+        </el-col>
         <el-col :span="12">
           <el-form-item label="实验室">
             <el-select v-if="optionsReady" v-model="form.labId" clearable style="width: 100%">

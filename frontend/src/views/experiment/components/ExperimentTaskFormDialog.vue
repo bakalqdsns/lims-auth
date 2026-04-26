@@ -34,18 +34,70 @@
           </el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item label="学生人数" prop="studentCount">
-            <el-input-number v-model="form.studentCount" :min="0" style="width: 100%" />
+          <el-form-item label="课程类型">
+            <el-select v-model="form.courseType" clearable placeholder="请选择" style="width: 100%">
+              <el-option label="必修课" value="必修课" />
+              <el-option label="选修课" value="选修课" />
+              <el-option label="专业课" value="专业课" />
+              <el-option label="专业核心课" value="专业核心课" />
+            </el-select>
           </el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item label="学生层次" prop="studentLevel">
-            <el-select v-model="form.studentLevel" placeholder="请选择层次" style="width: 100%">
+          <el-form-item label="独立设课">
+            <el-switch v-model="form.isIndependentCourse" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="学生人数"><el-input-number v-model="form.studentCount" :min="0" style="width: 100%" /></el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="学生层次">
+            <el-select v-model="form.studentLevel" clearable placeholder="请选择" style="width: 100%">
               <el-option label="专科" value="专科" />
               <el-option label="本科" value="本科" />
               <el-option label="研究生" value="研究生" />
             </el-select>
           </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="实验总学时"><el-input-number v-model="form.totalExperimentHours" :min="0" style="width: 100%" /></el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="本学期实验"><el-input-number v-model="form.currentSemesterExperimentHours" :min="0" style="width: 100%" /></el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="实践总学时"><el-input-number v-model="form.totalPracticeHours" :min="0" style="width: 100%" /></el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="本学期实践"><el-input-number v-model="form.currentSemesterPracticeHours" :min="0" style="width: 100%" /></el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="实训总学时"><el-input-number v-model="form.totalTrainingHours" :min="0" style="width: 100%" /></el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="本学期实训"><el-input-number v-model="form.currentSemesterTrainingHours" :min="0" style="width: 100%" /></el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="主讲教师"><el-input v-model="form.teacherIds" /></el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="教师职称"><el-input v-model="form.teacherTitles" /></el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="实验技术人员"><el-input v-model="form.technicalStaff" /></el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="技术人员职称"><el-input v-model="form.technicalTitle" /></el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="教材"><el-input v-model="form.textbookName" /></el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="实验指导书"><el-input v-model="form.experimentGuideName" /></el-form-item>
+        </el-col>
+        <el-col :span="24">
+          <el-form-item label="备注"><el-input v-model="form.description" type="textarea" :rows="2" /></el-form-item>
         </el-col>
       </el-row>
     </el-form>

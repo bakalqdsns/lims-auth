@@ -6,12 +6,20 @@
     </div>
     <el-card shadow="never">
       <el-table :data="list" v-loading="loading" stripe>
-        <el-table-column prop="courseName" label="课程名称" min-width="180" />
-        <el-table-column prop="mainTeacher" label="主讲教师" width="120" />
-        <el-table-column prop="className" label="授课班级" width="120" />
-        <el-table-column prop="plannedExperimentCount" label="计划个数" width="90" />
-        <el-table-column prop="actualExperimentCount" label="实际个数" width="90" />
+        <el-table-column prop="courseName" label="课程名称" min-width="160" />
+        <el-table-column prop="mainTeacher" label="主讲教师" width="100" />
+        <el-table-column prop="teacherTitle" label="教师职称" width="90" />
+        <el-table-column prop="className" label="授课班级" width="130" />
+        <el-table-column prop="classStudentCount" label="班级人数" width="90" />
+        <el-table-column prop="experimentHours" label="实验课时" width="90" />
+        <el-table-column label="计划/实际" width="110">
+          <template #default="{ row }">{{ row.plannedExperimentCount }} / {{ row.actualExperimentCount }}</template>
+        </el-table-column>
         <el-table-column prop="assessmentMethod" label="考核方式" min-width="120" />
+        <el-table-column prop="assessmentTime" label="考核时间" width="90" />
+        <el-table-column label="独立设课" width="90">
+          <template #default="{ row }"><el-tag :type="row.isIndependentCourse ? 'success' : 'info'" size="small">{{ row.isIndependentCourse ? '是' : '否' }}</el-tag></template>
+        </el-table-column>
         <el-table-column label="操作" width="120" fixed="right">
           <template #default="{ row }"><el-button link type="primary" @click="handleEdit(row)">编辑</el-button></template>
         </el-table-column>

@@ -123,7 +123,15 @@ export interface ExperimentScheduleDto {
   description?: string
   experimentTask?: { id: string; courseName: string }
   experimentItem?: { id: string; experimentName: string }
-  lab?: { id: string; name: string; buildingId?: string; roomNumber?: string; building?: { name: string } }
+  lab?: {
+    id: string
+    code: string
+    name: string
+    buildingId?: string
+    roomNumber?: string
+    location?: string
+    building?: { id: string; name: string; campus?: { id: string; name: string } }
+  }
 }
 
 export type ExperimentScheduleRequest = Omit<ExperimentScheduleDto, 'id' | 'experimentTask' | 'experimentItem' | 'lab'>
@@ -150,13 +158,22 @@ export interface ExperimentQualityDto {
   status: string
   sortOrder: number
   description?: string
+  experimentTask?: { id: string; courseName: string }
+  institution?: { id: string; name: string }
 }
 
-export type ExperimentQualityRequest = Omit<ExperimentQualityDto, 'id'>
+export type ExperimentQualityRequest = Omit<ExperimentQualityDto, 'id' | 'experimentTask' | 'institution'>
 
 export interface TrainingPlanDto {
   id: string
+  semesterId: string
   courseId: string
+  courseName?: string
+  courseCode?: string
+  majorId?: string
+  classId?: string
+  studentCount: number
+  studentLevel?: string
   teachingOrganizationMethod?: string
   teachingLocation?: string
   teachingPurpose?: string
@@ -170,7 +187,10 @@ export interface TrainingPlanDto {
   sortOrder: number
   description?: string
   course?: { id: string; code: string; name: string }
+  semester?: { id: string; name: string }
+  major?: { id: string; name: string }
+  class?: { id: string; name: string }
 }
 
-export type TrainingPlanRequest = Omit<TrainingPlanDto, 'id' | 'course'>
+export type TrainingPlanRequest = Omit<TrainingPlanDto, 'id' | 'course' | 'semester' | 'major' | 'class'>
 
