@@ -145,6 +145,12 @@ const router = createRouter({
           meta: { requiresAuth: true, permission: 'building:read' }
         },
         {
+          path: 'floor-plan',
+          name: 'floorPlan',
+          component: () => import('../views/venue/BuildingFloorPlanView.vue'),
+          meta: { requiresAuth: true, permission: 'building:read' }
+        },
+        {
           path: 'labs',
           name: 'labs',
           component: () => import('../views/venue/LabsView.vue'),

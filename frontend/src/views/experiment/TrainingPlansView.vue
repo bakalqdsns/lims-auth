@@ -2,7 +2,7 @@
   <div class="page-container">
     <div class="page-header">
       <h2>实训教学计划</h2>
-      <el-button type="primary" @click="openDialog()">新增计划</el-button>
+      <el-button type="primary" @click="handleAdd">新增计划</el-button>
     </div>
     <el-card shadow="never">
       <el-table :data="list" v-loading="loading" stripe>
@@ -13,55 +13,25 @@
         <el-table-column prop="teachingLocation" label="教学地点" min-width="150" />
         <el-table-column prop="assessmentMethod" label="考核方式" min-width="120" />
         <el-table-column label="操作" width="120" fixed="right">
-          <template #default="{ row }"><el-button link type="primary" @click="openDialog(row)">编辑</el-button></template>
+          <template #default="{ row }"><el-button link type="primary" @click="handleEdit(row)">编辑</el-button></template>
         </el-table-column>
       </el-table>
     </el-card>
 
-    <el-dialog v-model="dialogVisible" :title="form.id ? '编辑计划' : '新增计划'" width="760px">
-      <el-form :model="form" label-width="140px">
-        <el-form-item label="课程"><el-select v-model="form.courseId"><el-option v-for="c in courses" :key="c.id" :label="`${c.code} - ${c.name}`" :value="c.id" /></el-select></el-form-item>
-        <el-form-item label="组织方式"><el-input v-model="form.teachingOrganizationMethod" /></el-form-item>
-        <el-form-item label="教学地点"><el-input v-model="form.teachingLocation" /></el-form-item>
-        <el-form-item label="教学目的要求"><el-input v-model="form.teachingPurpose" type="textarea" :rows="2" /></el-form-item>
-        <el-form-item label="教学内容安排"><el-input v-model="form.teachingContent" type="textarea" :rows="2" /></el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="save">保存</el-button>
-      </template>
-    </el-dialog>
+    <TrainingPlanFormDialog v-model="dialogVisible" :plan="currentPlan" @success="loadList" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { courseApi, type CourseDto } from '@/api/teaching'
 import { experimentApi, type TrainingPlanDto } from '@/api/experiment'
+import TrainingPlanFormDialog from './components/TrainingPlanFormDialog.vue'
 
 const loading = ref(false)
 const list = ref<TrainingPlanDto[]>([])
-const courses = ref<CourseDto[]>([])
 const dialogVisible = ref(false)
-
-const emptyForm = () => ({
-  id: '',
-  courseId: '',
-  teachingOrganizationMethod: '',
-  teachingLocation: '',
-  teachingPurpose: '',
-  teachingContent: '',
-  trainingMethod: '',
-  assessmentMethod: '',
-  qualityAssuranceMeasures: '',
-  experimentCenterOpinion: '',
-  departmentOpinion: '',
-  status: 'Active',
-  sortOrder: 0,
-  description: ''
-})
-const form = reactive(emptyForm())
+const currentPlan = ref<TrainingPlanDto | undefined>(undefined)
 
 const loadList = async () => {
   loading.value = true
@@ -73,31 +43,17 @@ const loadList = async () => {
   }
 }
 
-const loadCourses = async () => {
-  const res = await courseApi.getList({ page: 1, pageSize: 999 })
-  courses.value = res.data.data || []
-}
-
-const openDialog = (row?: TrainingPlanDto) => {
-  Object.assign(form, emptyForm(), row || {})
+const handleAdd = () => {
+  currentPlan.value = undefined
   dialogVisible.value = true
 }
 
-const save = async () => {
-  const payload: any = { ...form }
-  if (payload.id) await experimentApi.updateTrainingPlan(payload.id, payload)
-  else {
-    delete payload.id
-    await experimentApi.createTrainingPlan(payload)
-  }
-  ElMessage.success('保存成功')
-  dialogVisible.value = false
-  loadList()
+const handleEdit = (row: TrainingPlanDto) => {
+  currentPlan.value = row
+  dialogVisible.value = true
 }
 
-onMounted(async () => {
-  await Promise.all([loadList(), loadCourses()])
-})
+onMounted(loadList)
 </script>
 
 <style scoped>

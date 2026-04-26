@@ -65,12 +65,24 @@ public class ExperimentTeachingTask
     [Column("institution_id")]
     public Guid? InstitutionId { get; set; }
 
+    [Column("institution_name")]
+    [MaxLength(200)]
+    public string? InstitutionName { get; set; }
+
     [Column("department_id")]
     public Guid? DepartmentId { get; set; }
+
+    [Column("department_name")]
+    [MaxLength(200)]
+    public string? DepartmentName { get; set; }
 
     [Column("teacher_ids")]
     [MaxLength(500)]
     public string? TeacherIds { get; set; }
+
+    [Column("teacher_names")]
+    [MaxLength(500)]
+    public string? TeacherNames { get; set; }
 
     [Column("teacher_titles")]
     [MaxLength(200)]
@@ -115,11 +127,12 @@ public class ExperimentTeachingTask
     [Column("updated_by")]
     public string? UpdatedBy { get; set; }
 
-    // 导航属性
+    // Navigation properties
     public virtual Semester? Semester { get; set; }
     public virtual Major? Major { get; set; }
     public virtual Class? Class { get; set; }
     public virtual Department? Department { get; set; }
+    public virtual SysInstitution? Institution { get; set; }
     public virtual ICollection<ExperimentItemSchedule> Schedules { get; set; } = new List<ExperimentItemSchedule>();
     public virtual ExperimentQualityAssessment? QualityAssessment { get; set; }
 }
@@ -222,12 +235,12 @@ public class ExperimentItemSchedule
     [MaxLength(100)]
     public string? ExperimentRequirement { get; set; }
 
+    [Column("lab_id")]
+    public Guid? LabId { get; set; }
+
     [Column("location")]
     [MaxLength(200)]
     public string? Location { get; set; }
-
-    [Column("lab_id")]
-    public Guid? LabId { get; set; }
 
     [Column("is_conducted")]
     public bool IsConducted { get; set; }
@@ -259,7 +272,7 @@ public class ExperimentItemSchedule
     [Column("updated_by")]
     public string? UpdatedBy { get; set; }
 
-    // 导航属性
+    // Navigation properties
     public virtual ExperimentTeachingTask? ExperimentTask { get; set; }
     public virtual ExperimentItem? ExperimentItem { get; set; }
     public virtual Lab? Lab { get; set; }
@@ -376,44 +389,111 @@ public class TrainingTeachingPlan
     public Guid Id { get; set; } = Guid.NewGuid();
 
     [Required]
+    [Column("semester_id")]
+    public Guid SemesterId { get; set; }
+
+    [Required]
     [Column("course_id")]
     public Guid CourseId { get; set; }
 
-    [Column("teaching_organization_method")]
+    [Column("course_name")]
     [MaxLength(200)]
+    public string? CourseName { get; set; }
+
+    [Column("course_code")]
+    [MaxLength(50)]
+    public string? CourseCode { get; set; }
+
+    [Column("major_id")]
+    public Guid? MajorId { get; set; }
+
+    [Column("class_id")]
+    public Guid? ClassId { get; set; }
+
+    [Column("student_count")]
+    public int StudentCount { get; set; }
+
+    [Column("student_level")]
+    [MaxLength(50)]
+    public string? StudentLevel { get; set; }
+
+    [Column("teaching_organization_method")]
+    [MaxLength(50)]
     public string? TeachingOrganizationMethod { get; set; }
 
     [Column("teaching_location")]
-    [MaxLength(200)]
+    [MaxLength(500)]
     public string? TeachingLocation { get; set; }
 
     [Column("teaching_purpose")]
     [MaxLength(1000)]
     public string? TeachingPurpose { get; set; }
 
+    [Column("teaching_requirements")]
+    [MaxLength(1000)]
+    public string? TeachingRequirements { get; set; }
+
     [Column("teaching_content")]
-    [MaxLength(2000)]
+    [MaxLength(3000)]
     public string? TeachingContent { get; set; }
 
+    [Column("teaching_progress_schedule")]
+    [MaxLength(3000)]
+    public string? TeachingProgressSchedule { get; set; }
+
     [Column("training_method")]
-    [MaxLength(200)]
+    [MaxLength(500)]
     public string? TrainingMethod { get; set; }
 
+    [Column("cycle_group_info")]
+    [MaxLength(1000)]
+    public string? CycleGroupInfo { get; set; }
+
     [Column("assessment_method")]
-    [MaxLength(100)]
+    [MaxLength(200)]
     public string? AssessmentMethod { get; set; }
+
+    [Column("assessment_requirements")]
+    [MaxLength(1000)]
+    public string? AssessmentRequirements { get; set; }
 
     [Column("quality_assurance_measures")]
     [MaxLength(1000)]
     public string? QualityAssuranceMeasures { get; set; }
 
+    [Column("quality_assurance_details")]
+    [MaxLength(2000)]
+    public string? QualityAssuranceDetails { get; set; }
+
     [Column("experiment_center_opinion")]
     [MaxLength(1000)]
     public string? ExperimentCenterOpinion { get; set; }
 
+    [Column("experiment_center_opinion_status")]
+    [MaxLength(50)]
+    public string? ExperimentCenterOpinionStatus { get; set; }
+
+    [Column("experiment_center_approved_by")]
+    [MaxLength(100)]
+    public string? ExperimentCenterApprovedBy { get; set; }
+
+    [Column("experiment_center_approval_date")]
+    public DateTime? ExperimentCenterApprovalDate { get; set; }
+
     [Column("department_opinion")]
     [MaxLength(1000)]
     public string? DepartmentOpinion { get; set; }
+
+    [Column("department_opinion_status")]
+    [MaxLength(50)]
+    public string? DepartmentOpinionStatus { get; set; }
+
+    [Column("department_approved_by")]
+    [MaxLength(100)]
+    public string? DepartmentApprovedBy { get; set; }
+
+    [Column("department_approval_date")]
+    public DateTime? DepartmentApprovalDate { get; set; }
 
     [Column("status")]
     [MaxLength(20)]
@@ -438,8 +518,11 @@ public class TrainingTeachingPlan
     [Column("updated_by")]
     public string? UpdatedBy { get; set; }
 
-    // 导航属性
+    // Navigation properties
+    public virtual Semester? Semester { get; set; }
     public virtual Course? Course { get; set; }
+    public virtual Major? Major { get; set; }
+    public virtual Class? Class { get; set; }
 }
 
 /// <summary>

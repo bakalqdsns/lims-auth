@@ -106,6 +106,10 @@
               <el-icon><OfficeBuilding /></el-icon>
               <span>楼宇管理</span>
             </el-menu-item>
+            <el-menu-item v-if="hasPermission('building:read')" index="/venue/floor-plan">
+              <el-icon><Grid /></el-icon>
+              <span>建筑平面图</span>
+            </el-menu-item>
             <el-menu-item v-if="hasPermission('lab:read')" index="/venue/labs">
               <el-icon><HomeFilled /></el-icon>
               <span>实验室管理</span>
@@ -213,7 +217,8 @@ import {
   Reading,
   School,
   Timer,
-  Tools
+  Tools,
+  Grid
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '../stores/auth'
 import { userApi } from '../api/system'

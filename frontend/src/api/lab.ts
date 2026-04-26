@@ -84,6 +84,8 @@ export interface LabDto {
   name: string
   departmentId?: string
   departmentName?: string
+  buildingId?: string
+  roomNumber?: string
   location?: string
   capacity: number
   labType: string
@@ -94,6 +96,7 @@ export interface LabDto {
   isActive: boolean
   createdAt: string
   equipmentCount: number
+  building?: { id: string; name: string }
 }
 
 export interface EquipmentDto {

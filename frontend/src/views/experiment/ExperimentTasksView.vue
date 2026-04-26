@@ -2,10 +2,40 @@
   <div class="page-container">
     <div class="page-header">
       <h2>实验教学任务</h2>
-      <el-button type="primary" @click="openDialog()">新增任务</el-button>
+      <div class="header-actions">
+        <el-button @click="exportTaskList" :loading="exportingTaskList">
+          <el-icon><Download /></el-icon>导出任务一览表
+        </el-button>
+        <el-button type="primary" @click="handleAdd">
+          <el-icon><Plus /></el-icon>新增任务
+        </el-button>
+      </div>
     </div>
 
     <el-card shadow="never">
+      <el-skeleton :rows="1" animated style="margin-bottom: 14px" v-if="!optionsReady" />
+      <el-form v-else :inline="true" :model="searchForm" class="search-form">
+        <el-form-item label="学期">
+          <el-select v-model="searchForm.semesterId" placeholder="全部学期" clearable style="width: 160px">
+            <el-option v-for="s in semesterOptions" :key="s.id" :label="s.name" :value="s.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="专业">
+          <el-select v-model="searchForm.majorId" placeholder="全部专业" clearable style="width: 160px">
+            <el-option v-for="m in majorOptions" :key="m.id" :label="m.name" :value="m.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="班级">
+          <el-select v-model="searchForm.classId" placeholder="全部班级" clearable style="width: 160px">
+            <el-option v-for="c in classOptions" :key="c.id" :label="c.name" :value="c.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="loadList">搜索</el-button>
+          <el-button @click="searchForm.semesterId = ''; searchForm.majorId = ''; searchForm.classId = ''; loadList()">重置</el-button>
+        </el-form-item>
+      </el-form>
+
       <el-table :data="list" v-loading="loading" stripe>
         <el-table-column prop="semester.name" label="学期" min-width="140" />
         <el-table-column prop="major.name" label="专业" min-width="120" />
@@ -15,7 +45,7 @@
         <el-table-column prop="studentLevel" label="层次" width="90" />
         <el-table-column label="操作" width="180" fixed="right">
           <template #default="{ row }">
-            <el-button link type="primary" @click="openDialog(row)">编辑</el-button>
+            <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
             <el-popconfirm title="确认删除该任务？" @confirm="remove(row.id)">
               <template #reference>
                 <el-button link type="danger">删除</el-button>
@@ -26,72 +56,47 @@
       </el-table>
     </el-card>
 
-    <el-dialog v-model="dialogVisible" :title="form.id ? '编辑任务' : '新增任务'" width="760px">
-      <el-form :model="form" label-width="130px">
-        <el-row :gutter="12">
-          <el-col :span="12"><el-form-item label="学期"><el-select v-model="form.semesterId"><el-option v-for="s in semesterOptions" :key="s.id" :label="s.name" :value="s.id" /></el-select></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="专业"><el-select v-model="form.majorId"><el-option v-for="m in majorOptions" :key="m.id" :label="m.name" :value="m.id" /></el-select></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="班级"><el-select v-model="form.classId"><el-option v-for="c in classOptions" :key="c.id" :label="c.name" :value="c.id" /></el-select></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="课程名称"><el-input v-model="form.courseName" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="学生人数"><el-input-number v-model="form.studentCount" :min="0" style="width: 100%" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="学生层次"><el-select v-model="form.studentLevel"><el-option label="专科" value="专科" /><el-option label="本科" value="本科" /><el-option label="研究生" value="研究生" /></el-select></el-form-item></el-col>
-        </el-row>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="save">保存</el-button>
-      </template>
-    </el-dialog>
+    <ExperimentTaskFormDialog
+      v-model="dialogVisible"
+      :task="currentTask"
+      @success="loadList"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
+import { Download, Plus } from '@element-plus/icons-vue'
 import { classApi, majorApi, semesterApi, type ClassDto, type MajorDto, type SemesterDto } from '@/api/teaching'
-import { experimentApi, type ExperimentTaskDto } from '@/api/experiment'
+import { experimentApi, exportApi, type ExperimentTaskDto } from '@/api/experiment'
+import ExperimentTaskFormDialog from './components/ExperimentTaskFormDialog.vue'
 
 const loading = ref(false)
+const exportingTaskList = ref(false)
 const list = ref<ExperimentTaskDto[]>([])
 const semesterOptions = ref<SemesterDto[]>([])
 const majorOptions = ref<MajorDto[]>([])
 const classOptions = ref<ClassDto[]>([])
 
 const dialogVisible = ref(false)
-const emptyForm = () => ({
-  id: '',
+const currentTask = ref<ExperimentTaskDto | undefined>(undefined)
+const optionsReady = ref(false)
+
+const searchForm = reactive({
   semesterId: '',
   majorId: '',
-  classId: '',
-  studentCount: 0,
-  studentLevel: '',
-  courseName: '',
-  courseType: '',
-  isIndependentCourse: false,
-  totalExperimentHours: 0,
-  currentSemesterExperimentHours: 0,
-  totalPracticeHours: 0,
-  currentSemesterPracticeHours: 0,
-  totalTrainingHours: 0,
-  currentSemesterTrainingHours: 0,
-  institutionId: undefined as string | undefined,
-  departmentId: undefined as string | undefined,
-  teacherIds: '',
-  teacherTitles: '',
-  technicalStaff: '',
-  technicalTitle: '',
-  textbookName: '',
-  experimentGuideName: '',
-  status: 'Active',
-  sortOrder: 0,
-  description: ''
+  classId: ''
 })
-const form = reactive(emptyForm())
 
 const loadList = async () => {
   loading.value = true
   try {
-    const res = await experimentApi.getTasks()
+    const res = await experimentApi.getTasks({
+      semesterId: searchForm.semesterId || undefined,
+      majorId: searchForm.majorId || undefined,
+      classId: searchForm.classId || undefined
+    })
     list.value = res.data.data || []
   } finally {
     loading.value = false
@@ -107,30 +112,46 @@ const loadOptions = async () => {
   semesterOptions.value = semRes.data.data || []
   majorOptions.value = majorRes.data.data || []
   classOptions.value = classRes.data.data || []
+  optionsReady.value = true
 }
 
-const openDialog = (row?: ExperimentTaskDto) => {
-  Object.assign(form, emptyForm(), row || {})
+const handleAdd = () => {
+  currentTask.value = undefined
   dialogVisible.value = true
 }
 
-const save = async () => {
-  const payload: any = { ...form }
-  if (payload.id) {
-    await experimentApi.updateTask(payload.id, payload)
-  } else {
-    delete payload.id
-    await experimentApi.createTask(payload)
-  }
-  ElMessage.success('保存成功')
-  dialogVisible.value = false
-  loadList()
+const handleEdit = (row: ExperimentTaskDto) => {
+  currentTask.value = row
+  dialogVisible.value = true
 }
 
 const remove = async (id: string) => {
   await experimentApi.deleteTask(id)
   ElMessage.success('删除成功')
   loadList()
+}
+
+const exportTaskList = async () => {
+  exportingTaskList.value = true
+  try {
+    const res = await exportApi.exportTaskList({
+      semesterId: searchForm.semesterId || undefined,
+      majorId: searchForm.majorId || undefined,
+      classId: searchForm.classId || undefined
+    })
+    const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `实验课程教学任务一览表_${new Date().toISOString().slice(0, 10).replace(/-/g, '')}.docx`
+    a.click()
+    URL.revokeObjectURL(url)
+    ElMessage.success('导出成功')
+  } catch {
+    ElMessage.error('导出失败')
+  } finally {
+    exportingTaskList.value = false
+  }
 }
 
 onMounted(async () => {
@@ -142,5 +163,6 @@ onMounted(async () => {
 .page-container { padding: 20px; }
 .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .page-header h2 { margin: 0; font-size: 20px; font-weight: 500; }
+.header-actions { display: flex; gap: 10px; }
+.search-form { margin-bottom: 14px; }
 </style>
-

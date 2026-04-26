@@ -21,6 +21,13 @@ public interface IExperimentService
 
     Task<ExperimentQualityAssessment?> GetAssessmentAsync(Guid taskId);
     Task<ExperimentQualityAssessment> SaveAssessmentAsync(ExperimentQualityAssessment assessment);
+
+    Task<List<TrainingTeachingPlan>> GetTrainingPlansAsync();
+    Task<TrainingTeachingPlan?> GetTrainingPlanByIdAsync(Guid id);
+    Task<TrainingTeachingPlan> CreateTrainingPlanAsync(TrainingTeachingPlan plan);
+    Task<bool> UpdateTrainingPlanAsync(Guid id, TrainingTeachingPlan plan);
+    Task<bool> DeleteTrainingPlanAsync(Guid id);
+    Task<bool> ApproveTrainingPlanAsync(Guid id, string approvalType, string opinion, string? approver);
 }
 
 public class ExperimentService : IExperimentService
@@ -43,6 +50,7 @@ public class ExperimentService : IExperimentService
             .Include(x => x.Class)
             .Include(x => x.Semester)
             .Include(x => x.Department)
+            .Include(x => x.Institution)
             .Include(x => x.Schedules)
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync();
@@ -74,7 +82,6 @@ public class ExperimentService : IExperimentService
         var task = await _db.ExperimentTeachingTasks.FindAsync(id);
         if (task == null) return false;
 
-        // ???????????????????????
         task.CourseName = input.CourseName;
         task.StudentCount = input.StudentCount;
         task.StudentLevel = input.StudentLevel;
@@ -90,12 +97,22 @@ public class ExperimentService : IExperimentService
         task.TotalTrainingHours = input.TotalTrainingHours;
         task.CurrentSemesterTrainingHours = input.CurrentSemesterTrainingHours;
 
+        task.InstitutionId = input.InstitutionId;
+        task.InstitutionName = input.InstitutionName;
+        task.DepartmentId = input.DepartmentId;
+        task.DepartmentName = input.DepartmentName;
+
         task.TeacherIds = input.TeacherIds;
+        task.TeacherNames = input.TeacherNames;
         task.TeacherTitles = input.TeacherTitles;
 
         task.TechnicalStaff = input.TechnicalStaff;
         task.TechnicalTitle = input.TechnicalTitle;
 
+        task.TextbookName = input.TextbookName;
+        task.ExperimentGuideName = input.ExperimentGuideName;
+
+        task.SortOrder = input.SortOrder;
         task.Description = input.Description;
         task.Status = input.Status;
 
@@ -149,6 +166,7 @@ public class ExperimentService : IExperimentService
             .Include(x => x.ExperimentItem)
             .Include(x => x.Lab)
                 .ThenInclude(l => l!.Building)
+                    .ThenInclude(b => b!.Campus)
             .Where(x => x.ExperimentTaskId == taskId)
             .OrderBy(x => x.WeekNumber)
             .ThenBy(x => x.DayOfWeek)
@@ -216,5 +234,114 @@ public class ExperimentService : IExperimentService
         await _db.SaveChangesAsync();
 
         return input;
+    }
+
+    // =========================
+    // 实训教学计划
+    // =========================
+
+    public async Task<List<TrainingTeachingPlan>> GetTrainingPlansAsync()
+    {
+        return await _db.TrainingTeachingPlans
+            .Include(x => x.Semester)
+            .Include(x => x.Course)
+            .Include(x => x.Major)
+            .Include(x => x.Class)
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync();
+    }
+
+    public async Task<TrainingTeachingPlan?> GetTrainingPlanByIdAsync(Guid id)
+    {
+        return await _db.TrainingTeachingPlans
+            .Include(x => x.Semester)
+            .Include(x => x.Course)
+            .Include(x => x.Major)
+            .Include(x => x.Class)
+            .FirstOrDefaultAsync(x => x.Id == id);
+    }
+
+    public async Task<TrainingTeachingPlan> CreateTrainingPlanAsync(TrainingTeachingPlan plan)
+    {
+        plan.Id = Guid.NewGuid();
+        plan.CreatedAt = DateTime.UtcNow;
+        plan.UpdatedAt = DateTime.UtcNow;
+
+        _db.TrainingTeachingPlans.Add(plan);
+        await _db.SaveChangesAsync();
+
+        return plan;
+    }
+
+    public async Task<bool> UpdateTrainingPlanAsync(Guid id, TrainingTeachingPlan input)
+    {
+        var plan = await _db.TrainingTeachingPlans.FindAsync(id);
+        if (plan == null) return false;
+
+        plan.SemesterId = input.SemesterId;
+        plan.CourseId = input.CourseId;
+        plan.CourseName = input.CourseName;
+        plan.CourseCode = input.CourseCode;
+        plan.MajorId = input.MajorId;
+        plan.ClassId = input.ClassId;
+        plan.StudentCount = input.StudentCount;
+        plan.StudentLevel = input.StudentLevel;
+        plan.TeachingOrganizationMethod = input.TeachingOrganizationMethod;
+        plan.TeachingLocation = input.TeachingLocation;
+        plan.TeachingPurpose = input.TeachingPurpose;
+        plan.TeachingRequirements = input.TeachingRequirements;
+        plan.TeachingContent = input.TeachingContent;
+        plan.TeachingProgressSchedule = input.TeachingProgressSchedule;
+        plan.TrainingMethod = input.TrainingMethod;
+        plan.CycleGroupInfo = input.CycleGroupInfo;
+        plan.AssessmentMethod = input.AssessmentMethod;
+        plan.AssessmentRequirements = input.AssessmentRequirements;
+        plan.QualityAssuranceMeasures = input.QualityAssuranceMeasures;
+        plan.QualityAssuranceDetails = input.QualityAssuranceDetails;
+        plan.SortOrder = input.SortOrder;
+        plan.Description = input.Description;
+        plan.Status = input.Status;
+
+        plan.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> DeleteTrainingPlanAsync(Guid id)
+    {
+        var plan = await _db.TrainingTeachingPlans.FindAsync(id);
+        if (plan == null) return false;
+
+        _db.TrainingTeachingPlans.Remove(plan);
+        await _db.SaveChangesAsync();
+
+        return true;
+    }
+
+    public async Task<bool> ApproveTrainingPlanAsync(Guid id, string approvalType, string opinion, string? approver)
+    {
+        var plan = await _db.TrainingTeachingPlans.FindAsync(id);
+        if (plan == null) return false;
+
+        if (approvalType == "ExperimentCenter")
+        {
+            plan.ExperimentCenterOpinion = opinion;
+            plan.ExperimentCenterOpinionStatus = "Approved";
+            plan.ExperimentCenterApprovedBy = approver;
+            plan.ExperimentCenterApprovalDate = DateTime.UtcNow;
+        }
+        else if (approvalType == "Department")
+        {
+            plan.DepartmentOpinion = opinion;
+            plan.DepartmentOpinionStatus = "Approved";
+            plan.DepartmentApprovedBy = approver;
+            plan.DepartmentApprovalDate = DateTime.UtcNow;
+        }
+
+        plan.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+        return true;
     }
 }

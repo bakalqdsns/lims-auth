@@ -26,7 +26,7 @@ builder.Services.AddScoped<RoleService>();
 builder.Services.AddScoped<PermissionService>();
 builder.Services.AddScoped<DepartmentService>();
 builder.Services.AddScoped<ExperimentService>();
-
+builder.Services.AddSingleton<ExportService>();
 
 // Teaching Management Services
 builder.Services.AddScoped<ISemesterService, SemesterService>();

@@ -30,6 +30,7 @@ const routeNameMap: Record<string, string> = {
   experimentPlans: '实训计划',
   campuses: '校区管理',
   buildings: '楼宇管理',
+  floorPlan: '建筑平面图',
   labs: '实验室管理',
   equipments: '设备管理'
 }

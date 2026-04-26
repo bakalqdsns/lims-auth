@@ -1094,6 +1094,7 @@ public class AppDbContext : DbContext
         // =========================
 
         var tasksId = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
+        var labCenterId = Guid.Parse("a0000000-0000-0000-0000-000000000005");
 
         modelBuilder.Entity<ExperimentTeachingTask>().HasData(
             new ExperimentTeachingTask
@@ -1119,10 +1120,13 @@ public class AppDbContext : DbContext
                 TotalTrainingHours = 10,
                 CurrentSemesterTrainingHours = 5,
 
-                InstitutionId = null,
+                InstitutionId = labCenterId,
+                InstitutionName = "实验中心",
                 DepartmentId = csDeptId,
+                DepartmentName = "计算机系",
 
                 TeacherIds = "teacher-001,teacher-002",
+                TeacherNames = "张教授,李讲师",
                 TeacherTitles = "教授,讲师",
 
                 TechnicalStaff = "实验员A",
@@ -1250,6 +1254,901 @@ public class AppDbContext : DbContext
             }
         );
 
+        // =========================
+        // 机构种子数据（完整层级结构）
+        // =========================
+
+        var schoolId = Guid.Parse("a0000000-0000-0000-0000-000000000001");
+        var deptCSId = Guid.Parse("a0000000-0000-0000-0000-000000000002");
+        var deptPhysicsId = Guid.Parse("a0000000-0000-0000-0000-000000000003");
+        var deptChemistryId = Guid.Parse("a0000000-0000-0000-0000-000000000004");
+
+        modelBuilder.Entity<SysInstitution>().HasData(
+            new SysInstitution
+            {
+                Id = schoolId,
+                Code = "SCHOOL",
+                Name = "信息科学与工程学院",
+                InstitutionType = "学院",
+                Level = 1,
+                FullPath = "信息科学与工程学院",
+                Status = "Active",
+                SortOrder = 1,
+                Description = "学校信息科学与工程学院",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            },
+            new SysInstitution
+            {
+                Id = deptCSId,
+                Code = "DEPT-CS",
+                Name = "计算机系",
+                ParentId = schoolId,
+                InstitutionType = "系",
+                Level = 2,
+                FullPath = "信息科学与工程学院/计算机系",
+                Status = "Active",
+                SortOrder = 1,
+                Description = "计算机科学与技术系",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            },
+            new SysInstitution
+            {
+                Id = deptPhysicsId,
+                Code = "DEPT-PHY",
+                Name = "物理系",
+                ParentId = schoolId,
+                InstitutionType = "系",
+                Level = 2,
+                FullPath = "信息科学与工程学院/物理系",
+                Status = "Active",
+                SortOrder = 2,
+                Description = "物理学系",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            },
+            new SysInstitution
+            {
+                Id = deptChemistryId,
+                Code = "DEPT-CHEM",
+                Name = "化学系",
+                ParentId = schoolId,
+                InstitutionType = "系",
+                Level = 2,
+                FullPath = "信息科学与工程学院/化学系",
+                Status = "Active",
+                SortOrder = 3,
+                Description = "化学系",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            },
+            new SysInstitution
+            {
+                Id = labCenterId,
+                Code = "LAB-CENTER",
+                Name = "实验中心",
+                ParentId = schoolId,
+                InstitutionType = "实验中心",
+                Level = 2,
+                FullPath = "信息科学与工程学院/实验中心",
+                Status = "Active",
+                SortOrder = 4,
+                Description = "学院实验教学中心",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            }
+        );
+
+        // =========================
+        // 场地楼宇种子数据
+        // =========================
+
+        var venBuildingAId = Guid.Parse("b0000000-0000-0000-0000-000000000010");
+        var venBuildingBId = Guid.Parse("b0000000-0000-0000-0000-000000000011");
+        var venBuildingCId = Guid.Parse("b0000000-0000-0000-0000-000000000012");
+
+        modelBuilder.Entity<VenBuilding>().HasData(
+            new VenBuilding
+            {
+                Id = venBuildingAId,
+                Code = "VEN-A",
+                Name = "工程实训楼A",
+                EnglishName = "Engineering Training Building A",
+                Address = "主校区工程实践区",
+                TotalFloors = 4,
+                Area = 8000,
+                BuildYear = 2019,
+                UseType = "实训",
+                Status = "Active",
+                SortOrder = 1,
+                Description = "主要用于工程实训课程的场地楼宇",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            },
+            new VenBuilding
+            {
+                Id = venBuildingBId,
+                Code = "VEN-B",
+                Name = "理学实验楼B",
+                EnglishName = "Science Experiment Building B",
+                Address = "主校区理学区",
+                TotalFloors = 5,
+                Area = 10000,
+                BuildYear = 2020,
+                UseType = "实验",
+                Status = "Active",
+                SortOrder = 2,
+                Description = "物理、化学基础实验场地",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            },
+            new VenBuilding
+            {
+                Id = venBuildingCId,
+                Code = "VEN-C",
+                Name = "创新创业中心C",
+                EnglishName = "Innovation Center C",
+                Address = "东校区创新区",
+                TotalFloors = 3,
+                Area = 6000,
+                BuildYear = 2021,
+                UseType = "创新",
+                Status = "Active",
+                SortOrder = 3,
+                Description = "创新创业实践场地",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            }
+        );
+
+        // =========================
+        // 场地房间种子数据
+        // =========================
+
+        modelBuilder.Entity<VenRoom>().HasData(
+            new VenRoom
+            {
+                Id = Guid.Parse("c0000000-0000-0000-0000-000000000010"),
+                Code = "VEN-A101",
+                Name = "工程制图实训室",
+                BuildingId = venBuildingAId,
+                FloorNo = 1,
+                RoomNumber = "A101",
+                SeatCount = 40,
+                Area = 120,
+                RoomType = "实训室",
+                ExperimentLocationCode = "EXP-A101",
+                IsAvailable = true,
+                Status = "Active",
+                SortOrder = 1,
+                Description = "工程制图课程实训场地",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            },
+            new VenRoom
+            {
+                Id = Guid.Parse("c0000000-0000-0000-0000-000000000011"),
+                Code = "VEN-A102",
+                Name = "金工实训车间",
+                BuildingId = venBuildingAId,
+                FloorNo = 1,
+                RoomNumber = "A102",
+                SeatCount = 30,
+                Area = 200,
+                RoomType = "车间",
+                ExperimentLocationCode = "EXP-A102",
+                IsAvailable = true,
+                Status = "Active",
+                SortOrder = 2,
+                Description = "金属加工实训场地",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            },
+            new VenRoom
+            {
+                Id = Guid.Parse("c0000000-0000-0000-0000-000000000012"),
+                Code = "VEN-A201",
+                Name = "电子工艺实训室",
+                BuildingId = venBuildingAId,
+                FloorNo = 2,
+                RoomNumber = "A201",
+                SeatCount = 36,
+                Area = 150,
+                RoomType = "实训室",
+                ExperimentLocationCode = "EXP-A201",
+                IsAvailable = true,
+                Status = "Active",
+                SortOrder = 3,
+                Description = "电子工艺装配实训场地",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            },
+            new VenRoom
+            {
+                Id = Guid.Parse("c0000000-0000-0000-0000-000000000013"),
+                Code = "VEN-B101",
+                Name = "普通物理实验室1",
+                BuildingId = venBuildingBId,
+                FloorNo = 1,
+                RoomNumber = "B101",
+                SeatCount = 30,
+                Area = 100,
+                RoomType = "实验室",
+                ExperimentLocationCode = "EXP-B101",
+                IsAvailable = true,
+                Status = "Active",
+                SortOrder = 1,
+                Description = "大学物理实验场地",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            },
+            new VenRoom
+            {
+                Id = Guid.Parse("c0000000-0000-0000-0000-000000000014"),
+                Code = "VEN-B102",
+                Name = "普通物理实验室2",
+                BuildingId = venBuildingBId,
+                FloorNo = 1,
+                RoomNumber = "B102",
+                SeatCount = 30,
+                Area = 100,
+                RoomType = "实验室",
+                ExperimentLocationCode = "EXP-B102",
+                IsAvailable = true,
+                Status = "Active",
+                SortOrder = 2,
+                Description = "大学物理实验场地",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            },
+            new VenRoom
+            {
+                Id = Guid.Parse("c0000000-0000-0000-0000-000000000015"),
+                Code = "VEN-B201",
+                Name = "基础化学实验室",
+                BuildingId = venBuildingBId,
+                FloorNo = 2,
+                RoomNumber = "B201",
+                SeatCount = 24,
+                Area = 90,
+                RoomType = "实验室",
+                ExperimentLocationCode = "EXP-B201",
+                IsAvailable = true,
+                Status = "Active",
+                SortOrder = 3,
+                Description = "基础化学实验场地",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            },
+            new VenRoom
+            {
+                Id = Guid.Parse("c0000000-0000-0000-0000-000000000016"),
+                Code = "VEN-C101",
+                Name = "创客空间",
+                BuildingId = venBuildingCId,
+                FloorNo = 1,
+                RoomNumber = "C101",
+                SeatCount = 50,
+                Area = 200,
+                RoomType = "创客空间",
+                ExperimentLocationCode = "EXP-C101",
+                IsAvailable = true,
+                Status = "Active",
+                SortOrder = 1,
+                Description = "创新创业实践场地",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            }
+        );
+
+        // =========================
+        // 更多实验教学任务
+        // =========================
+
+        var task2Id = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb01");
+        var task3Id = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb02");
+        var task4Id = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbb03");
+
+        modelBuilder.Entity<ExperimentTeachingTask>().HasData(
+            // 任务1已在上面定义 (tasksId)
+            new ExperimentTeachingTask
+            {
+                Id = task2Id,
+                SemesterId = semesterId,
+                MajorId = majorId,
+                ClassId = classId,
+                StudentCount = 30,
+                StudentLevel = "本科",
+                CourseName = "程序设计综合实验",
+                CourseType = "必修课",
+                IsIndependentCourse = true,
+                TotalExperimentHours = 48,
+                CurrentSemesterExperimentHours = 24,
+                TotalPracticeHours = 16,
+                CurrentSemesterPracticeHours = 8,
+                TotalTrainingHours = 0,
+                CurrentSemesterTrainingHours = 0,
+                InstitutionId = labCenterId,
+                InstitutionName = "实验中心",
+                DepartmentId = csDeptId,
+                DepartmentName = "计算机系",
+                TeacherIds = teacherUserId.ToString(),
+                TeacherNames = "李老师",
+                TeacherTitles = "讲师",
+                TechnicalStaff = "实验员B",
+                TechnicalTitle = "实验师",
+                TextbookName = "C语言程序设计实验教程",
+                ExperimentGuideName = "程序设计实验指导",
+                Status = "Active",
+                SortOrder = 2,
+                Description = "C语言程序设计综合实验课程",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            },
+            new ExperimentTeachingTask
+            {
+                Id = task3Id,
+                SemesterId = semesterId,
+                MajorId = majorId,
+                ClassId = classId,
+                StudentCount = 30,
+                StudentLevel = "本科",
+                CourseName = "数据结构与算法实验",
+                CourseType = "必修课",
+                IsIndependentCourse = true,
+                TotalExperimentHours = 32,
+                CurrentSemesterExperimentHours = 16,
+                TotalPracticeHours = 0,
+                CurrentSemesterPracticeHours = 0,
+                TotalTrainingHours = 0,
+                CurrentSemesterTrainingHours = 0,
+                InstitutionId = labCenterId,
+                InstitutionName = "实验中心",
+                DepartmentId = csDeptId,
+                DepartmentName = "计算机系",
+                TeacherIds = teacherUserId.ToString(),
+                TeacherNames = "王老师",
+                TeacherTitles = "讲师",
+                TechnicalStaff = "实验员C",
+                TechnicalTitle = "高级实验师",
+                TextbookName = "数据结构实验教程",
+                ExperimentGuideName = "数据结构实验指导书",
+                Status = "Active",
+                SortOrder = 3,
+                Description = "数据结构与算法分析实验",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            },
+            new ExperimentTeachingTask
+            {
+                Id = task4Id,
+                SemesterId = semesterId,
+                MajorId = majorId,
+                ClassId = classId,
+                StudentCount = 30,
+                StudentLevel = "本科",
+                CourseName = "操作系统实验",
+                CourseType = "专业核心课",
+                IsIndependentCourse = false,
+                TotalExperimentHours = 24,
+                CurrentSemesterExperimentHours = 12,
+                TotalPracticeHours = 8,
+                CurrentSemesterPracticeHours = 4,
+                TotalTrainingHours = 0,
+                CurrentSemesterTrainingHours = 0,
+                InstitutionId = labCenterId,
+                InstitutionName = "实验中心",
+                DepartmentId = csDeptId,
+                DepartmentName = "计算机系",
+                TeacherIds = teacherUserId.ToString(),
+                TeacherNames = "赵老师",
+                TeacherTitles = "副教授",
+                TechnicalStaff = "实验员D",
+                TechnicalTitle = "工程师",
+                TextbookName = "操作系统实验教程",
+                ExperimentGuideName = "Linux系统实验指导",
+                Status = "Active",
+                SortOrder = 4,
+                Description = "操作系统原理与Linux实验",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            }
+        );
+
+        // =========================
+        // 更多实验项目
+        // =========================
+
+        var item2Id = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa01");
+        var item3Id = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa02");
+        var item4Id = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa03");
+        var item5Id = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa04");
+        var item6Id = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa05");
+        var item7Id = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa06");
+        var item8Id = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa07");
+        var item9Id = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa08");
+        var item10Id = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaa09");
+
+        modelBuilder.Entity<ExperimentItem>().HasData(
+            // 项目1已在上面定义 (itemId)
+            new ExperimentItem
+            {
+                Id = item2Id,
+                CourseCode = "NET-EXP-02",
+                ExperimentName = "交换机配置实验",
+                ExperimentHours = 4,
+                ExperimentType = "基础实验",
+                ExperimentRequirement = "必修",
+                Status = "Active",
+                SortOrder = 2,
+                Description = "学习交换机VLAN配置",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            },
+            new ExperimentItem
+            {
+                Id = item3Id,
+                CourseCode = "NET-EXP-03",
+                ExperimentName = "路由器配置实验",
+                ExperimentHours = 4,
+                ExperimentType = "基础实验",
+                ExperimentRequirement = "必修",
+                Status = "Active",
+                SortOrder = 3,
+                Description = "学习路由器静态路由和动态路由配置",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            },
+            new ExperimentItem
+            {
+                Id = item4Id,
+                CourseCode = "NET-EXP-04",
+                ExperimentName = "网络协议分析实验",
+                ExperimentHours = 4,
+                ExperimentType = "综合实验",
+                ExperimentRequirement = "必修",
+                Status = "Active",
+                SortOrder = 4,
+                Description = "使用Wireshark分析TCP/IP协议",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            },
+            new ExperimentItem
+            {
+                Id = item5Id,
+                CourseCode = "NET-EXP-05",
+                ExperimentName = "网络安全基础实验",
+                ExperimentHours = 4,
+                ExperimentType = "综合实验",
+                ExperimentRequirement = "选修",
+                Status = "Active",
+                SortOrder = 5,
+                Description = "防火墙配置与入侵检测基础",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            },
+            // 程序设计实验项目
+            new ExperimentItem
+            {
+                Id = item6Id,
+                CourseCode = "C-PROG-01",
+                ExperimentName = "顺序结构程序设计",
+                ExperimentHours = 2,
+                ExperimentType = "验证性实验",
+                ExperimentRequirement = "必修",
+                Status = "Active",
+                SortOrder = 1,
+                Description = "基本输入输出和算术运算",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            },
+            new ExperimentItem
+            {
+                Id = item7Id,
+                CourseCode = "C-PROG-02",
+                ExperimentName = "选择结构程序设计",
+                ExperimentHours = 2,
+                ExperimentType = "验证性实验",
+                ExperimentRequirement = "必修",
+                Status = "Active",
+                SortOrder = 2,
+                Description = "if-else和switch语句练习",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            },
+            new ExperimentItem
+            {
+                Id = item8Id,
+                CourseCode = "C-PROG-03",
+                ExperimentName = "循环结构程序设计",
+                ExperimentHours = 4,
+                ExperimentType = "设计性实验",
+                ExperimentRequirement = "必修",
+                Status = "Active",
+                SortOrder = 3,
+                Description = "for、while、do-while循环应用",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            },
+            new ExperimentItem
+            {
+                Id = item9Id,
+                CourseCode = "C-PROG-04",
+                ExperimentName = "函数与模块化设计",
+                ExperimentHours = 4,
+                ExperimentType = "设计性实验",
+                ExperimentRequirement = "必修",
+                Status = "Active",
+                SortOrder = 4,
+                Description = "函数的定义、调用与参数传递",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            },
+            new ExperimentItem
+            {
+                Id = item10Id,
+                CourseCode = "C-PROG-05",
+                ExperimentName = "综合设计项目",
+                ExperimentHours = 8,
+                ExperimentType = "综合性实验",
+                ExperimentRequirement = "必修",
+                Status = "Active",
+                SortOrder = 5,
+                Description = "学生成绩管理系统设计",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            }
+        );
+
+        // =========================
+        // 更多实验安排
+        // =========================
+
+        var schedule2Id = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccc01");
+        var schedule3Id = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccc02");
+        var schedule4Id = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccc03");
+        var schedule5Id = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccc04");
+        var schedule6Id = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccc05");
+        var schedule7Id = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccc06");
+        var schedule8Id = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccc07");
+
+        modelBuilder.Entity<ExperimentItemSchedule>().HasData(
+            // 安排1已在上面定义 (scheduleId)
+            new ExperimentItemSchedule
+            {
+                Id = schedule2Id,
+                ExperimentTaskId = tasksId,
+                ExperimentItemId = item2Id,
+                LabId = lab2Id,
+                WeekNumber = 3,
+                DayOfWeek = 2,
+                PeriodNumber = 3,
+                ParallelGroups = 2,
+                StudentsPerGroup = 15,
+                CycleCount = 1,
+                ExperimentRequirement = "必做",
+                Location = "实验楼A-102",
+                IsConducted = false,
+                Status = "Active",
+                SortOrder = 2,
+                Description = "交换机VLAN配置实验",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            },
+            new ExperimentItemSchedule
+            {
+                Id = schedule3Id,
+                ExperimentTaskId = tasksId,
+                ExperimentItemId = item3Id,
+                LabId = lab2Id,
+                WeekNumber = 5,
+                DayOfWeek = 4,
+                PeriodNumber = 4,
+                ParallelGroups = 2,
+                StudentsPerGroup = 15,
+                CycleCount = 1,
+                ExperimentRequirement = "必做",
+                Location = "实验楼A-102",
+                IsConducted = false,
+                Status = "Active",
+                SortOrder = 3,
+                Description = "路由器配置实验",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            },
+            new ExperimentItemSchedule
+            {
+                Id = schedule4Id,
+                ExperimentTaskId = tasksId,
+                ExperimentItemId = item4Id,
+                LabId = lab1Id,
+                WeekNumber = 7,
+                DayOfWeek = 2,
+                PeriodNumber = 1,
+                ParallelGroups = 2,
+                StudentsPerGroup = 15,
+                CycleCount = 1,
+                ExperimentRequirement = "必做",
+                Location = "实验楼A-101",
+                IsConducted = false,
+                Status = "Active",
+                SortOrder = 4,
+                Description = "网络协议分析实验",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            },
+            new ExperimentItemSchedule
+            {
+                Id = schedule5Id,
+                ExperimentTaskId = tasksId,
+                ExperimentItemId = item5Id,
+                LabId = lab2Id,
+                WeekNumber = 12,
+                DayOfWeek = 2,
+                PeriodNumber = 3,
+                ParallelGroups = 2,
+                StudentsPerGroup = 15,
+                CycleCount = 1,
+                ExperimentRequirement = "选做",
+                Location = "实验楼A-102",
+                IsConducted = false,
+                Status = "Active",
+                SortOrder = 5,
+                Description = "网络安全基础实验",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            },
+            // 程序设计实验安排
+            new ExperimentItemSchedule
+            {
+                Id = schedule6Id,
+                ExperimentTaskId = task2Id,
+                ExperimentItemId = item6Id,
+                LabId = lab1Id,
+                WeekNumber = 1,
+                DayOfWeek = 3,
+                PeriodNumber = 1,
+                ParallelGroups = 3,
+                StudentsPerGroup = 10,
+                CycleCount = 1,
+                ExperimentRequirement = "必做",
+                Location = "实验楼A-101",
+                IsConducted = false,
+                Status = "Active",
+                SortOrder = 1,
+                Description = "顺序结构程序设计",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            },
+            new ExperimentItemSchedule
+            {
+                Id = schedule7Id,
+                ExperimentTaskId = task2Id,
+                ExperimentItemId = item7Id,
+                LabId = lab1Id,
+                WeekNumber = 2,
+                DayOfWeek = 3,
+                PeriodNumber = 1,
+                ParallelGroups = 3,
+                StudentsPerGroup = 10,
+                CycleCount = 1,
+                ExperimentRequirement = "必做",
+                Location = "实验楼A-101",
+                IsConducted = false,
+                Status = "Active",
+                SortOrder = 2,
+                Description = "选择结构程序设计",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            },
+            new ExperimentItemSchedule
+            {
+                Id = schedule8Id,
+                ExperimentTaskId = task2Id,
+                ExperimentItemId = item8Id,
+                LabId = lab1Id,
+                WeekNumber = 4,
+                DayOfWeek = 5,
+                PeriodNumber = 2,
+                ParallelGroups = 3,
+                StudentsPerGroup = 10,
+                CycleCount = 1,
+                ExperimentRequirement = "必做",
+                Location = "实验楼A-101",
+                IsConducted = false,
+                Status = "Active",
+                SortOrder = 3,
+                Description = "循环结构程序设计",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            }
+        );
+
+        // =========================
+        // 更多教学质量评估
+        // =========================
+
+        var assessment2Id = Guid.Parse("dddddddd-dddd-dddd-dddd-dddddddd0001");
+        var assessment3Id = Guid.Parse("dddddddd-dddd-dddd-dddd-dddddddd0002");
+
+        modelBuilder.Entity<ExperimentQualityAssessment>().HasData(
+            new ExperimentQualityAssessment
+            {
+                Id = assessment2Id,
+                ExperimentTaskId = task2Id,
+                InstitutionId = labCenterId,
+                CourseName = "程序设计综合实验",
+                ExperimentHours = 24,
+                IsIndependentCourse = true,
+                MainTeacher = "李老师",
+                TeacherTitle = "讲师",
+                TechnicalStaff = "实验员B",
+                TechnicalTitle = "实验师",
+                ClassName = "计算机2024级1班",
+                ClassStudentCount = 30,
+                PlannedExperimentCount = 8,
+                ActualExperimentCount = 8,
+                MissedExperimentItems = "",
+                AssessmentMethod = "实验报告+现场操作",
+                AssessmentStudentCount = 30,
+                AssessmentTime = "第17周",
+                Status = "Active",
+                SortOrder = 2,
+                Description = "程序设计实验教学评估良好",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            },
+            new ExperimentQualityAssessment
+            {
+                Id = assessment3Id,
+                ExperimentTaskId = task3Id,
+                InstitutionId = labCenterId,
+                CourseName = "数据结构与算法实验",
+                ExperimentHours = 16,
+                IsIndependentCourse = true,
+                MainTeacher = "王老师",
+                TeacherTitle = "副教授",
+                TechnicalStaff = "实验员C",
+                TechnicalTitle = "高级实验师",
+                ClassName = "计算机2024级1班",
+                ClassStudentCount = 30,
+                PlannedExperimentCount = 6,
+                ActualExperimentCount = 6,
+                MissedExperimentItems = "",
+                AssessmentMethod = "实验报告+代码评审",
+                AssessmentStudentCount = 30,
+                AssessmentTime = "第16周",
+                Status = "Active",
+                SortOrder = 3,
+                Description = "数据结构实验教学评估优秀",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            }
+        );
+
+        // =========================
+        // 实训教学计划
+        // =========================
+
+        var plan1Id = Guid.Parse("eeeeeeee-eeee-eeee-eeee-eeeeeeee0001");
+        var plan2Id = Guid.Parse("eeeeeeee-eeee-eeee-eeee-eeeeeeee0002");
+        var plan3Id = Guid.Parse("eeeeeeee-eeee-eeee-eeee-eeeeeeee0003");
+
+        modelBuilder.Entity<TrainingTeachingPlan>().HasData(
+            new TrainingTeachingPlan
+            {
+                Id = plan1Id,
+                SemesterId = semesterId,
+                CourseId = courseId,
+                CourseName = "工程制图实训",
+                CourseCode = "ENG-DRW-001",
+                MajorId = majorId,
+                ClassId = classId,
+                StudentCount = 30,
+                StudentLevel = "本科",
+                TeachingOrganizationMethod = "校内集中",
+                TeachingLocation = "工程实训楼A座1层A101",
+                TeachingPurpose = "培养学生工程制图能力、空间想象能力和严谨的工作作风",
+                TeachingRequirements = "掌握AutoCAD软件操作、能够独立完成工程图纸的绘制",
+                TeachingContent = "机械制图基础、三维建模、工程图纸绘制、标准件与常用件表达",
+                TeachingProgressSchedule = "第1-2周：制图基本知识；第3-4周：AutoCAD基础；第5-8周：零件图绘制；第9-12周：装配图绘制；第13-16周：三维建模",
+                TrainingMethod = "项目驱动、分组教学",
+                CycleGroupInfo = "每班分为3组，每组10人，循环实训",
+                AssessmentMethod = "作品评价+答辩",
+                AssessmentRequirements = "提交完整的工程图纸集，含零件图3张、装配图1张",
+                QualityAssuranceMeasures = "过程考核+成果验收+答辩评分",
+                QualityAssuranceDetails = "平时表现占20%，作品完成度占50%，答辩表现占30%",
+                ExperimentCenterOpinion = "同意开课",
+                ExperimentCenterOpinionStatus = "Approved",
+                ExperimentCenterApprovedBy = "管理员",
+                ExperimentCenterApprovalDate = seedDate,
+                DepartmentOpinion = "符合培养方案要求",
+                DepartmentOpinionStatus = "Approved",
+                DepartmentApprovedBy = "系主任",
+                DepartmentApprovalDate = seedDate,
+                Status = "Active",
+                SortOrder = 1,
+                Description = "工程制图实训教学计划",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            },
+            new TrainingTeachingPlan
+            {
+                Id = plan2Id,
+                SemesterId = semesterId,
+                CourseId = courseId,
+                CourseName = "大学物理实验",
+                CourseCode = "PHY-EXP-001",
+                MajorId = majorId,
+                ClassId = classId,
+                StudentCount = 30,
+                StudentLevel = "本科",
+                TeachingOrganizationMethod = "校内集中",
+                TeachingLocation = "理学实验楼B座1层B101",
+                TeachingPurpose = "加深对物理原理的理解，培养实验操作技能和数据处理能力",
+                TeachingRequirements = "掌握基本物理量的测量方法、正确使用仪器、能够分析实验误差",
+                TeachingContent = "力学实验、热学实验、电磁学实验、光学实验",
+                TeachingProgressSchedule = "第1-3周：力学实验；第4-6周：热学实验；第7-10周：电磁学实验；第11-13周：光学实验；第14-15周：综合实验",
+                TrainingMethod = "理实一体化教学",
+                CycleGroupInfo = "每班分为3组，每组10人，循环进行各模块实验",
+                AssessmentMethod = "实验操作考核+实验报告",
+                AssessmentRequirements = "完成全部必做实验，提交规范实验报告",
+                QualityAssuranceMeasures = "实验过程监控+报告评阅+操作考核",
+                QualityAssuranceDetails = "实验操作占40%，实验报告占40%，考勤占20%",
+                ExperimentCenterOpinion = "教学质量良好",
+                ExperimentCenterOpinionStatus = "Approved",
+                ExperimentCenterApprovedBy = "管理员",
+                ExperimentCenterApprovalDate = seedDate,
+                DepartmentOpinion = "课程设置合理",
+                DepartmentOpinionStatus = "Approved",
+                DepartmentApprovedBy = "系主任",
+                DepartmentApprovalDate = seedDate,
+                Status = "Active",
+                SortOrder = 2,
+                Description = "大学物理实验教学计划",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            },
+            new TrainingTeachingPlan
+            {
+                Id = plan3Id,
+                SemesterId = semesterId,
+                CourseId = courseId,
+                CourseName = "创新创业实践",
+                CourseCode = "INN-ENT-001",
+                MajorId = majorId,
+                ClassId = classId,
+                StudentCount = 30,
+                StudentLevel = "本科",
+                TeachingOrganizationMethod = "校内分散",
+                TeachingLocation = "创新创业中心C座1层创客空间",
+                TeachingPurpose = "培养学生的创新思维、团队协作能力和创业实践能力",
+                TeachingRequirements = "完成创新项目策划与实施，能够进行项目路演和答辩",
+                TeachingContent = "创新方法论、创业基础、项目实践、商业计划书撰写",
+                TeachingProgressSchedule = "第1-2周：创新思维训练；第3-4周：创业基础理论；第5-8周：项目分组实践；第9-12周：中期检查与指导；第13-15周：路演准备；第16周：项目路演与答辩",
+                TrainingMethod = "案例分析+项目实战+路演展示",
+                CycleGroupInfo = "学生自由组队，每组4-5人，共6组",
+                AssessmentMethod = "项目成果+路演评分",
+                AssessmentRequirements = "提交完整商业计划书、进行项目路演答辩",
+                QualityAssuranceMeasures = "企业导师参与+阶段性评审",
+                QualityAssuranceDetails = "项目创新性占30%，团队协作占20%，路演表现占30%，商业可行性占20%",
+                ExperimentCenterOpinion = "教学模式创新",
+                ExperimentCenterOpinionStatus = "Approved",
+                ExperimentCenterApprovedBy = "管理员",
+                ExperimentCenterApprovalDate = seedDate,
+                DepartmentOpinion = "有助于学生全面发展",
+                DepartmentOpinionStatus = "Approved",
+                DepartmentApprovedBy = "系主任",
+                DepartmentApprovalDate = seedDate,
+                Status = "Active",
+                SortOrder = 3,
+                Description = "创新创业实训教学计划",
+                CreatedAt = seedDate,
+                UpdatedAt = seedDate
+            }
+        );
+
         // ========== 实验/实践/实训模块 ==========
 
         // SysInstitution 自引用（层级结构）
@@ -1305,6 +2204,11 @@ public class AppDbContext : DbContext
             entity.HasOne(e => e.Department)
                 .WithMany()
                 .HasForeignKey(e => e.DepartmentId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(e => e.Institution)
+                .WithMany()
+                .HasForeignKey(e => e.InstitutionId)
                 .OnDelete(DeleteBehavior.SetNull);
 
             // 一对多：Schedule
@@ -1401,13 +2305,29 @@ public class AppDbContext : DbContext
 
             entity.Property(e => e.Id).HasMaxLength(36);
 
+            entity.HasIndex(e => e.SemesterId);
             entity.HasIndex(e => e.CourseId);
             entity.HasIndex(e => e.Status);
+
+            entity.HasOne(e => e.Semester)
+                .WithMany()
+                .HasForeignKey(e => e.SemesterId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasOne(e => e.Course)
                 .WithMany()
                 .HasForeignKey(e => e.CourseId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Major)
+                .WithMany()
+                .HasForeignKey(e => e.MajorId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(e => e.Class)
+                .WithMany()
+                .HasForeignKey(e => e.ClassId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
 

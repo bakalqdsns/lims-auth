@@ -419,6 +419,9 @@ public class ExperimentsController : ControllerBase
     {
         var query = _context.TrainingTeachingPlans
             .Include(e => e.Course)
+            .Include(e => e.Semester)
+            .Include(e => e.Major)
+            .Include(e => e.Class)
             .AsQueryable();
 
         if (courseId.HasValue)
@@ -435,6 +438,9 @@ public class ExperimentsController : ControllerBase
     {
         var plan = await _context.TrainingTeachingPlans
             .Include(e => e.Course)
+            .Include(e => e.Semester)
+            .Include(e => e.Major)
+            .Include(e => e.Class)
             .FirstOrDefaultAsync(e => e.Id == id);
 
         if (plan == null)

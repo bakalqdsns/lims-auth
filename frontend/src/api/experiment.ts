@@ -1,6 +1,7 @@
 import axios from 'axios'
 
 const API_BASE_URL = '/api/experiments'
+const EXPORT_BASE_URL = '/api/export/experiment'
 
 export const experimentApi = {
   getTasks: (params?: { semesterId?: string; majorId?: string; classId?: string }) =>
@@ -45,6 +46,13 @@ export const experimentApi = {
     axios.post(`${API_BASE_URL}/training-plans`, data),
   updateTrainingPlan: (id: string, data: TrainingPlanRequest) =>
     axios.put(`${API_BASE_URL}/training-plans/${id}`, data)
+}
+
+export const exportApi = {
+  exportTaskList: (params?: { semesterId?: string; majorId?: string; classId?: string }) =>
+    axios.get(`${EXPORT_BASE_URL}/task-list`, { params, responseType: 'blob' }),
+  exportSchedulePlan: (params?: { semesterId?: string; majorId?: string; classId?: string }) =>
+    axios.get(`${EXPORT_BASE_URL}/schedule-plan`, { params, responseType: 'blob' })
 }
 
 export interface ExperimentTaskDto {
@@ -115,7 +123,7 @@ export interface ExperimentScheduleDto {
   description?: string
   experimentTask?: { id: string; courseName: string }
   experimentItem?: { id: string; experimentName: string }
-  lab?: { id: string; name: string; roomNumber?: string; building?: { name: string } }
+  lab?: { id: string; name: string; buildingId?: string; roomNumber?: string; building?: { name: string } }
 }
 
 export type ExperimentScheduleRequest = Omit<ExperimentScheduleDto, 'id' | 'experimentTask' | 'experimentItem' | 'lab'>
