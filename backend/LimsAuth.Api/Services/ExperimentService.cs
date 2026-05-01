@@ -6,28 +6,38 @@ namespace LimsAuth.Api.Services;
 
 public interface IExperimentService
 {
+    // ExperimentTeachingTask
     Task<List<ExperimentTeachingTask>> GetTasksAsync();
     Task<ExperimentTeachingTask?> GetTaskByIdAsync(Guid id);
-
     Task<ExperimentTeachingTask> CreateTaskAsync(ExperimentTeachingTask task);
     Task<bool> UpdateTaskAsync(Guid id, ExperimentTeachingTask task);
-    Task<bool> DeleteTaskAsync(Guid id);
+    Task<bool> DeleteTaskAsync(Guid id, string? deletedBy = null);
 
+    // ExperimentItem
     Task<List<ExperimentItem>> GetItemsAsync();
+    Task<ExperimentItem?> GetItemByIdAsync(Guid id);
     Task<ExperimentItem> CreateItemAsync(ExperimentItem item);
+    Task<bool> UpdateItemAsync(Guid id, ExperimentItem item);
+    Task<bool> DeleteItemAsync(Guid id);
 
+    // ExperimentItemSchedule
     Task<List<ExperimentItemSchedule>> GetSchedulesByTaskAsync(Guid taskId);
     Task<ExperimentItemSchedule> CreateScheduleAsync(ExperimentItemSchedule schedule);
+    Task<bool> UpdateScheduleAsync(Guid id, ExperimentItemSchedule schedule);
+    Task<bool> DeleteScheduleAsync(Guid id);
 
+    // ExperimentQualityAssessment
     Task<ExperimentQualityAssessment?> GetAssessmentAsync(Guid taskId);
     Task<ExperimentQualityAssessment> SaveAssessmentAsync(ExperimentQualityAssessment assessment);
 
+    // TrainingTeachingPlan
     Task<List<TrainingTeachingPlan>> GetTrainingPlansAsync();
     Task<TrainingTeachingPlan?> GetTrainingPlanByIdAsync(Guid id);
     Task<TrainingTeachingPlan> CreateTrainingPlanAsync(TrainingTeachingPlan plan);
     Task<bool> UpdateTrainingPlanAsync(Guid id, TrainingTeachingPlan plan);
     Task<bool> DeleteTrainingPlanAsync(Guid id);
-    Task<bool> ApproveTrainingPlanAsync(Guid id, string approvalType, string opinion, string? approver);
+    Task<List<TrainingTeachingPlan>> GetTrainingPlansByStatusAsync(string? status, string? approvalStatus);
+    Task<bool> ApproveTrainingPlanAsync(Guid id, string approvalType, string opinion, string? approver, string status);
 }
 
 public class ExperimentService : IExperimentService
@@ -46,9 +56,9 @@ public class ExperimentService : IExperimentService
     public async Task<List<ExperimentTeachingTask>> GetTasksAsync()
     {
         return await _db.ExperimentTeachingTasks
+            .Include(x => x.Semester)
             .Include(x => x.Major)
             .Include(x => x.Class)
-            .Include(x => x.Semester)
             .Include(x => x.Department)
             .Include(x => x.Institution)
             .Include(x => x.Schedules)
@@ -82,6 +92,9 @@ public class ExperimentService : IExperimentService
         var task = await _db.ExperimentTeachingTasks.FindAsync(id);
         if (task == null) return false;
 
+        task.SemesterId = input.SemesterId;
+        task.MajorId = input.MajorId;
+        task.ClassId = input.ClassId;
         task.CourseName = input.CourseName;
         task.StudentCount = input.StudentCount;
         task.StudentLevel = input.StudentLevel;
@@ -98,9 +111,7 @@ public class ExperimentService : IExperimentService
         task.CurrentSemesterTrainingHours = input.CurrentSemesterTrainingHours;
 
         task.InstitutionId = input.InstitutionId;
-        task.InstitutionName = input.InstitutionName;
         task.DepartmentId = input.DepartmentId;
-        task.DepartmentName = input.DepartmentName;
 
         task.TeacherIds = input.TeacherIds;
         task.TeacherNames = input.TeacherNames;
@@ -122,11 +133,24 @@ public class ExperimentService : IExperimentService
         return true;
     }
 
-    public async Task<bool> DeleteTaskAsync(Guid id)
+    public async Task<bool> DeleteTaskAsync(Guid id, string? deletedBy = null)
     {
-        var task = await _db.ExperimentTeachingTasks.FindAsync(id);
+        var task = await _db.ExperimentTeachingTasks
+            .Include(t => t.Schedules)
+            .Include(t => t.QualityAssessment)
+            .FirstOrDefaultAsync(t => t.Id == id);
         if (task == null) return false;
 
+        // 级联删除关联的 Schedules
+        if (task.Schedules?.Count > 0)
+            _db.ExperimentItemSchedules.RemoveRange(task.Schedules);
+
+        // 级联删除关联的 QualityAssessment
+        if (task.QualityAssessment != null)
+            _db.ExperimentQualityAssessments.Remove(task.QualityAssessment);
+
+        task.UpdatedAt = DateTime.UtcNow;
+        task.UpdatedBy = deletedBy;
         _db.ExperimentTeachingTasks.Remove(task);
         await _db.SaveChangesAsync();
 
@@ -156,6 +180,42 @@ public class ExperimentService : IExperimentService
         return item;
     }
 
+    public async Task<ExperimentItem?> GetItemByIdAsync(Guid id)
+    {
+        return await _db.ExperimentItems
+            .Include(x => x.Schedules)
+            .FirstOrDefaultAsync(x => x.Id == id);
+    }
+
+    public async Task<bool> UpdateItemAsync(Guid id, ExperimentItem input)
+    {
+        var item = await _db.ExperimentItems.FindAsync(id);
+        if (item == null) return false;
+
+        item.CourseCode = input.CourseCode;
+        item.ExperimentName = input.ExperimentName;
+        item.ExperimentHours = input.ExperimentHours;
+        item.ExperimentType = input.ExperimentType;
+        item.ExperimentRequirement = input.ExperimentRequirement;
+        item.Status = input.Status;
+        item.SortOrder = input.SortOrder;
+        item.Description = input.Description;
+        item.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> DeleteItemAsync(Guid id)
+    {
+        var item = await _db.ExperimentItems.FindAsync(id);
+        if (item == null) return false;
+
+        _db.ExperimentItems.Remove(item);
+        await _db.SaveChangesAsync();
+        return true;
+    }
+
     // =========================
     // ?????Schedule??
     // =========================
@@ -183,6 +243,43 @@ public class ExperimentService : IExperimentService
         await _db.SaveChangesAsync();
 
         return schedule;
+    }
+
+    public async Task<bool> UpdateScheduleAsync(Guid id, ExperimentItemSchedule input)
+    {
+        var schedule = await _db.ExperimentItemSchedules.FindAsync(id);
+        if (schedule == null) return false;
+
+        schedule.ExperimentTaskId = input.ExperimentTaskId;
+        schedule.ExperimentItemId = input.ExperimentItemId;
+        schedule.WeekNumber = input.WeekNumber;
+        schedule.DayOfWeek = input.DayOfWeek;
+        schedule.PeriodNumber = input.PeriodNumber;
+        schedule.ParallelGroups = input.ParallelGroups;
+        schedule.StudentsPerGroup = input.StudentsPerGroup;
+        schedule.CycleCount = input.CycleCount;
+        schedule.ExperimentRequirement = input.ExperimentRequirement;
+        schedule.LabId = input.LabId;
+        schedule.Location = input.Location;
+        schedule.IsConducted = input.IsConducted;
+        schedule.ReasonIfNotConducted = input.ReasonIfNotConducted;
+        schedule.Status = input.Status;
+        schedule.SortOrder = input.SortOrder;
+        schedule.Description = input.Description;
+        schedule.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> DeleteScheduleAsync(Guid id)
+    {
+        var schedule = await _db.ExperimentItemSchedules.FindAsync(id);
+        if (schedule == null) return false;
+
+        _db.ExperimentItemSchedules.Remove(schedule);
+        await _db.SaveChangesAsync();
+        return true;
     }
 
     // =========================
@@ -219,6 +316,7 @@ public class ExperimentService : IExperimentService
             existing.TechnicalStaff = input.TechnicalStaff;
             existing.TechnicalTitle = input.TechnicalTitle;
 
+            existing.InstitutionId = input.InstitutionId;
             existing.ClassName = input.ClassName;
             existing.ClassStudentCount = input.ClassStudentCount;
 
@@ -227,6 +325,12 @@ public class ExperimentService : IExperimentService
 
             existing.MissedExperimentItems = input.MissedExperimentItems;
             existing.AssessmentMethod = input.AssessmentMethod;
+            existing.AssessmentStudentCount = input.AssessmentStudentCount;
+            existing.AssessmentTime = input.AssessmentTime;
+
+            existing.SortOrder = input.SortOrder;
+            existing.Description = input.Description;
+            existing.Status = input.Status;
 
             existing.UpdatedAt = DateTime.UtcNow;
         }
@@ -298,6 +402,14 @@ public class ExperimentService : IExperimentService
         plan.AssessmentRequirements = input.AssessmentRequirements;
         plan.QualityAssuranceMeasures = input.QualityAssuranceMeasures;
         plan.QualityAssuranceDetails = input.QualityAssuranceDetails;
+        plan.ExperimentCenterOpinion = input.ExperimentCenterOpinion;
+        plan.ExperimentCenterOpinionStatus = input.ExperimentCenterOpinionStatus;
+        plan.ExperimentCenterApprovedBy = input.ExperimentCenterApprovedBy;
+        plan.ExperimentCenterApprovalDate = input.ExperimentCenterApprovalDate;
+        plan.DepartmentOpinion = input.DepartmentOpinion;
+        plan.DepartmentOpinionStatus = input.DepartmentOpinionStatus;
+        plan.DepartmentApprovedBy = input.DepartmentApprovedBy;
+        plan.DepartmentApprovalDate = input.DepartmentApprovalDate;
         plan.SortOrder = input.SortOrder;
         plan.Description = input.Description;
         plan.Status = input.Status;
@@ -319,7 +431,7 @@ public class ExperimentService : IExperimentService
         return true;
     }
 
-    public async Task<bool> ApproveTrainingPlanAsync(Guid id, string approvalType, string opinion, string? approver)
+    public async Task<bool> ApproveTrainingPlanAsync(Guid id, string approvalType, string opinion, string? approver, string status)
     {
         var plan = await _db.TrainingTeachingPlans.FindAsync(id);
         if (plan == null) return false;
@@ -327,21 +439,49 @@ public class ExperimentService : IExperimentService
         if (approvalType == "ExperimentCenter")
         {
             plan.ExperimentCenterOpinion = opinion;
-            plan.ExperimentCenterOpinionStatus = "Approved";
+            plan.ExperimentCenterOpinionStatus = status;
             plan.ExperimentCenterApprovedBy = approver;
-            plan.ExperimentCenterApprovalDate = DateTime.UtcNow;
+            plan.ExperimentCenterApprovalDate = status == "Approved" || status == "Rejected" ? DateTime.UtcNow : null;
         }
         else if (approvalType == "Department")
         {
             plan.DepartmentOpinion = opinion;
-            plan.DepartmentOpinionStatus = "Approved";
+            plan.DepartmentOpinionStatus = status;
             plan.DepartmentApprovedBy = approver;
-            plan.DepartmentApprovalDate = DateTime.UtcNow;
+            plan.DepartmentApprovalDate = status == "Approved" || status == "Rejected" ? DateTime.UtcNow : null;
         }
 
         plan.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<List<TrainingTeachingPlan>> GetTrainingPlansByStatusAsync(string? status, string? approvalStatus)
+    {
+        var query = _db.TrainingTeachingPlans
+            .Include(x => x.Semester)
+            .Include(x => x.Course)
+            .Include(x => x.Major)
+            .Include(x => x.Class)
+            .AsQueryable();
+
+        if (!string.IsNullOrEmpty(status))
+            query = query.Where(x => x.Status == status);
+
+        if (!string.IsNullOrEmpty(approvalStatus))
+        {
+            if (approvalStatus == "PendingExperimentCenter")
+                query = query.Where(x => x.ExperimentCenterOpinionStatus == "Pending" || x.ExperimentCenterOpinionStatus == null);
+            else if (approvalStatus == "PendingDepartment")
+                query = query.Where(x => x.DepartmentOpinionStatus == "Pending" || x.DepartmentOpinionStatus == null);
+            else if (approvalStatus == "Approved")
+                query = query.Where(x => x.ExperimentCenterOpinionStatus == "Approved" && x.DepartmentOpinionStatus == "Approved");
+            else if (approvalStatus == "Rejected")
+                query = query.Where(x =>
+                    x.ExperimentCenterOpinionStatus == "Rejected" || x.DepartmentOpinionStatus == "Rejected");
+        }
+
+        return await query.OrderByDescending(x => x.CreatedAt).ToListAsync();
     }
 }

@@ -68,13 +68,25 @@
           <el-form-item label="教学内容安排"><el-input v-model="form.teachingContent" type="textarea" :rows="2" /></el-form-item>
         </el-col>
         <el-col :span="24">
+          <el-form-item label="教学进度安排"><el-input v-model="form.teachingProgressSchedule" type="textarea" :rows="2" /></el-form-item>
+        </el-col>
+        <el-col :span="24">
           <el-form-item label="实训方法"><el-input v-model="form.trainingMethod" type="textarea" :rows="2" /></el-form-item>
+        </el-col>
+        <el-col :span="24">
+          <el-form-item label="轮组信息"><el-input v-model="form.cycleGroupInfo" type="textarea" :rows="2" /></el-form-item>
         </el-col>
         <el-col :span="12">
           <el-form-item label="考核方式"><el-input v-model="form.assessmentMethod" /></el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item label="质量保障"><el-input v-model="form.qualityAssuranceMeasures" type="textarea" :rows="2" /></el-form-item>
+          <el-form-item label="考核要求"><el-input v-model="form.assessmentRequirements" type="textarea" :rows="2" /></el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="质量保障措施"><el-input v-model="form.qualityAssuranceMeasures" type="textarea" :rows="2" /></el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="质量保障细则"><el-input v-model="form.qualityAssuranceDetails" type="textarea" :rows="2" /></el-form-item>
         </el-col>
         <el-col :span="24">
           <el-form-item label="实验中心意见"><el-input v-model="form.experimentCenterOpinion" /></el-form-item>
@@ -122,8 +134,10 @@ const form = reactive({
   semesterId: '', courseId: '', majorId: '', classId: '',
   studentCount: 0, studentLevel: '',
   teachingOrganizationMethod: '', teachingLocation: '',
-  teachingPurpose: '', teachingContent: '', trainingMethod: '',
-  assessmentMethod: '', qualityAssuranceMeasures: '',
+  teachingPurpose: '', teachingContent: '', teachingProgressSchedule: '',
+  trainingMethod: '', cycleGroupInfo: '',
+  assessmentMethod: '', assessmentRequirements: '',
+  qualityAssuranceMeasures: '', qualityAssuranceDetails: '',
   experimentCenterOpinion: '', departmentOpinion: '',
   status: 'Active', sortOrder: 0, description: ''
 })
@@ -170,8 +184,10 @@ watch(() => props.plan, (val) => {
     semesterId: '', courseId: '', majorId: '', classId: '',
     studentCount: 0, studentLevel: '',
     teachingOrganizationMethod: '', teachingLocation: '',
-    teachingPurpose: '', teachingContent: '', trainingMethod: '',
-    assessmentMethod: '', qualityAssuranceMeasures: '',
+    teachingPurpose: '', teachingContent: '', teachingProgressSchedule: '',
+    trainingMethod: '', cycleGroupInfo: '',
+    assessmentMethod: '', assessmentRequirements: '',
+    qualityAssuranceMeasures: '', qualityAssuranceDetails: '',
     experimentCenterOpinion: '', departmentOpinion: '',
     status: 'Active', sortOrder: 0, description: ''
   }

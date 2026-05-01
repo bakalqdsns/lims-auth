@@ -174,8 +174,9 @@ watch(() => props.schedule, (val) => {
   if (val) {
     Object.assign(form, reset, {
       ...val,
-      experimentTaskId: val.experimentTask?.id,
-      experimentItemId: val.experimentItem?.id
+      experimentTaskId: val.experimentTaskId,
+      experimentItemId: val.experimentItemId,
+      labId: val.labId
     })
   } else {
     Object.assign(form, reset)

@@ -39,13 +39,17 @@ export const experimentApi = {
     axios.post(`${API_BASE_URL}/quality`, data),
   updateQuality: (id: string, data: ExperimentQualityRequest) =>
     axios.put(`${API_BASE_URL}/quality/${id}`, data),
+  deleteQuality: (id: string) =>
+    axios.delete(`${API_BASE_URL}/quality/${id}`),
 
-  getTrainingPlans: (params?: { courseId?: string }) =>
+  getTrainingPlans: (params?: { courseId?: string; status?: string; approvalStatus?: string }) =>
     axios.get(`${API_BASE_URL}/training-plans`, { params }),
   createTrainingPlan: (data: TrainingPlanRequest) =>
     axios.post(`${API_BASE_URL}/training-plans`, data),
   updateTrainingPlan: (id: string, data: TrainingPlanRequest) =>
-    axios.put(`${API_BASE_URL}/training-plans/${id}`, data)
+    axios.put(`${API_BASE_URL}/training-plans/${id}`, data),
+  deleteTrainingPlan: (id: string) =>
+    axios.delete(`${API_BASE_URL}/training-plans/${id}`)
 }
 
 export const exportApi = {
@@ -74,6 +78,7 @@ export interface ExperimentTaskDto {
   institutionId?: string
   departmentId?: string
   teacherIds?: string
+  teacherNames?: string
   teacherTitles?: string
   technicalStaff?: string
   technicalTitle?: string
@@ -177,20 +182,32 @@ export interface TrainingPlanDto {
   teachingOrganizationMethod?: string
   teachingLocation?: string
   teachingPurpose?: string
+  teachingRequirements?: string
   teachingContent?: string
+  teachingProgressSchedule?: string
   trainingMethod?: string
+  cycleGroupInfo?: string
   assessmentMethod?: string
+  assessmentRequirements?: string
   qualityAssuranceMeasures?: string
+  qualityAssuranceDetails?: string
   experimentCenterOpinion?: string
+  experimentCenterOpinionStatus?: string
+  experimentCenterApprovedBy?: string
+  experimentCenterApprovalDate?: string
   departmentOpinion?: string
+  departmentOpinionStatus?: string
+  departmentApprovedBy?: string
+  departmentApprovalDate?: string
   status: string
   sortOrder: number
   description?: string
+  updatedAt?: string
   course?: { id: string; code: string; name: string }
   semester?: { id: string; name: string }
   major?: { id: string; name: string }
   class?: { id: string; name: string }
 }
 
-export type TrainingPlanRequest = Omit<TrainingPlanDto, 'id' | 'course' | 'semester' | 'major' | 'class'>
+export type TrainingPlanRequest = Omit<TrainingPlanDto, 'id' | 'course' | 'semester' | 'major' | 'class' | 'updatedAt'>
 

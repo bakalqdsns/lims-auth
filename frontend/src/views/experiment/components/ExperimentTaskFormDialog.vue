@@ -79,7 +79,7 @@
           <el-form-item label="本学期实训"><el-input-number v-model="form.currentSemesterTrainingHours" :min="0" style="width: 100%" /></el-form-item>
         </el-col>
         <el-col :span="12">
-          <el-form-item label="主讲教师"><el-input v-model="form.teacherIds" /></el-form-item>
+          <el-form-item label="主讲教师"><el-input v-model="form.teacherNames" /></el-form-item>
         </el-col>
         <el-col :span="12">
           <el-form-item label="教师职称"><el-input v-model="form.teacherTitles" /></el-form-item>
@@ -155,6 +155,7 @@ const form = reactive({
   institutionId: undefined as string | undefined,
   departmentId: undefined as string | undefined,
   teacherIds: '',
+  teacherNames: '',
   teacherTitles: '',
   technicalStaff: '',
   technicalTitle: '',
@@ -225,6 +226,7 @@ watch(() => props.task, (val) => {
     institutionId: undefined as string | undefined,
     departmentId: undefined as string | undefined,
     teacherIds: '',
+    teacherNames: '',
     teacherTitles: '',
     technicalStaff: '',
     technicalTitle: '',

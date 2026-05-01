@@ -3,7 +3,7 @@
     <div class="page-header">
       <h2>实验教学任务</h2>
       <div class="header-actions">
-        <el-button @click="exportTaskList" :loading="exportingTaskList">
+        <el-button @click="openExportDialog" :loading="exportingTaskList">
           <el-icon><Download /></el-icon>导出任务一览表
         </el-button>
         <el-button type="primary" @click="handleAdd">
@@ -71,6 +71,56 @@
       :task="currentTask"
       @success="loadList"
     />
+
+    <!-- 表格预览弹窗：实验课程教学任务一览表 -->
+    <el-dialog v-model="exportDialogVisible" title="实验课程教学任务一览表" width="1100px" top="20px">
+      <div class="table-wrap">
+        <h3 class="table-title">实验课程教学任务一览表</h3>
+        <table border="1" cellpadding="6" cellspacing="0" width="100%" style="border-collapse:collapse; font-size:13px;">
+          <thead>
+          <tr style="background:#f0f0f0; text-align:center;">
+            <td rowspan="2" style="min-width:40px">序号</td>
+            <td rowspan="2" style="min-width:120px">专业、班级</td>
+            <td rowspan="2" style="min-width:60px">学生人数</td>
+            <td rowspan="2" style="min-width:180px">实验课程名称</td>
+            <td rowspan="2" style="min-width:70px">实验总学时</td>
+            <td rowspan="2" style="min-width:80px">本学期实验学时</td>
+            <td rowspan="2" style="min-width:120px">课程承担部门</td>
+            <td colspan="2" style="text-align:center">实验指导教师</td>
+          </tr>
+          <tr style="background:#f0f0f0; text-align:center;">
+            <td style="min-width:80px">姓名</td>
+            <td style="min-width:80px">职称</td>
+          </tr>
+          </thead>
+          <tbody>
+          <tr v-for="(item, idx) in exportTableData" :key="idx">
+            <td style="text-align:center">{{ idx + 1 }}</td>
+            <td><el-input v-model="item.className" placeholder="填写班级" /></td>
+            <td><el-input v-model="item.studentCount" placeholder="人数" /></td>
+            <td><el-input v-model="item.courseName" placeholder="课程名称" /></td>
+            <td><el-input v-model="item.totalHours" placeholder="总学时" /></td>
+            <td><el-input v-model="item.currentHours" placeholder="本学期" /></td>
+            <td><el-input v-model="item.department" placeholder="部门" /></td>
+            <td><el-input v-model="item.teacherName" placeholder="姓名" /></td>
+            <td><el-input v-model="item.teacherTitle" placeholder="职称" /></td>
+          </tr>
+          <tr v-if="exportTableData.length === 0">
+            <td colspan="9" style="text-align:center; color:#999">暂无数据，请先添加实验教学任务</td>
+          </tr>
+          </tbody>
+        </table>
+        <div class="table-bottom">
+          <span>填表人：<el-input v-model="formFillName" style="width:100px" /></span>
+          <span>院系（中心）盖章：<el-input v-model="formDeptSign" style="width:100px" /></span>
+          <span>日期：<el-input v-model="formDate" style="width:120px" placeholder="年  月  日" /></span>
+        </div>
+      </div>
+      <template #footer>
+        <el-button @click="exportDialogVisible = false">关闭</el-button>
+        <el-button type="primary" @click="downloadDocFn">下载 doc 文件</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -80,6 +130,7 @@ import { ElMessage } from 'element-plus'
 import { Download, Plus } from '@element-plus/icons-vue'
 import { classApi, majorApi, semesterApi, type ClassDto, type MajorDto, type SemesterDto } from '@/api/teaching'
 import { experimentApi, exportApi, type ExperimentTaskDto } from '@/api/experiment'
+import { downloadDoc } from '@/utils/doc'
 import ExperimentTaskFormDialog from './components/ExperimentTaskFormDialog.vue'
 
 const loading = ref(false)
@@ -92,6 +143,13 @@ const classOptions = ref<ClassDto[]>([])
 const dialogVisible = ref(false)
 const currentTask = ref<ExperimentTaskDto | undefined>(undefined)
 const optionsReady = ref(false)
+
+// 导出表格相关
+const exportDialogVisible = ref(false)
+const exportTableData = ref<any[]>([])
+const formFillName = ref('')
+const formDeptSign = ref('')
+const formDate = ref('')
 
 const searchForm = reactive({
   semesterId: '',
@@ -141,27 +199,59 @@ const remove = async (id: string) => {
   loadList()
 }
 
-const exportTaskList = async () => {
-  exportingTaskList.value = true
-  try {
-    const res = await exportApi.exportTaskList({
-      semesterId: searchForm.semesterId || undefined,
-      majorId: searchForm.majorId || undefined,
-      classId: searchForm.classId || undefined
-    })
-    const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `实验课程教学任务一览表_${new Date().toISOString().slice(0, 10).replace(/-/g, '')}.docx`
-    a.click()
-    URL.revokeObjectURL(url)
-    ElMessage.success('导出成功')
-  } catch {
-    ElMessage.error('导出失败')
-  } finally {
-    exportingTaskList.value = false
+const openExportDialog = () => {
+  exportTableData.value = list.value.map(row => ({
+    className: `${row.major?.name || ''}${row.class?.name || ''}`,
+    studentCount: row.studentCount?.toString() || '',
+    courseName: row.courseName || '',
+    totalHours: row.totalExperimentHours?.toString() || '',
+    currentHours: row.currentSemesterExperimentHours?.toString() || '',
+    department: '',
+    teacherName: row.teacherNames || '',
+    teacherTitle: row.teacherTitles || ''
+  }))
+  exportDialogVisible.value = true
+}
+
+const downloadDocFn = () => {
+  if (exportTableData.value.length === 0) {
+    ElMessage.warning('表格无数据')
+    return
   }
+  const dateStr = formDate.value ? `（${formDate.value}）` : ''
+  const tableRows = exportTableData.value.map((item, idx) => `
+    <tr>
+      <td style="text-align:center">${idx + 1}</td>
+      <td>${item.className}</td>
+      <td style="text-align:center">${item.studentCount}</td>
+      <td>${item.courseName}</td>
+      <td style="text-align:center">${item.totalHours}</td>
+      <td style="text-align:center">${item.currentHours}</td>
+      <td>${item.department}</td>
+      <td>${item.teacherName}</td>
+      <td>${item.teacherTitle}</td>
+    </tr>`).join('')
+  const tableHtml = `
+<h3>实验课程教学任务一览表</h3>
+<table>
+  <tr style="background:#ddd;text-align:center">
+    <td rowspan="2">序号</td><td rowspan="2">专业、班级</td><td rowspan="2">学生人数</td>
+    <td rowspan="2">实验课程名称</td><td rowspan="2">实验总学时</td>
+    <td rowspan="2">本学期实验学时</td><td rowspan="2">课程承担部门</td>
+    <td colspan="2">实验指导教师</td>
+  </tr>
+  <tr style="background:#ddd;text-align:center">
+    <td>姓名</td><td>职称</td>
+  </tr>
+  ${tableRows}
+</table>
+<div class="footer">
+  <span>填表人：${formFillName.value}</span>
+  <span>院系（中心）盖章：${formDeptSign.value}</span>
+  <span>日期：${formDate.value}</span>
+</div>`
+  downloadDoc(tableHtml, `实验课程教学任务一览表${dateStr}`)
+  ElMessage.success('下载成功')
 }
 
 onMounted(async () => {
@@ -175,4 +265,7 @@ onMounted(async () => {
 .page-header h2 { margin: 0; font-size: 20px; font-weight: 500; }
 .header-actions { display: flex; gap: 10px; }
 .search-form { margin-bottom: 14px; }
+.table-wrap { padding: 10px; }
+.table-title { text-align: center; margin: 10px 0 20px; font-size: 18px; }
+.table-bottom { margin-top: 20px; display: flex; gap: 30px; align-items: center; flex-wrap: wrap; }
 </style>

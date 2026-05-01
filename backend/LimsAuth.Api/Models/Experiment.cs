@@ -65,16 +65,8 @@ public class ExperimentTeachingTask
     [Column("institution_id")]
     public Guid? InstitutionId { get; set; }
 
-    [Column("institution_name")]
-    [MaxLength(200)]
-    public string? InstitutionName { get; set; }
-
     [Column("department_id")]
     public Guid? DepartmentId { get; set; }
-
-    [Column("department_name")]
-    [MaxLength(200)]
-    public string? DepartmentName { get; set; }
 
     [Column("teacher_ids")]
     [MaxLength(500)]

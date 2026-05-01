@@ -22,9 +22,6 @@ public class ExperimentsController : ControllerBase
 
     #region 实验教学任务
 
-    /// <summary>
-    /// 获取实验教学任务列表
-    /// </summary>
     [HttpGet("tasks")]
     public async Task<ActionResult<IEnumerable<ExperimentTeachingTask>>> GetExperimentTasks(
         [FromQuery] Guid? semesterId,
@@ -36,23 +33,21 @@ public class ExperimentsController : ControllerBase
             .Include(e => e.Major)
             .Include(e => e.Class)
             .Include(e => e.Department)
+            .Include(e => e.Institution)
             .AsQueryable();
 
         if (semesterId.HasValue)
             query = query.Where(e => e.SemesterId == semesterId.Value);
-        
+
         if (majorId.HasValue)
             query = query.Where(e => e.MajorId == majorId.Value);
-        
+
         if (classId.HasValue)
             query = query.Where(e => e.ClassId == classId.Value);
 
         return await query.OrderByDescending(e => e.CreatedAt).ToListAsync();
     }
 
-    /// <summary>
-    /// 获取单个实验教学任务
-    /// </summary>
     [HttpGet("tasks/{id}")]
     public async Task<ActionResult<ExperimentTeachingTask>> GetExperimentTask(Guid id)
     {
@@ -61,8 +56,10 @@ public class ExperimentsController : ControllerBase
             .Include(e => e.Major)
             .Include(e => e.Class)
             .Include(e => e.Department)
+            .Include(e => e.Institution)
             .Include(e => e.Schedules)
-            .ThenInclude(s => s.ExperimentItem)
+                .ThenInclude(s => s.ExperimentItem)
+            .Include(e => e.QualityAssessment)
             .FirstOrDefaultAsync(e => e.Id == id);
 
         if (task == null)
@@ -71,12 +68,12 @@ public class ExperimentsController : ControllerBase
         return task;
     }
 
-    /// <summary>
-    /// 创建实验教学任务
-    /// </summary>
     [HttpPost("tasks")]
     public async Task<ActionResult<ExperimentTeachingTask>> CreateExperimentTask(ExperimentTeachingTask task)
     {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
         task.Id = Guid.NewGuid();
         task.CreatedAt = DateTime.UtcNow;
         task.UpdatedAt = DateTime.UtcNow;
@@ -87,12 +84,12 @@ public class ExperimentsController : ControllerBase
         return CreatedAtAction(nameof(GetExperimentTask), new { id = task.Id }, task);
     }
 
-    /// <summary>
-    /// 更新实验教学任务
-    /// </summary>
     [HttpPut("tasks/{id}")]
     public async Task<IActionResult> UpdateExperimentTask(Guid id, ExperimentTeachingTask task)
     {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
         if (id != task.Id)
             return BadRequest();
 
@@ -113,15 +110,22 @@ public class ExperimentsController : ControllerBase
         return NoContent();
     }
 
-    /// <summary>
-    /// 删除实验教学任务
-    /// </summary>
     [HttpDelete("tasks/{id}")]
     public async Task<IActionResult> DeleteExperimentTask(Guid id)
     {
-        var task = await _context.ExperimentTeachingTasks.FindAsync(id);
+        var task = await _context.ExperimentTeachingTasks
+            .Include(t => t.Schedules)
+            .Include(t => t.QualityAssessment)
+            .FirstOrDefaultAsync(t => t.Id == id);
+
         if (task == null)
             return NotFound();
+
+        if (task.Schedules?.Count > 0)
+            _context.ExperimentItemSchedules.RemoveRange(task.Schedules);
+
+        if (task.QualityAssessment != null)
+            _context.ExperimentQualityAssessments.Remove(task.QualityAssessment);
 
         _context.ExperimentTeachingTasks.Remove(task);
         await _context.SaveChangesAsync();
@@ -133,9 +137,6 @@ public class ExperimentsController : ControllerBase
 
     #region 实验项目
 
-    /// <summary>
-    /// 获取实验项目列表
-    /// </summary>
     [HttpGet("items")]
     public async Task<ActionResult<IEnumerable<ExperimentItem>>> GetExperimentItems(
         [FromQuery] string? courseCode,
@@ -145,16 +146,30 @@ public class ExperimentsController : ControllerBase
 
         if (!string.IsNullOrEmpty(courseCode))
             query = query.Where(e => e.CourseCode == courseCode);
-        
+
         if (!string.IsNullOrEmpty(experimentType))
             query = query.Where(e => e.ExperimentType == experimentType);
 
         return await query.OrderBy(e => e.CourseCode).ThenBy(e => e.SortOrder).ToListAsync();
     }
 
-    /// <summary>
-    /// 获取单个实验项目
-    /// </summary>
+    [HttpGet("items/by-task/{taskId}")]
+    public async Task<ActionResult<IEnumerable<ExperimentItem>>> GetExperimentItemsByTask(Guid taskId)
+    {
+        var itemIds = await _context.ExperimentItemSchedules
+            .Where(s => s.ExperimentTaskId == taskId)
+            .Select(s => s.ExperimentItemId)
+            .Distinct()
+            .ToListAsync();
+
+        var items = await _context.ExperimentItems
+            .Where(i => itemIds.Contains(i.Id))
+            .OrderBy(e => e.SortOrder)
+            .ToListAsync();
+
+        return items;
+    }
+
     [HttpGet("items/{id}")]
     public async Task<ActionResult<ExperimentItem>> GetExperimentItem(Guid id)
     {
@@ -168,12 +183,12 @@ public class ExperimentsController : ControllerBase
         return item;
     }
 
-    /// <summary>
-    /// 创建实验项目
-    /// </summary>
     [HttpPost("items")]
     public async Task<ActionResult<ExperimentItem>> CreateExperimentItem(ExperimentItem item)
     {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
         item.Id = Guid.NewGuid();
         item.CreatedAt = DateTime.UtcNow;
         item.UpdatedAt = DateTime.UtcNow;
@@ -184,12 +199,12 @@ public class ExperimentsController : ControllerBase
         return CreatedAtAction(nameof(GetExperimentItem), new { id = item.Id }, item);
     }
 
-    /// <summary>
-    /// 更新实验项目
-    /// </summary>
     [HttpPut("items/{id}")]
     public async Task<IActionResult> UpdateExperimentItem(Guid id, ExperimentItem item)
     {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
         if (id != item.Id)
             return BadRequest();
 
@@ -210,9 +225,6 @@ public class ExperimentsController : ControllerBase
         return NoContent();
     }
 
-    /// <summary>
-    /// 删除实验项目
-    /// </summary>
     [HttpDelete("items/{id}")]
     public async Task<IActionResult> DeleteExperimentItem(Guid id)
     {
@@ -230,9 +242,6 @@ public class ExperimentsController : ControllerBase
 
     #region 实验项目开出安排
 
-    /// <summary>
-    /// 获取实验安排列表
-    /// </summary>
     [HttpGet("schedules")]
     public async Task<ActionResult<IEnumerable<ExperimentItemSchedule>>> GetExperimentSchedules(
         [FromQuery] Guid? taskId,
@@ -242,21 +251,19 @@ public class ExperimentsController : ControllerBase
             .Include(e => e.ExperimentTask)
             .Include(e => e.ExperimentItem)
             .Include(e => e.Lab)
-            .ThenInclude(l => l!.Building)
+                .ThenInclude(l => l!.Building)
+                    .ThenInclude(b => b!.Campus)
             .AsQueryable();
 
         if (taskId.HasValue)
             query = query.Where(e => e.ExperimentTaskId == taskId.Value);
-        
+
         if (weekNumber.HasValue)
             query = query.Where(e => e.WeekNumber == weekNumber);
 
         return await query.OrderBy(e => e.WeekNumber).ThenBy(e => e.DayOfWeek).ToListAsync();
     }
 
-    /// <summary>
-    /// 获取单个实验安排
-    /// </summary>
     [HttpGet("schedules/{id}")]
     public async Task<ActionResult<ExperimentItemSchedule>> GetExperimentSchedule(Guid id)
     {
@@ -264,7 +271,8 @@ public class ExperimentsController : ControllerBase
             .Include(e => e.ExperimentTask)
             .Include(e => e.ExperimentItem)
             .Include(e => e.Lab)
-            .ThenInclude(l => l!.Building)
+                .ThenInclude(l => l!.Building)
+                    .ThenInclude(b => b!.Campus)
             .FirstOrDefaultAsync(e => e.Id == id);
 
         if (schedule == null)
@@ -273,12 +281,12 @@ public class ExperimentsController : ControllerBase
         return schedule;
     }
 
-    /// <summary>
-    /// 创建实验安排
-    /// </summary>
     [HttpPost("schedules")]
     public async Task<ActionResult<ExperimentItemSchedule>> CreateExperimentSchedule(ExperimentItemSchedule schedule)
     {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
         schedule.Id = Guid.NewGuid();
         schedule.CreatedAt = DateTime.UtcNow;
         schedule.UpdatedAt = DateTime.UtcNow;
@@ -289,12 +297,12 @@ public class ExperimentsController : ControllerBase
         return CreatedAtAction(nameof(GetExperimentSchedule), new { id = schedule.Id }, schedule);
     }
 
-    /// <summary>
-    /// 更新实验安排
-    /// </summary>
     [HttpPut("schedules/{id}")]
     public async Task<IActionResult> UpdateExperimentSchedule(Guid id, ExperimentItemSchedule schedule)
     {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
         if (id != schedule.Id)
             return BadRequest();
 
@@ -315,9 +323,6 @@ public class ExperimentsController : ControllerBase
         return NoContent();
     }
 
-    /// <summary>
-    /// 删除实验安排
-    /// </summary>
     [HttpDelete("schedules/{id}")]
     public async Task<IActionResult> DeleteExperimentSchedule(Guid id)
     {
@@ -335,9 +340,6 @@ public class ExperimentsController : ControllerBase
 
     #region 实验质量评估
 
-    /// <summary>
-    /// 获取质量评估列表
-    /// </summary>
     [HttpGet("quality")]
     public async Task<ActionResult<IEnumerable<ExperimentQualityAssessment>>> GetQualityAssessments()
     {
@@ -348,14 +350,12 @@ public class ExperimentsController : ControllerBase
             .ToListAsync();
     }
 
-    /// <summary>
-    /// 获取单个质量评估
-    /// </summary>
     [HttpGet("quality/{id}")]
     public async Task<ActionResult<ExperimentQualityAssessment>> GetQualityAssessment(Guid id)
     {
         var assessment = await _context.ExperimentQualityAssessments
             .Include(e => e.ExperimentTask)
+            .Include(e => e.Institution)
             .FirstOrDefaultAsync(e => e.Id == id);
 
         if (assessment == null)
@@ -364,12 +364,12 @@ public class ExperimentsController : ControllerBase
         return assessment;
     }
 
-    /// <summary>
-    /// 创建质量评估
-    /// </summary>
     [HttpPost("quality")]
     public async Task<ActionResult<ExperimentQualityAssessment>> CreateQualityAssessment(ExperimentQualityAssessment assessment)
     {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
         assessment.Id = Guid.NewGuid();
         assessment.CreatedAt = DateTime.UtcNow;
         assessment.UpdatedAt = DateTime.UtcNow;
@@ -380,12 +380,12 @@ public class ExperimentsController : ControllerBase
         return CreatedAtAction(nameof(GetQualityAssessment), new { id = assessment.Id }, assessment);
     }
 
-    /// <summary>
-    /// 更新质量评估
-    /// </summary>
     [HttpPut("quality/{id}")]
     public async Task<IActionResult> UpdateQualityAssessment(Guid id, ExperimentQualityAssessment assessment)
     {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
         if (id != assessment.Id)
             return BadRequest();
 
@@ -406,16 +406,28 @@ public class ExperimentsController : ControllerBase
         return NoContent();
     }
 
+    [HttpDelete("quality/{id}")]
+    public async Task<IActionResult> DeleteQualityAssessment(Guid id)
+    {
+        var assessment = await _context.ExperimentQualityAssessments.FindAsync(id);
+        if (assessment == null)
+            return NotFound();
+
+        _context.ExperimentQualityAssessments.Remove(assessment);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
     #endregion
 
     #region 实训教学计划
 
-    /// <summary>
-    /// 获取实训计划列表
-    /// </summary>
     [HttpGet("training-plans")]
     public async Task<ActionResult<IEnumerable<TrainingTeachingPlan>>> GetTrainingPlans(
-        [FromQuery] Guid? courseId)
+        [FromQuery] Guid? courseId,
+        [FromQuery] string? status,
+        [FromQuery] string? approvalStatus)
     {
         var query = _context.TrainingTeachingPlans
             .Include(e => e.Course)
@@ -427,12 +439,24 @@ public class ExperimentsController : ControllerBase
         if (courseId.HasValue)
             query = query.Where(e => e.CourseId == courseId.Value);
 
-        return await query.OrderBy(e => e.Course!.Code).ToListAsync();
+        if (!string.IsNullOrEmpty(status))
+            query = query.Where(e => e.Status == status);
+
+        if (!string.IsNullOrEmpty(approvalStatus))
+        {
+            if (approvalStatus == "PendingExperimentCenter")
+                query = query.Where(e => e.ExperimentCenterOpinionStatus == "Pending" || e.ExperimentCenterOpinionStatus == null);
+            else if (approvalStatus == "PendingDepartment")
+                query = query.Where(e => e.DepartmentOpinionStatus == "Pending" || e.DepartmentOpinionStatus == null);
+            else if (approvalStatus == "Approved")
+                query = query.Where(e => e.ExperimentCenterOpinionStatus == "Approved" && e.DepartmentOpinionStatus == "Approved");
+            else if (approvalStatus == "Rejected")
+                query = query.Where(e => e.ExperimentCenterOpinionStatus == "Rejected" || e.DepartmentOpinionStatus == "Rejected");
+        }
+
+        return await query.OrderByDescending(e => e.CreatedAt).ToListAsync();
     }
 
-    /// <summary>
-    /// 获取单个实训计划
-    /// </summary>
     [HttpGet("training-plans/{id}")]
     public async Task<ActionResult<TrainingTeachingPlan>> GetTrainingPlan(Guid id)
     {
@@ -449,12 +473,12 @@ public class ExperimentsController : ControllerBase
         return plan;
     }
 
-    /// <summary>
-    /// 创建实训计划
-    /// </summary>
     [HttpPost("training-plans")]
     public async Task<ActionResult<TrainingTeachingPlan>> CreateTrainingPlan(TrainingTeachingPlan plan)
     {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
         plan.Id = Guid.NewGuid();
         plan.CreatedAt = DateTime.UtcNow;
         plan.UpdatedAt = DateTime.UtcNow;
@@ -465,12 +489,12 @@ public class ExperimentsController : ControllerBase
         return CreatedAtAction(nameof(GetTrainingPlan), new { id = plan.Id }, plan);
     }
 
-    /// <summary>
-    /// 更新实训计划
-    /// </summary>
     [HttpPut("training-plans/{id}")]
     public async Task<IActionResult> UpdateTrainingPlan(Guid id, TrainingTeachingPlan plan)
     {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
         if (id != plan.Id)
             return BadRequest();
 
@@ -491,13 +515,51 @@ public class ExperimentsController : ControllerBase
         return NoContent();
     }
 
+    [HttpDelete("training-plans/{id}")]
+    public async Task<IActionResult> DeleteTrainingPlan(Guid id)
+    {
+        var plan = await _context.TrainingTeachingPlans.FindAsync(id);
+        if (plan == null)
+            return NotFound();
+
+        _context.TrainingTeachingPlans.Remove(plan);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    [HttpPost("training-plans/{id}/approve")]
+    public async Task<IActionResult> ApproveTrainingPlan(Guid id, [FromBody] ApproveTrainingPlanRequest request)
+    {
+        var plan = await _context.TrainingTeachingPlans.FindAsync(id);
+        if (plan == null)
+            return NotFound();
+
+        if (request.ApprovalType == "ExperimentCenter")
+        {
+            plan.ExperimentCenterOpinion = request.Opinion;
+            plan.ExperimentCenterOpinionStatus = request.Status;
+            plan.ExperimentCenterApprovedBy = request.Approver;
+            plan.ExperimentCenterApprovalDate = request.Status == "Approved" || request.Status == "Rejected" ? DateTime.UtcNow : null;
+        }
+        else if (request.ApprovalType == "Department")
+        {
+            plan.DepartmentOpinion = request.Opinion;
+            plan.DepartmentOpinionStatus = request.Status;
+            plan.DepartmentApprovedBy = request.Approver;
+            plan.DepartmentApprovalDate = request.Status == "Approved" || request.Status == "Rejected" ? DateTime.UtcNow : null;
+        }
+
+        plan.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
     #endregion
 
     #region 楼宇和场地管理
 
-    /// <summary>
-    /// 获取楼宇列表
-    /// </summary>
     [HttpGet("buildings")]
     public async Task<ActionResult<IEnumerable<VenBuilding>>> GetBuildings()
     {
@@ -507,9 +569,6 @@ public class ExperimentsController : ControllerBase
             .ToListAsync();
     }
 
-    /// <summary>
-    /// 获取场地/实验室列表
-    /// </summary>
     [HttpGet("rooms")]
     public async Task<ActionResult<IEnumerable<VenRoom>>> GetRooms(
         [FromQuery] Guid? buildingId,
@@ -521,7 +580,7 @@ public class ExperimentsController : ControllerBase
 
         if (buildingId.HasValue)
             query = query.Where(r => r.BuildingId == buildingId.Value);
-        
+
         if (!string.IsNullOrEmpty(roomType))
             query = query.Where(r => r.RoomType == roomType);
 
@@ -529,4 +588,12 @@ public class ExperimentsController : ControllerBase
     }
 
     #endregion
+}
+
+public class ApproveTrainingPlanRequest
+{
+    public string ApprovalType { get; set; } = string.Empty;
+    public string Opinion { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public string? Approver { get; set; }
 }
