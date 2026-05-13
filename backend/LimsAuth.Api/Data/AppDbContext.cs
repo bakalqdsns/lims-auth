@@ -48,6 +48,13 @@ public class AppDbContext : DbContext
     public DbSet<Campus> Campuses => Set<Campus>();
     public DbSet<Building> Buildings => Set<Building>();
 
+    // 排课预约管理
+    public DbSet<ScheduleEntry> ScheduleEntries => Set<ScheduleEntry>();
+    public DbSet<Reservation> Reservations => Set<Reservation>();
+    public DbSet<TeachingApplication> TeachingApplications => Set<TeachingApplication>();
+    public DbSet<UsageRegistration> UsageRegistrations => Set<UsageRegistration>();
+    public DbSet<ScheduleStatistics> ScheduleStatistics => Set<ScheduleStatistics>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -501,6 +508,32 @@ public class AppDbContext : DbContext
             // 系统管理权限
             new Permission { Id = Guid.Parse("90000000-0000-0000-0000-000000000001"), Code = "system:config", Name = "系统配置", Module = "system", Description = "系统配置管理", CreatedAt = seedDate },
             new Permission { Id = Guid.Parse("90000000-0000-0000-0000-000000000002"), Code = "system:log", Name = "查看日志", Module = "system", Description = "查看系统日志", CreatedAt = seedDate },
+
+            // 排课管理权限
+            new Permission { Id = Guid.Parse("a0000000-0000-0000-0000-000000000001"), Code = "schedule:read", Name = "查看排课", Module = "schedule", Description = "查看排课记录", CreatedAt = seedDate },
+            new Permission { Id = Guid.Parse("a0000000-0000-0000-0000-000000000002"), Code = "schedule:create", Name = "创建排课", Module = "schedule", Description = "创建排课记录", CreatedAt = seedDate },
+            new Permission { Id = Guid.Parse("a0000000-0000-0000-0000-000000000003"), Code = "schedule:update", Name = "编辑排课", Module = "schedule", Description = "编辑排课记录", CreatedAt = seedDate },
+            new Permission { Id = Guid.Parse("a0000000-0000-0000-0000-000000000004"), Code = "schedule:delete", Name = "删除排课", Module = "schedule", Description = "删除排课记录", CreatedAt = seedDate },
+
+            // 预约管理权限
+            new Permission { Id = Guid.Parse("a0000000-0000-0000-0000-000000000011"), Code = "reservation:read", Name = "查看预约", Module = "reservation", Description = "查看预约申请", CreatedAt = seedDate },
+            new Permission { Id = Guid.Parse("a0000000-0000-0000-0000-000000000012"), Code = "reservation:create", Name = "创建预约", Module = "reservation", Description = "提交预约申请", CreatedAt = seedDate },
+            new Permission { Id = Guid.Parse("a0000000-0000-0000-0000-000000000013"), Code = "reservation:approve", Name = "审批预约", Module = "reservation", Description = "审批预约申请", CreatedAt = seedDate },
+            new Permission { Id = Guid.Parse("a0000000-0000-0000-0000-000000000014"), Code = "reservation:cancel", Name = "取消预约", Module = "reservation", Description = "取消预约", CreatedAt = seedDate },
+
+            // 授课申请权限
+            new Permission { Id = Guid.Parse("a0000000-0000-0000-0000-000000000021"), Code = "teaching_application:read", Name = "查看授课申请", Module = "teaching_application", Description = "查看授课申请", CreatedAt = seedDate },
+            new Permission { Id = Guid.Parse("a0000000-0000-0000-0000-000000000022"), Code = "teaching_application:create", Name = "创建授课申请", Module = "teaching_application", Description = "提交授课申请", CreatedAt = seedDate },
+            new Permission { Id = Guid.Parse("a0000000-0000-0000-0000-000000000023"), Code = "teaching_application:approve", Name = "审批授课申请", Module = "teaching_application", Description = "审批授课申请", CreatedAt = seedDate },
+
+            // 使用登记权限
+            new Permission { Id = Guid.Parse("a0000000-0000-0000-0000-000000000031"), Code = "usage_registration:read", Name = "查看使用登记", Module = "usage_registration", Description = "查看使用登记记录", CreatedAt = seedDate },
+            new Permission { Id = Guid.Parse("a0000000-0000-0000-0000-000000000032"), Code = "usage_registration:create", Name = "创建使用登记", Module = "usage_registration", Description = "填写使用登记表", CreatedAt = seedDate },
+
+            // 统计报表权限
+            new Permission { Id = Guid.Parse("a0000000-0000-0000-0000-000000000041"), Code = "statistics:read", Name = "查看统计", Module = "statistics", Description = "查看统计报表", CreatedAt = seedDate },
+            new Permission { Id = Guid.Parse("a0000000-0000-0000-0000-000000000042"), Code = "statistics:export", Name = "导出统计", Module = "statistics", Description = "导出统计报表", CreatedAt = seedDate },
+            new Permission { Id = Guid.Parse("a0000000-0000-0000-0000-000000000043"), Code = "statistics:dashboard", Name = "查看大屏", Module = "statistics", Description = "查看可视化大屏", CreatedAt = seedDate },
         };
 
         modelBuilder.Entity<Permission>().HasData(permissions);
@@ -520,7 +553,12 @@ public class AppDbContext : DbContext
             "lab:create", "lab:read", "lab:update", "lab:delete",
             "campus:create", "campus:read", "campus:update", "campus:delete",
             "building:create", "building:read", "building:update", "building:delete",
-            "department:read"
+            "department:read",
+            "schedule:read", "schedule:create", "schedule:update", "schedule:delete",
+            "reservation:read", "reservation:approve",
+            "teaching_application:read", "teaching_application:approve",
+            "usage_registration:read",
+            "statistics:read", "statistics:export", "statistics:dashboard"
         };
         rolePermissions.AddRange(permissions
             .Where(p => labAdminPermissions.Contains(p.Code))
@@ -538,7 +576,12 @@ public class AppDbContext : DbContext
             "report:read", "report:approve",
             "equipment:read", "equipment:borrow",
             "lab:read",
-            "campus:read", "building:read"
+            "campus:read", "building:read",
+            "schedule:read",
+            "reservation:read", "reservation:create",
+            "teaching_application:read", "teaching_application:create",
+            "usage_registration:read", "usage_registration:create",
+            "statistics:read"
         };
         rolePermissions.AddRange(permissions
             .Where(p => teacherPermissions.Contains(p.Code))
@@ -2378,6 +2421,149 @@ public class AppDbContext : DbContext
                 .WithMany(e => e.Children)
                 .HasForeignKey(e => e.ParentId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // =========================
+        // ScheduleEntry（统一排课记录）
+        // =========================
+        modelBuilder.Entity<ScheduleEntry>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasMaxLength(36);
+
+            entity.HasIndex(e => e.SemesterId);
+            entity.HasIndex(e => e.LabId);
+            entity.HasIndex(e => new { e.WeekNumber, e.DayOfWeek, e.PeriodNumber });
+            entity.HasIndex(e => e.Source);
+            entity.HasIndex(e => e.Status);
+
+            entity.HasOne(e => e.Semester)
+                .WithMany()
+                .HasForeignKey(e => e.SemesterId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Lab)
+                .WithMany()
+                .HasForeignKey(e => e.LabId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // =========================
+        // Reservation（预约申请）
+        // =========================
+        modelBuilder.Entity<Reservation>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasMaxLength(36);
+
+            entity.HasIndex(e => e.SemesterId);
+            entity.HasIndex(e => e.LabId);
+            entity.HasIndex(e => e.ApplicantId);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.WeekNumber);
+
+            entity.HasOne(e => e.Semester)
+                .WithMany()
+                .HasForeignKey(e => e.SemesterId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Lab)
+                .WithMany()
+                .HasForeignKey(e => e.LabId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Applicant)
+                .WithMany()
+                .HasForeignKey(e => e.ApplicantId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // =========================
+        // TeachingApplication（授课申请）
+        // =========================
+        modelBuilder.Entity<TeachingApplication>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasMaxLength(36);
+
+            entity.HasIndex(e => e.SemesterId);
+            entity.HasIndex(e => e.TeachingTaskId);
+            entity.HasIndex(e => e.ApplicantId);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.DayOfWeek);
+
+            entity.HasOne(e => e.Semester)
+                .WithMany()
+                .HasForeignKey(e => e.SemesterId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.TeachingTask)
+                .WithMany()
+                .HasForeignKey(e => e.TeachingTaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.ExpectedLab)
+                .WithMany()
+                .HasForeignKey(e => e.ExpectedLabId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(e => e.Applicant)
+                .WithMany()
+                .HasForeignKey(e => e.ApplicantId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // =========================
+        // UsageRegistration（使用登记）
+        // =========================
+        modelBuilder.Entity<UsageRegistration>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasMaxLength(36);
+
+            entity.HasIndex(e => e.SemesterId);
+            entity.HasIndex(e => e.LabId);
+            entity.HasIndex(e => e.FilledById);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => new { e.UseDate, e.PeriodNumber });
+
+            entity.HasOne(e => e.Semester)
+                .WithMany()
+                .HasForeignKey(e => e.SemesterId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Lab)
+                .WithMany()
+                .HasForeignKey(e => e.LabId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(e => e.FilledBy)
+                .WithMany()
+                .HasForeignKey(e => e.FilledById)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // =========================
+        // ScheduleStatistics（排课统计）
+        // =========================
+        modelBuilder.Entity<ScheduleStatistics>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasMaxLength(36);
+
+            entity.HasIndex(e => e.SemesterId);
+            entity.HasIndex(e => e.WeekNumber);
+            entity.HasIndex(e => new { e.SemesterId, e.WeekNumber, e.LabId }).IsUnique();
+
+            entity.HasOne(e => e.Semester)
+                .WithMany()
+                .HasForeignKey(e => e.SemesterId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Lab)
+                .WithMany()
+                .HasForeignKey(e => e.LabId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
     }
 }

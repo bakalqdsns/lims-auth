@@ -77,19 +77,63 @@
               <span>实验教学管理</span>
             </template>
             <el-menu-item index="/experiment/tasks">
+              <el-icon><Document /></el-icon>
               <span>教学任务</span>
             </el-menu-item>
             <el-menu-item index="/experiment/items">
+              <el-icon><Collection /></el-icon>
               <span>实验项目库</span>
             </el-menu-item>
             <el-menu-item index="/experiment/schedules">
+              <el-icon><Calendar /></el-icon>
               <span>项目开出</span>
             </el-menu-item>
             <el-menu-item index="/experiment/quality">
+              <el-icon><DataLine /></el-icon>
               <span>教学质量</span>
             </el-menu-item>
             <el-menu-item index="/experiment/plans">
+              <el-icon><Memo /></el-icon>
               <span>实训计划</span>
+            </el-menu-item>
+          </el-sub-menu>
+
+          <el-sub-menu index="/scheduling" class="scheduling-submenu">
+            <template #title>
+              <el-icon><Calendar /></el-icon>
+              <span>预约排课管理</span>
+            </template>
+            <el-menu-item index="/scheduling/list">
+              <el-icon><Search /></el-icon>
+              <span>排课查询</span>
+            </el-menu-item>
+            <el-menu-item index="/scheduling/central">
+              <el-icon><Edit /></el-icon>
+              <span>集中排课</span>
+            </el-menu-item>
+            <el-menu-item index="/scheduling/reservations">
+              <el-icon><Postcard /></el-icon>
+              <span>预约申请</span>
+            </el-menu-item>
+            <el-menu-item index="/scheduling/reservations/approval">
+              <el-icon><CircleCheck /></el-icon>
+              <span>预约审批</span>
+            </el-menu-item>
+            <el-menu-item index="/scheduling/teaching-applications">
+              <el-icon><Tickets /></el-icon>
+              <span>教学申请</span>
+            </el-menu-item>
+            <el-menu-item index="/scheduling/usage-registration">
+              <el-icon><EditPen /></el-icon>
+              <span>使用登记</span>
+            </el-menu-item>
+            <el-menu-item index="/scheduling/statistics">
+              <el-icon><DataAnalysis /></el-icon>
+              <span>统计分析</span>
+            </el-menu-item>
+            <el-menu-item index="/scheduling/dashboard">
+              <el-icon><DataBoard /></el-icon>
+              <span>排课看板</span>
             </el-menu-item>
           </el-sub-menu>
 
@@ -218,7 +262,18 @@ import {
   School,
   Timer,
   Tools,
-  Grid
+  Grid,
+  Document,
+  DataLine,
+  Memo,
+  Search,
+  Edit,
+  Postcard,
+  CircleCheck,
+  Tickets,
+  EditPen,
+  DataAnalysis,
+  DataBoard
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '../stores/auth'
 import { userApi } from '../api/system'

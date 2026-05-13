@@ -60,6 +60,13 @@ builder.Services.AddScoped<IEquipmentService, EquipmentService>();
 builder.Services.AddScoped<ICampusService, CampusService>();
 builder.Services.AddScoped<IBuildingService, BuildingService>();
 
+// 排课预约管理
+builder.Services.AddScoped<IScheduleService, ScheduleService>();
+builder.Services.AddScoped<IReservationService, ReservationService>();
+builder.Services.AddScoped<ITeachingApplicationService, TeachingApplicationService>();
+builder.Services.AddScoped<IUsageRegistrationService, UsageRegistrationService>();
+builder.Services.AddScoped<IStatisticsService, StatisticsService>();
+
 // JWT Authentication
 var secretKey = builder.Configuration["Jwt:SecretKey"] ?? "your-super-secret-key-min-32-chars-long!!";
 

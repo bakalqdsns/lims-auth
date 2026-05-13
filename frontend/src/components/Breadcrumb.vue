@@ -1,7 +1,14 @@
 <template>
   <el-breadcrumb separator="/">
-    <el-breadcrumb-item v-for="item in breadcrumbList" :key="item.path">
-      <span>{{ item.title }}</span>
+    <el-breadcrumb-item v-for="(item, index) in breadcrumbList" :key="item.path">
+      <router-link
+        v-if="index < breadcrumbList.length - 1"
+        :to="item.path"
+        class="breadcrumb-link"
+      >
+        {{ item.title }}
+      </router-link>
+      <span v-else>{{ item.title }}</span>
     </el-breadcrumb-item>
   </el-breadcrumb>
 </template>
@@ -32,7 +39,15 @@ const routeNameMap: Record<string, string> = {
   buildings: '楼宇管理',
   floorPlan: '建筑平面图',
   labs: '实验室管理',
-  equipments: '设备管理'
+  equipments: '设备管理',
+  scheduleSearch: '排课查询',
+  centralScheduling: '集中排课',
+  reservations: '预约申请',
+  reservationApproval: '预约审批',
+  teachingApplications: '教学申请',
+  usageRegistration: '使用登记',
+  scheduleStatistics: '统计分析',
+  scheduleDashboard: '排课看板'
 }
 
 const breadcrumbList = computed(() => {
@@ -43,4 +58,16 @@ const breadcrumbList = computed(() => {
   }))
 })
 </script>
+
+<style scoped>
+.breadcrumb-link {
+  color: #606266;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.breadcrumb-link:hover {
+  color: #409EFF;
+}
+</style>
 
