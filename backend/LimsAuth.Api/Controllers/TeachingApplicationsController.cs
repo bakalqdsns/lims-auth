@@ -21,8 +21,15 @@ public class TeachingApplicationsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<TeachingApplicationDto>>> GetApplications([FromQuery] TeachingApplicationQuery query)
     {
-        var list = await _service.GetApplicationsAsync(query);
-        return Ok(new { code = 200, data = list });
+        try
+        {
+            var list = await _service.GetApplicationsAsync(query);
+            return Ok(new { code = 200, data = list });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { code = 500, message = ex.Message, detail = ex.StackTrace });
+        }
     }
 
     [HttpGet("{id}")]

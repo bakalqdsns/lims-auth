@@ -4,12 +4,6 @@ import axios from 'axios'
 
 const API_BASE_URL = '/api/v1'
 
-interface Role {
-  id: string
-  code: string
-  name: string
-}
-
 interface User {
   id: string
   username: string
@@ -18,7 +12,7 @@ interface User {
   fullName?: string
   avatarUrl?: string
   isActive: boolean
-  roles: Role[]
+  roles: string[]
   permissions: string[]
 }
 
@@ -48,7 +42,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   // Getters
   const isAuthenticated = computed(() => !!token.value && !!user.value)
-  const userRole = computed(() => user.value?.roles?.[0]?.code || '')
+  const userRole = computed(() => user.value?.roles?.[0] || '')
   const userRoles = computed(() => user.value?.roles || [])
   const userPermissions = computed(() => user.value?.permissions || [])
 
@@ -64,15 +58,14 @@ export const useAuthStore = defineStore('auth', () => {
   // 检查是否有指定角色
   const hasRole = (role: string | string[]): boolean => {
     if (!user.value?.roles) return false
-    const userRoleCodes = user.value.roles.map((r: Role) => r.code)
     if (Array.isArray(role)) {
-      return role.some(r => userRoleCodes.includes(r))
+      return role.some(r => user.value!.roles.includes(r))
     }
-    return userRoleCodes.includes(role)
+    return user.value.roles.includes(role)
   }
 
   // 检查是否是超级管理员
-  const isSuperAdmin = computed(() => user.value?.roles?.some((r: Role) => r.code === 'super_admin') || false)
+  const isSuperAdmin = computed(() => user.value?.roles?.includes('super_admin') || false)
 
   // Actions
   async function login(username: string, password: string): Promise<boolean> {
@@ -143,6 +136,8 @@ export const useAuthStore = defineStore('auth', () => {
   // 初始化时如果有 token，设置 axios header 并获取用户信息
   if (token.value) {
     axios.defaults.headers.common['Authorization'] = `Bearer ${token.value}`
+    // 同步调用，由 useAuthStore() 初始化顺序保证：router 守卫中 token 存在时
+    // 必须先确保 user 已加载，因此这里返回 Promise，由 router.beforeEach 等待
     fetchCurrentUser()
   }
 

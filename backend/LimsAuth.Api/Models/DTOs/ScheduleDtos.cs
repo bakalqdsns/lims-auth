@@ -101,8 +101,6 @@ public class ScheduleEntryDto
     public Guid? MajorId { get; set; }
     public string? MajorName { get; set; }
     public int? StudentCount { get; set; }
-    public string? BuildingName { get; set; }
-    public string? RoomNumber { get; set; }
     public string? Remark { get; set; }
     public bool HasConflict { get; set; }
     public string? ConflictInfo { get; set; }
@@ -133,8 +131,6 @@ public class CreateScheduleEntryRequest
     public Guid? MajorId { get; set; }
     public string? MajorName { get; set; }
     public int? StudentCount { get; set; }
-    public string? BuildingName { get; set; }
-    public string? RoomNumber { get; set; }
     public string? Remark { get; set; }
     public bool ForceSchedule { get; set; }
 }
@@ -311,8 +307,6 @@ public class UsageRegistrationDto
     public string? SemesterName { get; set; }
     public Guid? LabId { get; set; }
     public string LabName { get; set; } = string.Empty;
-    public string? BuildingName { get; set; }
-    public string? RoomNumber { get; set; }
     public DateTime UseDate { get; set; }
     public int WeekNumber { get; set; }
     public int DayOfWeek { get; set; }
@@ -348,8 +342,6 @@ public class CreateUsageRegistrationRequest
     public Guid SemesterId { get; set; }
     public Guid? LabId { get; set; }
     public string LabName { get; set; } = string.Empty;
-    public string? BuildingName { get; set; }
-    public string? RoomNumber { get; set; }
     public DateTime UseDate { get; set; }
     public int WeekNumber { get; set; }
     public int DayOfWeek { get; set; }

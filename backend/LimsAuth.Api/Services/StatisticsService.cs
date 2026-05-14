@@ -258,8 +258,8 @@ public class StatisticsService : IStatisticsService
                 TotalStudentCount = weekEntries.Where(x => x.StudentCount.HasValue).Sum(x => x.StudentCount!.Value),
                 TotalReservations = await _db.Reservations.CountAsync(x => x.SemesterId == semesterId && x.WeekNumber == weekNumber),
                 ApprovedReservations = await _db.Reservations.CountAsync(x => x.SemesterId == semesterId && x.WeekNumber == weekNumber && x.Status == ApprovalStatus.Approved),
-                TotalTeachingApplications = await _db.TeachingApplications.CountAsync(x => x.SemesterId == semesterId && x.WeekNumbers.Contains(weekNumber)),
-                ApprovedTeachingApplications = await _db.TeachingApplications.CountAsync(x => x.SemesterId == semesterId && x.WeekNumbers.Contains(weekNumber) && x.Status == ApprovalStatus.Approved)
+                TotalTeachingApplications = (await _db.TeachingApplications.Where(x => x.SemesterId == semesterId).ToListAsync()).Count(x => x.WeekNumbers.Contains(weekNumber)),
+                ApprovedTeachingApplications = (await _db.TeachingApplications.Where(x => x.SemesterId == semesterId && x.Status == ApprovalStatus.Approved).ToListAsync()).Count(x => x.WeekNumbers.Contains(weekNumber))
             },
             LabOccupancyList = await GetLabUsageCountAsync(new StatisticsQuery { SemesterId = semesterId, WeekNumber = weekNumber }),
             CompletionRate = await GetRegistrationCompletionRateAsync(new StatisticsQuery { SemesterId = semesterId }),

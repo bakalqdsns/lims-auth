@@ -225,7 +225,7 @@ const router = createRouter({
 })
 
 // 路由守卫
-router.beforeEach((to, _from, next) => {
+router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore()
 
   // 需要登录的页面
@@ -240,10 +240,22 @@ router.beforeEach((to, _from, next) => {
     return
   }
 
-  // 检查权限（暂时放宽：仅打印警告，不阻止访问）
-  // TODO: 正式环境应恢复权限检查
+  // 有 token 但 user 信息尚未加载，先获取用户信息
+  if (to.meta.requiresAuth && authStore.token && !authStore.user) {
+    await authStore.fetchCurrentUser()
+  }
+
+  // 超级管理员拥有所有权限，跳过权限检查
+  if (authStore.isSuperAdmin) {
+    next()
+    return
+  }
+
+  // 权限拦截：无权限时跳转到首页
   if (to.meta.permission && !authStore.hasPermission(to.meta.permission as string)) {
     console.warn(`[权限警告] 页面 "${to.path}" 需要权限 "${to.meta.permission}"，当前用户未拥有该权限`)
+    next('/home')
+    return
   }
 
   next()

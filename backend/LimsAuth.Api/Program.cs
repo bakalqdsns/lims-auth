@@ -161,6 +161,32 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("Permission:building:read", policy => policy.RequirePermission("building:read"));
     options.AddPolicy("Permission:building:update", policy => policy.RequirePermission("building:update"));
     options.AddPolicy("Permission:building:delete", policy => policy.RequirePermission("building:delete"));
+
+    // 排课管理权限
+    options.AddPolicy("Permission:schedule:read", policy => policy.RequirePermission("schedule:read"));
+    options.AddPolicy("Permission:schedule:create", policy => policy.RequirePermission("schedule:create"));
+    options.AddPolicy("Permission:schedule:update", policy => policy.RequirePermission("schedule:update"));
+    options.AddPolicy("Permission:schedule:delete", policy => policy.RequirePermission("schedule:delete"));
+
+    // 预约管理权限
+    options.AddPolicy("Permission:reservation:read", policy => policy.RequirePermission("reservation:read"));
+    options.AddPolicy("Permission:reservation:create", policy => policy.RequirePermission("reservation:create"));
+    options.AddPolicy("Permission:reservation:approve", policy => policy.RequirePermission("reservation:approve"));
+    options.AddPolicy("Permission:reservation:cancel", policy => policy.RequirePermission("reservation:cancel"));
+
+    // 授课申请权限
+    options.AddPolicy("Permission:teaching_application:read", policy => policy.RequirePermission("teaching_application:read"));
+    options.AddPolicy("Permission:teaching_application:create", policy => policy.RequirePermission("teaching_application:create"));
+    options.AddPolicy("Permission:teaching_application:approve", policy => policy.RequirePermission("teaching_application:approve"));
+
+    // 使用登记权限
+    options.AddPolicy("Permission:usage_registration:read", policy => policy.RequirePermission("usage_registration:read"));
+    options.AddPolicy("Permission:usage_registration:create", policy => policy.RequirePermission("usage_registration:create"));
+
+    // 统计报表权限
+    options.AddPolicy("Permission:statistics:read", policy => policy.RequirePermission("statistics:read"));
+    options.AddPolicy("Permission:statistics:export", policy => policy.RequirePermission("statistics:export"));
+    options.AddPolicy("Permission:statistics:dashboard", policy => policy.RequirePermission("statistics:dashboard"));
 });
 
 // CORS

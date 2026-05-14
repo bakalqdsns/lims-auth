@@ -81,14 +81,6 @@ public class ScheduleEntry
     [Column("student_count")]
     public int? StudentCount { get; set; }
 
-    [Column("building_name")]
-    [MaxLength(100)]
-    public string? BuildingName { get; set; }
-
-    [Column("room_number")]
-    [MaxLength(50)]
-    public string? RoomNumber { get; set; }
-
     [Column("remark")]
     [MaxLength(500)]
     public string? Remark { get; set; }

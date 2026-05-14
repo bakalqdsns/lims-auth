@@ -557,37 +557,6 @@ public class ExperimentsController : ControllerBase
     }
 
     #endregion
-
-    #region 楼宇和场地管理
-
-    [HttpGet("buildings")]
-    public async Task<ActionResult<IEnumerable<VenBuilding>>> GetBuildings()
-    {
-        return await _context.VenBuildings
-            .Include(b => b.Rooms)
-            .OrderBy(b => b.Code)
-            .ToListAsync();
-    }
-
-    [HttpGet("rooms")]
-    public async Task<ActionResult<IEnumerable<VenRoom>>> GetRooms(
-        [FromQuery] Guid? buildingId,
-        [FromQuery] string? roomType)
-    {
-        var query = _context.VenRooms
-            .Include(r => r.Building)
-            .AsQueryable();
-
-        if (buildingId.HasValue)
-            query = query.Where(r => r.BuildingId == buildingId.Value);
-
-        if (!string.IsNullOrEmpty(roomType))
-            query = query.Where(r => r.RoomType == roomType);
-
-        return await query.OrderBy(r => r.Building!.Name).ThenBy(r => r.RoomNumber).ToListAsync();
-    }
-
-    #endregion
 }
 
 public class ApproveTrainingPlanRequest

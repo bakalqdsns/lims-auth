@@ -394,6 +394,9 @@ public class UserService
     {
         var permissions = await _dbContext.UserRoles
             .Where(ur => ur.UserId == userId)
+            .Include(ur => ur.Role)
+            .ThenInclude(r => r.RolePermissions)
+            .ThenInclude(rp => rp.Permission)
             .SelectMany(ur => ur.Role.RolePermissions)
             .Select(rp => rp.Permission.Code)
             .Distinct()
@@ -409,6 +412,7 @@ public class UserService
     {
         var roles = await _dbContext.UserRoles
             .Where(ur => ur.UserId == userId)
+            .Include(ur => ur.Role)
             .Select(ur => ur.Role.Code)
             .ToListAsync();
 

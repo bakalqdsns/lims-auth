@@ -117,28 +117,6 @@ public class ReservationService : IReservationService
         reservation.ApprovedAt = DateTime.UtcNow;
         reservation.UpdatedAt = DateTime.UtcNow;
 
-        foreach (var period in reservation.PeriodNumbers)
-        {
-            var createReq = new CreateScheduleEntryRequest
-            {
-                SemesterId = reservation.SemesterId,
-                LabId = reservation.LabId,
-                WeekNumber = reservation.WeekNumber,
-                DayOfWeek = reservation.DayOfWeek,
-                PeriodNumber = period,
-                Source = "Reservation",
-                ReservationId = reservation.Id,
-                ProjectName = reservation.ProjectName,
-                Remark = $"来源：预约申请 | {reservation.Remark}"
-            };
-
-            if (reservation.Lab != null)
-            {
-                createReq.BuildingName = reservation.Lab.Building?.Name;
-                createReq.RoomNumber = reservation.Lab.RoomNumber;
-            }
-        }
-
         await _db.SaveChangesAsync();
 
         foreach (var period in reservation.PeriodNumbers)

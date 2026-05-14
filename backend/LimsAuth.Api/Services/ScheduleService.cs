@@ -98,22 +98,10 @@ public class ScheduleService : IScheduleService
             MajorId = request.MajorId,
             MajorName = request.MajorName,
             StudentCount = request.StudentCount,
-            BuildingName = request.BuildingName,
-            RoomNumber = request.RoomNumber,
             Remark = request.Remark,
             CreatedAt = DateTime.UtcNow,
             CreatedBy = createdBy
         };
-
-        if (request.LabId.HasValue)
-        {
-            var lab = await _db.Labs.FindAsync(request.LabId.Value);
-            if (lab != null)
-            {
-                entry.BuildingName = entry.BuildingName ?? lab.Building?.Name;
-                entry.RoomNumber = entry.RoomNumber ?? lab.RoomNumber;
-            }
-        }
 
         var conflict = await CheckConflictsAsync(entry);
         entry.HasConflict = conflict.HasSoftConflict;
@@ -196,7 +184,7 @@ public class ScheduleService : IScheduleService
             {
                 Id = c.Id,
                 Type = "HardConflict",
-                Message = $"实验室 [{c.Lab?.Name ?? c.RoomNumber}] 在第{c.WeekNumber}周 星期{c.DayOfWeek} 第{c.PeriodNumber}节 已被 [{c.CourseName ?? c.ProjectName}] 占用",
+                Message = $"实验室 [{c.Lab?.Name}] 在第{c.WeekNumber}周 星期{c.DayOfWeek} 第{c.PeriodNumber}节 已被 [{c.CourseName ?? c.ProjectName}] 占用",
                 LabName = c.Lab?.Name,
                 WeekNumber = c.WeekNumber,
                 DayOfWeek = c.DayOfWeek,
@@ -384,8 +372,6 @@ public class ScheduleService : IScheduleService
             MajorId = e.MajorId,
             MajorName = e.MajorName,
             StudentCount = e.StudentCount,
-            BuildingName = e.BuildingName ?? e.Lab?.Building?.Name,
-            RoomNumber = e.RoomNumber ?? e.Lab?.RoomNumber,
             Remark = e.Remark,
             HasConflict = e.HasConflict,
             ConflictInfo = e.ConflictInfo,

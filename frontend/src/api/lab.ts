@@ -41,8 +41,18 @@ export interface CreateLabRequest {
   code: string
   name: string
   departmentId?: string
+  buildingId?: string
+  floor?: number
+  roomNumber?: string
   location?: string
   capacity?: number
+  seatCount?: number
+  floorNo?: number
+  area?: number
+  roomType?: string
+  photo?: string
+  isAvailable?: boolean
+  experimentLocationCode?: string
   labType?: string
   safetyLevel?: string
   managerId?: string
@@ -85,9 +95,18 @@ export interface LabDto {
   departmentId?: string
   departmentName?: string
   buildingId?: string
+  building?: { id: string; name: string }
+  floor?: number
+  floorNo?: number
   roomNumber?: string
   location?: string
   capacity: number
+  seatCount: number
+  area?: number
+  roomType?: string
+  photo?: string
+  isAvailable: boolean
+  experimentLocationCode?: string
   labType: string
   safetyLevel: string
   managerId?: string
@@ -96,7 +115,6 @@ export interface LabDto {
   isActive: boolean
   createdAt: string
   equipmentCount: number
-  building?: { id: string; name: string }
 }
 
 export interface EquipmentDto {

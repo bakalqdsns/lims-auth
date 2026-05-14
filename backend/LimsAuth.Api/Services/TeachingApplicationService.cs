@@ -41,7 +41,7 @@ public class TeachingApplicationService : ITeachingApplicationService
         if (query.ApplicantId.HasValue)
             q = q.Where(x => x.ApplicantId == query.ApplicantId.Value);
         if (!string.IsNullOrEmpty(query.Status))
-            q = q.Where(x => x.Status.ToString() == query.Status);
+            q = q.Where(x => x.Status.ToString().ToLower() == query.Status.ToLower());
 
         var list = await q.OrderByDescending(x => x.CreatedAt).ToListAsync();
         return list.Select(MapToDto).ToList();

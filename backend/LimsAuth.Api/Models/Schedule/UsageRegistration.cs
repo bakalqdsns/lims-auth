@@ -22,14 +22,6 @@ public class UsageRegistration
     [MaxLength(100)]
     public string LabName { get; set; } = string.Empty;
 
-    [Column("building_name")]
-    [MaxLength(100)]
-    public string? BuildingName { get; set; }
-
-    [Column("room_number")]
-    [MaxLength(50)]
-    public string? RoomNumber { get; set; }
-
     [Column("use_date")]
     public DateTime UseDate { get; set; }
 

@@ -91,6 +91,51 @@ public class Lab
     [Column("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+    /// <summary>
+    /// 座位数（从 VenRoom 合并）
+    /// </summary>
+    [Column("seat_count")]
+    public int SeatCount { get; set; } = 0;
+
+    /// <summary>
+    /// 楼层号（从 VenRoom 合并）
+    /// </summary>
+    [Column("floor_no")]
+    public int? FloorNo { get; set; }
+
+    /// <summary>
+    /// 房间面积（从 VenRoom 合并）
+    /// </summary>
+    [Column("area")]
+    public double? Area { get; set; }
+
+    /// <summary>
+    /// 房间类型（从 VenRoom 合并）
+    /// </summary>
+    [Column("room_type")]
+    [MaxLength(50)]
+    public string? RoomType { get; set; }
+
+    /// <summary>
+    /// 房间照片（从 VenRoom 合并）
+    /// </summary>
+    [Column("photo")]
+    [MaxLength(500)]
+    public string? Photo { get; set; }
+
+    /// <summary>
+    /// 是否可用（从 VenRoom 合并）
+    /// </summary>
+    [Column("is_available")]
+    public bool IsAvailable { get; set; } = true;
+
+    /// <summary>
+    /// 实验场地代码（从 VenRoom 合并）
+    /// </summary>
+    [Column("experiment_location_code")]
+    [MaxLength(50)]
+    public string? ExperimentLocationCode { get; set; }
+
     // 导航属性
     public virtual Department? Department { get; set; }
     public virtual Building? Building { get; set; }

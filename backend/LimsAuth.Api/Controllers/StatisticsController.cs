@@ -76,8 +76,15 @@ public class StatisticsController : ControllerBase
     [HttpGet("dashboard")]
     public async Task<ActionResult> GetDashboard([FromQuery] DashboardQuery query)
     {
-        var data = await _statisticsService.GetDashboardDataAsync(query);
-        return Ok(new { code = 200, data = data });
+        try
+        {
+            var data = await _statisticsService.GetDashboardDataAsync(query);
+            return Ok(new { code = 200, data = data });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { code = 500, message = ex.Message, detail = ex.StackTrace });
+        }
     }
 
     [HttpGet("export")]

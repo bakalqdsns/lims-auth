@@ -42,8 +42,6 @@ public class AppDbContext : DbContext
     public DbSet<ExperimentItemSchedule> ExperimentItemSchedules => Set<ExperimentItemSchedule>();
     public DbSet<ExperimentQualityAssessment> ExperimentQualityAssessments => Set<ExperimentQualityAssessment>();
     public DbSet<TrainingTeachingPlan> TrainingTeachingPlans => Set<TrainingTeachingPlan>();
-    public DbSet<VenBuilding> VenBuildings => Set<VenBuilding>();
-    public DbSet<VenRoom> VenRooms => Set<VenRoom>();
     public DbSet<SysInstitution> SysInstitutions => Set<SysInstitution>();
     public DbSet<Campus> Campuses => Set<Campus>();
     public DbSet<Building> Buildings => Set<Building>();
@@ -1382,208 +1380,6 @@ public class AppDbContext : DbContext
         );
 
         // =========================
-        // 场地楼宇种子数据
-        // =========================
-
-        var venBuildingAId = Guid.Parse("b0000000-0000-0000-0000-000000000010");
-        var venBuildingBId = Guid.Parse("b0000000-0000-0000-0000-000000000011");
-        var venBuildingCId = Guid.Parse("b0000000-0000-0000-0000-000000000012");
-
-        modelBuilder.Entity<VenBuilding>().HasData(
-            new VenBuilding
-            {
-                Id = venBuildingAId,
-                Code = "VEN-A",
-                Name = "工程实训楼A",
-                EnglishName = "Engineering Training Building A",
-                Address = "主校区工程实践区",
-                TotalFloors = 4,
-                Area = 8000,
-                BuildYear = 2019,
-                UseType = "实训",
-                Status = "Active",
-                SortOrder = 1,
-                Description = "主要用于工程实训课程的场地楼宇",
-                CreatedAt = seedDate,
-                UpdatedAt = seedDate
-            },
-            new VenBuilding
-            {
-                Id = venBuildingBId,
-                Code = "VEN-B",
-                Name = "理学实验楼B",
-                EnglishName = "Science Experiment Building B",
-                Address = "主校区理学区",
-                TotalFloors = 5,
-                Area = 10000,
-                BuildYear = 2020,
-                UseType = "实验",
-                Status = "Active",
-                SortOrder = 2,
-                Description = "物理、化学基础实验场地",
-                CreatedAt = seedDate,
-                UpdatedAt = seedDate
-            },
-            new VenBuilding
-            {
-                Id = venBuildingCId,
-                Code = "VEN-C",
-                Name = "创新创业中心C",
-                EnglishName = "Innovation Center C",
-                Address = "东校区创新区",
-                TotalFloors = 3,
-                Area = 6000,
-                BuildYear = 2021,
-                UseType = "创新",
-                Status = "Active",
-                SortOrder = 3,
-                Description = "创新创业实践场地",
-                CreatedAt = seedDate,
-                UpdatedAt = seedDate
-            }
-        );
-
-        // =========================
-        // 场地房间种子数据
-        // =========================
-
-        modelBuilder.Entity<VenRoom>().HasData(
-            new VenRoom
-            {
-                Id = Guid.Parse("c0000000-0000-0000-0000-000000000010"),
-                Code = "VEN-A101",
-                Name = "工程制图实训室",
-                BuildingId = venBuildingAId,
-                FloorNo = 1,
-                RoomNumber = "A101",
-                SeatCount = 40,
-                Area = 120,
-                RoomType = "实训室",
-                ExperimentLocationCode = "EXP-A101",
-                IsAvailable = true,
-                Status = "Active",
-                SortOrder = 1,
-                Description = "工程制图课程实训场地",
-                CreatedAt = seedDate,
-                UpdatedAt = seedDate
-            },
-            new VenRoom
-            {
-                Id = Guid.Parse("c0000000-0000-0000-0000-000000000011"),
-                Code = "VEN-A102",
-                Name = "金工实训车间",
-                BuildingId = venBuildingAId,
-                FloorNo = 1,
-                RoomNumber = "A102",
-                SeatCount = 30,
-                Area = 200,
-                RoomType = "车间",
-                ExperimentLocationCode = "EXP-A102",
-                IsAvailable = true,
-                Status = "Active",
-                SortOrder = 2,
-                Description = "金属加工实训场地",
-                CreatedAt = seedDate,
-                UpdatedAt = seedDate
-            },
-            new VenRoom
-            {
-                Id = Guid.Parse("c0000000-0000-0000-0000-000000000012"),
-                Code = "VEN-A201",
-                Name = "电子工艺实训室",
-                BuildingId = venBuildingAId,
-                FloorNo = 2,
-                RoomNumber = "A201",
-                SeatCount = 36,
-                Area = 150,
-                RoomType = "实训室",
-                ExperimentLocationCode = "EXP-A201",
-                IsAvailable = true,
-                Status = "Active",
-                SortOrder = 3,
-                Description = "电子工艺装配实训场地",
-                CreatedAt = seedDate,
-                UpdatedAt = seedDate
-            },
-            new VenRoom
-            {
-                Id = Guid.Parse("c0000000-0000-0000-0000-000000000013"),
-                Code = "VEN-B101",
-                Name = "普通物理实验室1",
-                BuildingId = venBuildingBId,
-                FloorNo = 1,
-                RoomNumber = "B101",
-                SeatCount = 30,
-                Area = 100,
-                RoomType = "实验室",
-                ExperimentLocationCode = "EXP-B101",
-                IsAvailable = true,
-                Status = "Active",
-                SortOrder = 1,
-                Description = "大学物理实验场地",
-                CreatedAt = seedDate,
-                UpdatedAt = seedDate
-            },
-            new VenRoom
-            {
-                Id = Guid.Parse("c0000000-0000-0000-0000-000000000014"),
-                Code = "VEN-B102",
-                Name = "普通物理实验室2",
-                BuildingId = venBuildingBId,
-                FloorNo = 1,
-                RoomNumber = "B102",
-                SeatCount = 30,
-                Area = 100,
-                RoomType = "实验室",
-                ExperimentLocationCode = "EXP-B102",
-                IsAvailable = true,
-                Status = "Active",
-                SortOrder = 2,
-                Description = "大学物理实验场地",
-                CreatedAt = seedDate,
-                UpdatedAt = seedDate
-            },
-            new VenRoom
-            {
-                Id = Guid.Parse("c0000000-0000-0000-0000-000000000015"),
-                Code = "VEN-B201",
-                Name = "基础化学实验室",
-                BuildingId = venBuildingBId,
-                FloorNo = 2,
-                RoomNumber = "B201",
-                SeatCount = 24,
-                Area = 90,
-                RoomType = "实验室",
-                ExperimentLocationCode = "EXP-B201",
-                IsAvailable = true,
-                Status = "Active",
-                SortOrder = 3,
-                Description = "基础化学实验场地",
-                CreatedAt = seedDate,
-                UpdatedAt = seedDate
-            },
-            new VenRoom
-            {
-                Id = Guid.Parse("c0000000-0000-0000-0000-000000000016"),
-                Code = "VEN-C101",
-                Name = "创客空间",
-                BuildingId = venBuildingCId,
-                FloorNo = 1,
-                RoomNumber = "C101",
-                SeatCount = 50,
-                Area = 200,
-                RoomType = "创客空间",
-                ExperimentLocationCode = "EXP-C101",
-                IsAvailable = true,
-                Status = "Active",
-                SortOrder = 1,
-                Description = "创新创业实践场地",
-                CreatedAt = seedDate,
-                UpdatedAt = seedDate
-            }
-        );
-
-        // =========================
         // 更多实验教学任务
         // =========================
 
@@ -2193,17 +1989,6 @@ public class AppDbContext : DbContext
             .HasForeignKey(i => i.ParentId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // VenRoom 关系
-        modelBuilder.Entity<VenRoom>(entity =>
-        {
-            entity.HasOne(r => r.Building)
-                .WithMany()
-                .HasForeignKey(r => r.BuildingId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            entity.HasIndex(r => new { r.BuildingId, r.RoomNumber }).IsUnique();
-        });
-
         // =========================
         // ExperimentTeachingTask
         // =========================
@@ -2362,44 +2147,6 @@ public class AppDbContext : DbContext
             entity.HasOne(e => e.Class)
                 .WithMany()
                 .HasForeignKey(e => e.ClassId)
-                .OnDelete(DeleteBehavior.SetNull);
-        });
-
-
-        // =========================
-        // VenBuilding
-        // =========================
-        modelBuilder.Entity<VenBuilding>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-
-            entity.Property(e => e.Id).HasMaxLength(36);
-
-            entity.HasIndex(e => e.Code).IsUnique();
-            entity.HasIndex(e => e.Status);
-
-            entity.HasMany(e => e.Rooms)
-                .WithOne(r => r.Building)
-                .HasForeignKey(r => r.BuildingId);
-        });
-
-
-        // =========================
-        // VenRoom
-        // =========================
-        modelBuilder.Entity<VenRoom>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-
-            entity.Property(e => e.Id).HasMaxLength(36);
-
-            entity.HasIndex(e => e.BuildingId);
-            entity.HasIndex(e => e.RoomType);
-            entity.HasIndex(e => e.Status);
-
-            entity.HasOne(e => e.Building)
-                .WithMany(b => b.Rooms)
-                .HasForeignKey(e => e.BuildingId)
                 .OnDelete(DeleteBehavior.SetNull);
         });
 
@@ -2565,5 +2312,391 @@ public class AppDbContext : DbContext
                 .HasForeignKey(e => e.LabId)
                 .OnDelete(DeleteBehavior.SetNull);
         });
+
+        // =========================
+        // 排课预约模块种子数据
+        // =========================
+
+        // 统一排课记录
+        var entry1Id = Guid.Parse("e1000000-0000-0000-0000-000000000001");
+        var entry2Id = Guid.Parse("e1000000-0000-0000-0000-000000000002");
+        var entry3Id = Guid.Parse("e1000000-0000-0000-0000-000000000003");
+        var entry4Id = Guid.Parse("e1000000-0000-0000-0000-000000000004");
+
+        modelBuilder.Entity<ScheduleEntry>().HasData(
+            new ScheduleEntry
+            {
+                Id = entry1Id,
+                SemesterId = semesterId,
+                LabId = lab1Id,
+                WeekNumber = 1,
+                DayOfWeek = 1,
+                PeriodNumber = 1,
+                Source = ScheduleSource.CentralScheduling,
+                Status = "Active",
+                CourseId = courseId,
+                CourseName = "程序设计基础",
+                TeachingTaskId = taskId,
+                TeacherId = teacherUserId,
+                TeacherName = "张老师",
+                ClassId = classId,
+                ClassName = "计算机科学与技术2024级1班",
+                MajorId = majorId,
+                MajorName = "计算机科学与技术",
+                StudentCount = 30,
+                CreatedAt = seedDate
+            },
+            new ScheduleEntry
+            {
+                Id = entry2Id,
+                SemesterId = semesterId,
+                LabId = lab2Id,
+                WeekNumber = 2,
+                DayOfWeek = 2,
+                PeriodNumber = 3,
+                Source = ScheduleSource.CentralScheduling,
+                Status = "Active",
+                CourseId = courseId,
+                CourseName = "计算机网络实验",
+                TeacherId = teacherUserId,
+                TeacherName = "张老师",
+                ClassId = classId,
+                ClassName = "计算机科学与技术2024级1班",
+                MajorId = majorId,
+                MajorName = "计算机科学与技术",
+                StudentCount = 28,
+                CreatedAt = seedDate
+            },
+            new ScheduleEntry
+            {
+                Id = entry3Id,
+                SemesterId = semesterId,
+                LabId = lab1Id,
+                WeekNumber = 3,
+                DayOfWeek = 3,
+                PeriodNumber = 2,
+                Source = ScheduleSource.CentralScheduling,
+                Status = "Active",
+                CourseId = courseId,
+                CourseName = "程序设计基础",
+                TeachingTaskId = taskId,
+                TeacherId = teacherUserId,
+                TeacherName = "张老师",
+                ClassId = classId,
+                ClassName = "计算机科学与技术2024级1班",
+                MajorId = majorId,
+                MajorName = "计算机科学与技术",
+                StudentCount = 30,
+                CreatedAt = seedDate
+            },
+            new ScheduleEntry
+            {
+                Id = entry4Id,
+                SemesterId = semesterId,
+                LabId = lab3Id,
+                WeekNumber = 4,
+                DayOfWeek = 4,
+                PeriodNumber = 4,
+                Source = ScheduleSource.CentralScheduling,
+                Status = "Active",
+                CourseName = "嵌入式系统实验",
+                TeacherId = teacherUserId,
+                TeacherName = "张老师",
+                ClassId = classId,
+                ClassName = "计算机科学与技术2024级1班",
+                MajorId = majorId,
+                MajorName = "计算机科学与技术",
+                StudentCount = 25,
+                CreatedAt = seedDate
+            }
+        );
+
+        // 预约申请
+        var res1Id = Guid.Parse("e2000000-0000-0000-0000-000000000001");
+        var res2Id = Guid.Parse("e2000000-0000-0000-0000-000000000002");
+        var res3Id = Guid.Parse("e2000000-0000-0000-0000-000000000003");
+
+        modelBuilder.Entity<Reservation>().HasData(
+            new Reservation
+            {
+                Id = res1Id,
+                SemesterId = semesterId,
+                LabId = lab1Id,
+                UseDate = new DateTime(2026, 9, 8),
+                DayOfWeek = 1,
+                PeriodNumbersJson = "[1, 2]",
+                WeekNumber = 2,
+                ExpectedDurationHours = 3,
+                ProjectName = "大学生创新创业项目",
+                ProjectCategory = "InnovationEntrepreneurship",
+                Remark = "用于大学生创新项目小组研讨与开发",
+                ApplicantId = studentUserId,
+                ApplicantName = "李同学",
+                ApplicantPhone = "13800000003",
+                ProjectLeaderId = studentUserId,
+                ProjectLeaderName = "李同学",
+                ProjectLeaderPhone = "13800000003",
+                MemberGrade = "2024",
+                MemberClassName = "计算机科学与技术2024级1班",
+                MemberCount = 8,
+                Status = ApprovalStatus.Approved,
+                ApprovalComment = "已通过，请按时使用实验室",
+                ApprovedBy = adminUserId,
+                ApprovedAt = new DateTime(2026, 9, 1, 10, 0, 0),
+                IsCancelled = false,
+                CreatedAt = new DateTime(2026, 8, 25, 9, 0, 0)
+            },
+            new Reservation
+            {
+                Id = res2Id,
+                SemesterId = semesterId,
+                LabId = lab2Id,
+                UseDate = new DateTime(2026, 9, 10),
+                DayOfWeek = 3,
+                PeriodNumbersJson = "[3, 4, 5]",
+                WeekNumber = 2,
+                ExpectedDurationHours = 5,
+                ProjectName = "网络工程课程设计",
+                ProjectCategory = "CourseTeaching",
+                Remark = "课程配套实验，需使用交换机和路由器设备",
+                ApplicantId = studentUserId,
+                ApplicantName = "李同学",
+                ApplicantPhone = "13800000003",
+                ProjectLeaderId = studentUserId,
+                ProjectLeaderName = "李同学",
+                ProjectLeaderPhone = "13800000003",
+                MemberGrade = "2024",
+                MemberClassName = "计算机科学与技术2024级1班",
+                MemberCount = 15,
+                Status = ApprovalStatus.Pending,
+                IsCancelled = false,
+                CreatedAt = new DateTime(2026, 9, 3, 14, 30, 0)
+            },
+            new Reservation
+            {
+                Id = res3Id,
+                SemesterId = semesterId,
+                LabId = lab3Id,
+                UseDate = new DateTime(2026, 9, 15),
+                DayOfWeek = 1,
+                PeriodNumbersJson = "[4, 5]",
+                WeekNumber = 3,
+                ExpectedDurationHours = 4,
+                ProjectName = "嵌入式课程设计",
+                ProjectCategory = "CourseTeaching",
+                Remark = "申请使用嵌入式实验室进行STM32开发实验",
+                ApplicantId = studentUserId,
+                ApplicantName = "李同学",
+                ApplicantPhone = "13800000003",
+                ProjectLeaderId = studentUserId,
+                ProjectLeaderName = "李同学",
+                ProjectLeaderPhone = "13800000003",
+                MemberGrade = "2024",
+                MemberClassName = "计算机科学与技术2024级1班",
+                MemberCount = 10,
+                Status = ApprovalStatus.Rejected,
+                ApprovalComment = "该时段已有其他教学安排，实验室不可用",
+                ApprovedBy = adminUserId,
+                ApprovedAt = new DateTime(2026, 9, 4, 16, 0, 0),
+                IsCancelled = false,
+                CreatedAt = new DateTime(2026, 9, 2, 11, 0, 0)
+            }
+        );
+
+        // 使用登记
+        var reg1Id = Guid.Parse("e3000000-0000-0000-0000-000000000001");
+        var reg2Id = Guid.Parse("e3000000-0000-0000-0000-000000000002");
+        var reg3Id = Guid.Parse("e3000000-0000-0000-0000-000000000003");
+        var reg4Id = Guid.Parse("e3000000-0000-0000-0000-000000000004");
+
+        modelBuilder.Entity<UsageRegistration>().HasData(
+            new UsageRegistration
+            {
+                Id = reg1Id,
+                SemesterId = semesterId,
+                LabId = lab1Id,
+                LabName = "计算机基础实验室",
+                UseDate = new DateTime(2026, 9, 1),
+                WeekNumber = 1,
+                DayOfWeek = 1,
+                PeriodNumber = 1,
+                Source = ScheduleSource.CentralScheduling,
+                ScheduleEntryId = entry1Id,
+                TeachingTaskId = taskId,
+                CourseName = "程序设计基础",
+                ExperimentItemName = "顺序结构程序设计",
+                ExperimentItemType = "验证性实验",
+                PlannedHours = 4,
+                ActualHours = 3.5,
+                ClassName = "计算机科学与技术2024级1班",
+                ExpectedStudentCount = 30,
+                ActualStudentCount = 28,
+                AttendanceRecord = "2人请假",
+                TeachingCondition = "良好",
+                EquipmentCondition = "正常",
+                Status = RegistrationStatus.Registered,
+                FilledById = teacherUserId,
+                FilledByName = "张老师",
+                FilledAt = new DateTime(2026, 9, 1, 12, 0, 0),
+                CreatedAt = new DateTime(2026, 9, 1, 12, 0, 0)
+            },
+            new UsageRegistration
+            {
+                Id = reg2Id,
+                SemesterId = semesterId,
+                LabId = lab2Id,
+                LabName = "网络工程实验室",
+                UseDate = new DateTime(2026, 9, 2),
+                WeekNumber = 1,
+                DayOfWeek = 2,
+                PeriodNumber = 3,
+                Source = ScheduleSource.TeachingRequest,
+                ReservationId = res1Id,
+                ProjectName = "大学生创新创业项目",
+                PlannedHours = 3,
+                ActualHours = 3,
+                ClassName = "计算机科学与技术2024级1班",
+                ExpectedStudentCount = 8,
+                ActualStudentCount = 8,
+                AttendanceRecord = "全员出勤",
+                TeachingCondition = "良好",
+                EquipmentCondition = "正常",
+                Status = RegistrationStatus.Registered,
+                FilledById = studentUserId,
+                FilledByName = "李同学",
+                FilledAt = new DateTime(2026, 9, 2, 17, 30, 0),
+                CreatedAt = new DateTime(2026, 9, 2, 17, 30, 0)
+            },
+            new UsageRegistration
+            {
+                Id = reg3Id,
+                SemesterId = semesterId,
+                LabId = lab1Id,
+                LabName = "计算机基础实验室",
+                UseDate = new DateTime(2026, 9, 8),
+                WeekNumber = 2,
+                DayOfWeek = 1,
+                PeriodNumber = 1,
+                Source = ScheduleSource.CentralScheduling,
+                ScheduleEntryId = entry1Id,
+                TeachingTaskId = taskId,
+                CourseName = "程序设计基础",
+                ExperimentItemName = "选择结构程序设计",
+                ExperimentItemType = "验证性实验",
+                PlannedHours = 4,
+                ActualHours = 0,
+                ClassName = "计算机科学与技术2024级1班",
+                ExpectedStudentCount = 30,
+                ActualStudentCount = null,
+                Status = RegistrationStatus.Pending,
+                FilledById = teacherUserId,
+                FilledByName = "张老师",
+                FilledAt = new DateTime(2026, 9, 8, 8, 0, 0),
+                CreatedAt = new DateTime(2026, 9, 8, 8, 0, 0)
+            },
+            new UsageRegistration
+            {
+                Id = reg4Id,
+                SemesterId = semesterId,
+                LabId = lab2Id,
+                LabName = "网络工程实验室",
+                UseDate = new DateTime(2026, 8, 25),
+                WeekNumber = -1,
+                DayOfWeek = 1,
+                PeriodNumber = 2,
+                Source = ScheduleSource.TeachingRequest,
+                CourseName = "计算机网络实验",
+                PlannedHours = 4,
+                ActualHours = 4,
+                ClassName = "计算机科学与技术2024级1班",
+                ExpectedStudentCount = 28,
+                ActualStudentCount = 27,
+                AttendanceRecord = "1人请假",
+                TeachingCondition = "良好",
+                EquipmentCondition = "正常",
+                Status = RegistrationStatus.Registered,
+                FilledById = teacherUserId,
+                FilledByName = "张老师",
+                FilledAt = new DateTime(2026, 8, 25, 17, 0, 0),
+                CreatedAt = new DateTime(2026, 8, 25, 17, 0, 0)
+            }
+        );
+
+        // 授课申请
+        var ta1Id = Guid.Parse("e4000000-0000-0000-0000-000000000001");
+        var ta2Id = Guid.Parse("e4000000-0000-0000-0000-000000000002");
+        var ta3Id = Guid.Parse("e4000000-0000-0000-0000-000000000003");
+
+        modelBuilder.Entity<TeachingApplication>().HasData(
+            new TeachingApplication
+            {
+                Id = ta1Id,
+                SemesterId = semesterId,
+                TeachingTaskId = taskId,
+                CourseName = "程序设计基础",
+                MajorId = majorId,
+                MajorName = "计算机科学与技术",
+                ClassId = classId,
+                ClassName = "计算机科学与技术2024级1班",
+                WeekNumbersJson = "[1,2,3,4,5,6,7,8,9,10]",
+                DayOfWeek = 1,
+                PeriodNumbersJson = "[1, 2]",
+                ExpectedLabId = lab1Id,
+                Remark = "需使用投影仪和学生用机",
+                ApplicantId = teacherUserId,
+                ApplicantName = "张老师",
+                Status = ApprovalStatus.Approved,
+                ApprovalComment = "已通过排课安排",
+                ApprovedBy = adminUserId,
+                ApprovedAt = new DateTime(2026, 8, 20, 10, 0, 0),
+                IsCancelled = false,
+                CreatedAt = new DateTime(2026, 8, 15, 9, 0, 0)
+            },
+            new TeachingApplication
+            {
+                Id = ta2Id,
+                SemesterId = semesterId,
+                TeachingTaskId = taskId,
+                CourseName = "计算机网络实验",
+                MajorId = majorId,
+                MajorName = "计算机科学与技术",
+                ClassId = classId,
+                ClassName = "计算机科学与技术2024级1班",
+                WeekNumbersJson = "[2,4,6,8,10,12,14,16]",
+                DayOfWeek = 2,
+                PeriodNumbersJson = "[3, 4, 5]",
+                ExpectedLabId = lab2Id,
+                Remark = "需使用网络交换机和路由器设备，请提前检查设备状态",
+                ApplicantId = teacherUserId,
+                ApplicantName = "张老师",
+                Status = ApprovalStatus.Pending,
+                IsCancelled = false,
+                CreatedAt = new DateTime(2026, 9, 1, 14, 0, 0)
+            },
+            new TeachingApplication
+            {
+                Id = ta3Id,
+                SemesterId = semesterId,
+                TeachingTaskId = taskId,
+                CourseName = "数据结构与算法实验",
+                MajorId = majorId,
+                MajorName = "计算机科学与技术",
+                ClassId = classId,
+                ClassName = "计算机科学与技术2024级1班",
+                WeekNumbersJson = "[3,5,7,9,11,13,15,17]",
+                DayOfWeek = 3,
+                PeriodNumbersJson = "[2, 3]",
+                ExpectedLabId = lab1Id,
+                Remark = "需安装C语言和Python开发环境",
+                ApplicantId = teacherUserId,
+                ApplicantName = "张老师",
+                Status = ApprovalStatus.Rejected,
+                ApprovalComment = "第7周和第9周与计算机基础实验室已有排课冲突，请调整周次",
+                ApprovedBy = adminUserId,
+                ApprovedAt = new DateTime(2026, 9, 2, 11, 0, 0),
+                IsCancelled = false,
+                CreatedAt = new DateTime(2026, 9, 1, 16, 0, 0)
+            }
+        );
     }
 }

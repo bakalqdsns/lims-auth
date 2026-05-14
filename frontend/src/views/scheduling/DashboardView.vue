@@ -178,7 +178,14 @@ const fetchDashboard = async () => {
     const res = await fetch(
       `/api/v1/statistics/dashboard?semesterId=${queryForm.semesterId}&weekNumber=${queryForm.weekNumber}`,
       { headers: authHeaders() }
-    ).then(r => r.json())
+    ).then(async r => {
+      if (!r.ok) {
+        const text = await r.text()
+        console.error('Dashboard API error:', r.status, text)
+        throw new Error(text)
+      }
+      return r.json()
+    })
     if (res.code === 200 && res.data) {
       Object.assign(data.today, res.data.today || {})
       Object.assign(data.week, res.data.week || {})
@@ -186,7 +193,8 @@ const fetchDashboard = async () => {
       data.completionRate = res.data.completionRate || { total: 0, completed: 0, pending: 0, overdue: 0, rate: 0 }
       data.alerts = res.data.alerts || []
     }
-  } catch {
+  } catch (err) {
+    console.error('Dashboard error:', err)
     ElMessage.error('加载大屏数据失败')
   } finally {
     loading.value = false
