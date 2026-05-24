@@ -26,6 +26,8 @@ public class AvailabilityQuery
 {
     public Guid SemesterId { get; set; }
     public int WeekNumber { get; set; }
+    public int? StartWeek { get; set; }
+    public int? EndWeek { get; set; }
     public int DayOfWeek { get; set; }
     public List<int> PeriodNumbers { get; set; } = new();
     public Guid? BuildingId { get; set; }
@@ -499,4 +501,34 @@ public class AlertItem
     public string Message { get; set; } = string.Empty;
     public DateTime Time { get; set; }
     public string? RelatedId { get; set; }
+}
+
+// ============================================================
+// Experiment Task Import DTOs
+// ============================================================
+
+public class ExperimentTaskImportDto
+{
+    public Guid Id { get; set; }
+    public string CourseName { get; set; } = string.Empty;
+    public string ClassName { get; set; } = string.Empty;
+    public string MajorName { get; set; } = string.Empty;
+    public int StudentCount { get; set; }
+    public string TeacherNames { get; set; } = string.Empty;
+    public int TotalExperimentHours { get; set; }
+    public int CurrentSemesterExperimentHours { get; set; }
+    public int ScheduleCount { get; set; }
+    public List<ExperimentScheduleItemDto> Schedules { get; set; } = new();
+}
+
+public class ExperimentScheduleItemDto
+{
+    public Guid Id { get; set; }
+    public string ExperimentName { get; set; } = string.Empty;
+    public int? WeekNumber { get; set; }
+    public int? DayOfWeek { get; set; }
+    public int? PeriodNumber { get; set; }
+    public Guid? LabId { get; set; }
+    public string? LabName { get; set; }
+    public bool IsConducted { get; set; }
 }

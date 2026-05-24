@@ -33,6 +33,21 @@
 
       <el-row :gutter="20">
         <el-col :span="12">
+          <el-form-item label="所属楼宇">
+            <el-select v-model="form.buildingId" placeholder="选择楼宇" clearable filterable style="width: 100%">
+              <el-option v-for="building in buildings" :key="building.id" :label="building.name" :value="building.id" />
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="楼层">
+            <el-input-number v-model="form.floor" :min="1" :max="50" style="width: 100%" placeholder="楼层" />
+          </el-form-item>
+        </el-col>
+      </el-row>
+
+      <el-row :gutter="20">
+        <el-col :span="12">
           <el-form-item label="所属部门">
             <el-select v-model="form.departmentId" placeholder="选择部门" clearable style="width: 100%">
               <el-option v-for="dept in departments" :key="dept.id" :label="dept.name" :value="dept.id" />
@@ -98,6 +113,7 @@ const dialogTitle = computed(() => props.type === 'create' ? '新增实验室' :
 const formRef = ref<FormInstance>()
 const submitting = ref(false)
 const departments = ref<{ id: string; name: string }[]>([])
+const buildings = ref<{ id: string; name: string }[]>([])
 const managers = ref<{ id: string; fullName?: string; username: string }[]>([])
 
 const form = reactive({
@@ -105,6 +121,8 @@ const form = reactive({
   name: '',
   labType: '普通实验室',
   safetyLevel: '一般',
+  buildingId: undefined as string | undefined,
+  floor: undefined as number | undefined,
   departmentId: undefined as string | undefined,
   managerId: undefined as string | undefined,
   location: '',
@@ -130,6 +148,19 @@ const fetchDepartments = async () => {
   }
 }
 
+const fetchBuildings = async () => {
+  try {
+    const res = await fetch('/api/v1/buildings', {
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+    }).then(r => r.json())
+    if (res.code === 200) {
+      buildings.value = res.data || []
+    }
+  } catch (error) {
+    console.error('获取楼宇列表失败', error)
+  }
+}
+
 const fetchManagers = async () => {
   try {
     const res = await userApi.getUsers({ page: 1, pageSize: 1000 })
@@ -148,6 +179,8 @@ const resetForm = () => {
   form.name = ''
   form.labType = '普通实验室'
   form.safetyLevel = '一般'
+  form.buildingId = undefined
+  form.floor = undefined
   form.departmentId = undefined
   form.managerId = undefined
   form.location = ''
@@ -161,6 +194,8 @@ const fillForm = () => {
     form.name = props.labData.name
     form.labType = props.labData.labType
     form.safetyLevel = props.labData.safetyLevel
+    form.buildingId = props.labData.buildingId
+    form.floor = props.labData.floor
     form.departmentId = props.labData.departmentId
     form.managerId = props.labData.managerId
     form.location = props.labData.location || ''
@@ -180,6 +215,8 @@ const handleSubmit = async () => {
       name: form.name,
       labType: form.labType,
       safetyLevel: form.safetyLevel,
+      buildingId: form.buildingId,
+      floor: form.floor,
       departmentId: form.departmentId,
       managerId: form.managerId,
       location: form.location || undefined,
@@ -216,12 +253,14 @@ watch(() => props.modelValue, (val) => {
       fillForm()
     }
     fetchDepartments()
+    fetchBuildings()
     fetchManagers()
   }
 })
 
 onMounted(() => {
   fetchDepartments()
+  fetchBuildings()
   fetchManagers()
 })
 </script>

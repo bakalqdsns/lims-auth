@@ -36,8 +36,10 @@
               </el-form-item>
             </el-col>
             <el-col :span="12">
-              <el-form-item label="课程编号">
-                <el-input v-model="form.courseId" placeholder="请输入课程编号" />
+              <el-form-item label="教师">
+                <el-select v-model="form.teacherId" placeholder="请选择教师" style="width: 100%" filterable @change="handleTeacherChange">
+                  <el-option v-for="t in teachers" :key="t.id" :label="t.fullName || t.username" :value="t.id" />
+                </el-select>
               </el-form-item>
             </el-col>
             <el-col :span="8">
@@ -58,18 +60,17 @@
               </el-form-item>
             </el-col>
             <el-col :span="12">
-              <el-form-item label="教师姓名">
-                <el-input v-model="form.teacherName" placeholder="请输入教师姓名" />
+              <el-form-item label="班级">
+                <el-select v-model="form.classId" placeholder="请选择班级" style="width: 100%" filterable @change="handleClassChange">
+                  <el-option v-for="c in classes" :key="c.id" :label="c.name" :value="c.id" />
+                </el-select>
               </el-form-item>
             </el-col>
             <el-col :span="12">
-              <el-form-item label="班级名称">
-                <el-input v-model="form.className" placeholder="请输入班级名称" />
-              </el-form-item>
-            </el-col>
-            <el-col :span="12">
-              <el-form-item label="专业名称">
-                <el-input v-model="form.majorName" placeholder="请输入专业名称" />
+              <el-form-item label="专业">
+                <el-select v-model="form.majorId" placeholder="请选择专业" style="width: 100%" filterable @change="handleMajorChange">
+                  <el-option v-for="m in majors" :key="m.id" :label="m.name" :value="m.id" />
+                </el-select>
               </el-form-item>
             </el-col>
             <el-col :span="12">
@@ -197,7 +198,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { ElMessage, type FormInstance } from 'element-plus'
 
 const authHeaders = () => ({
@@ -244,6 +245,27 @@ const weekDays = [
 const selectedSemesterName = computed(() => semesters.value.find(s => s.id === form.semesterId)?.name || '')
 const selectedLab = computed(() => availableLabs.value.find(l => l.id === form.labId))
 
+const handleTeacherChange = (teacherId: string) => {
+  const teacher = teachers.value.find(t => t.id === teacherId)
+  if (teacher) {
+    form.teacherName = teacher.fullName || teacher.username
+  }
+}
+
+const handleClassChange = (classId: string) => {
+  const cls = classes.value.find(c => c.id === classId)
+  if (cls) {
+    form.className = cls.name
+  }
+}
+
+const handleMajorChange = (majorId: string) => {
+  const major = majors.value.find(m => m.id === majorId)
+  if (major) {
+    form.majorName = major.name
+  }
+}
+
 const handleLabSelect = (lab: any) => {
   form.labId = lab.id === form.labId ? undefined : lab.id
   conflictResult.value = null
@@ -275,29 +297,52 @@ const handleCheckConflicts = async () => {
   }
 }
 
+const loadAvailableLabs = async () => {
+  if (!form.semesterId) return
+  
+  labsLoading.value = true
+  try {
+    const params = new URLSearchParams({
+      semesterId: form.semesterId,
+      weekNumber: String(form.weekNumber),
+      dayOfWeek: String(form.dayOfWeek),
+      periodNumbers: String(form.periodNumber || 1)
+    })
+    if (form.startWeek) params.append('startWeek', String(form.startWeek))
+    if (form.endWeek) params.append('endWeek', String(form.endWeek))
+    if (selectedBuildingId.value) params.append('buildingId', selectedBuildingId.value)
+    
+    console.log('请求可用实验室，参数:', params.toString())
+    const res = await fetch(`/api/v1/schedules/available-labs?${params}`, {
+      headers: authHeaders()
+    }).then(r => r.json())
+    console.log('可用实验室响应:', res)
+    if (res.code === 200) {
+      availableLabs.value = res.data || []
+      console.log('可用实验室数量:', availableLabs.value.length)
+    }
+  } catch (error) {
+    console.error('获取可用实验室失败:', error)
+    ElMessage.error('获取实验室列表失败')
+  } finally {
+    labsLoading.value = false
+  }
+}
+
+// 监听楼宇选择变化，重新加载实验室列表
+watch(selectedBuildingId, () => {
+  if (currentStep.value === 2) {
+    loadAvailableLabs()
+  }
+})
+
 const handleNext = async () => {
   if (currentStep.value === 1 && !form.courseName) {
     ElMessage.warning('请输入课程名称')
     return
   }
-  if (currentStep.value === 2 && form.labId && form.semesterId) {
-    labsLoading.value = true
-    try {
-      const params = new URLSearchParams({
-        semesterId: form.semesterId,
-        weekNumber: String(form.weekNumber),
-        dayOfWeek: String(form.dayOfWeek),
-        periodNumbers: String(form.periodNumber)
-      })
-      if (selectedBuildingId.value) params.append('buildingId', selectedBuildingId.value)
-      const res = await fetch(`/api/v1/schedules/available-labs?${params}`, {
-        headers: authHeaders()
-      }).then(r => r.json())
-      if (res.code === 200) {
-        availableLabs.value = res.data || []
-      }
-    } catch {}
-    labsLoading.value = false
+  if (currentStep.value === 2) {
+    await loadAvailableLabs()
   }
   currentStep.value++
 }
