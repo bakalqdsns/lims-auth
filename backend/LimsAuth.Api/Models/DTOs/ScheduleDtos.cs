@@ -10,6 +10,8 @@ public class ScheduleQuery
 {
     public Guid? SemesterId { get; set; }
     public int? WeekNumber { get; set; }
+    public int? StartWeek { get; set; }
+    public int? EndWeek { get; set; }
     public int? DayOfWeek { get; set; }
     public Guid? LabId { get; set; }
     public Guid? BuildingId { get; set; }
@@ -84,7 +86,10 @@ public class ScheduleEntryDto
     public string? SemesterName { get; set; }
     public Guid? LabId { get; set; }
     public string? LabName { get; set; }
+    public string? BuildingName { get; set; }
     public int WeekNumber { get; set; }
+    public int? StartWeek { get; set; }
+    public int? EndWeek { get; set; }
     public int DayOfWeek { get; set; }
     public int PeriodNumber { get; set; }
     public string Source { get; set; } = string.Empty;
@@ -116,6 +121,8 @@ public class CreateScheduleEntryRequest
     public Guid SemesterId { get; set; }
     public Guid? LabId { get; set; }
     public int WeekNumber { get; set; }
+    public int? StartWeek { get; set; }
+    public int? EndWeek { get; set; }
     public int DayOfWeek { get; set; }
     public int PeriodNumber { get; set; }
     public string Source { get; set; } = "CentralScheduling";
@@ -531,4 +538,9 @@ public class ExperimentScheduleItemDto
     public Guid? LabId { get; set; }
     public string? LabName { get; set; }
     public bool IsConducted { get; set; }
+}
+
+public class ImportTasksRequest
+{
+    public List<Guid> TaskIds { get; set; } = new();
 }

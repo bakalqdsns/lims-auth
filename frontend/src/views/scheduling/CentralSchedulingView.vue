@@ -2,7 +2,36 @@
   <div class="central-scheduling-container">
     <div class="page-header">
       <h2>集中排课</h2>
+      <el-button type="primary" @click="showImportDialog = true">
+        <el-icon><Upload /></el-icon>
+        从实验教学任务导入
+      </el-button>
     </div>
+
+    <!-- 导入对话框 -->
+    <el-dialog v-model="showImportDialog" title="从实验教学任务导入" width="800px">
+      <el-form label-width="120px">
+        <el-form-item label="选择学期">
+          <el-select v-model="importSemesterId" placeholder="请选择学期" style="width: 300px" @change="loadImportableTasks">
+            <el-option v-for="s in semesters" :key="s.id" :label="s.name" :value="s.id" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <el-table :data="importableTasks" v-loading="tasksLoading" max-height="400" @selection-change="handleTaskSelection">
+        <el-table-column type="selection" width="55" />
+        <el-table-column prop="courseName" label="课程名称" />
+        <el-table-column prop="className" label="班级" />
+        <el-table-column prop="majorName" label="专业" />
+        <el-table-column prop="scheduleCount" label="已排课次" width="100" />
+        <el-table-column prop="teacherNames" label="教师" />
+      </el-table>
+      <template #footer>
+        <el-button @click="showImportDialog = false">取消</el-button>
+        <el-button type="primary" @click="handleImportTasks" :loading="importing" :disabled="selectedTaskIds.length === 0">
+          导入选中任务（{{ selectedTaskIds.length }}）
+        </el-button>
+      </template>
+    </el-dialog>
 
     <el-card shadow="never">
       <el-steps :active="currentStep" finish-status="success" style="margin-bottom: 24px">
@@ -20,8 +49,14 @@
               <el-option v-for="s in semesters" :key="s.id" :label="s.name" :value="s.id" />
             </el-select>
           </el-form-item>
-          <el-form-item label="教学周">
-            <el-input-number v-model="form.weekNumber" :min="1" :max="20" style="width: 200px" />
+          <el-form-item label="周次范围">
+            <el-select v-model="form.startWeek" placeholder="起始周" style="width: 150px">
+              <el-option v-for="w in 20" :key="w" :label="w + '周'" :value="w" />
+            </el-select>
+            <span style="margin: 0 8px">至</span>
+            <el-select v-model="form.endWeek" placeholder="结束周" style="width: 150px">
+              <el-option v-for="w in 20" :key="w" :label="w + '周'" :value="w" />
+            </el-select>
           </el-form-item>
         </el-form>
       </div>
@@ -31,8 +66,10 @@
         <el-form :model="form" ref="formRef" label-width="120px">
           <el-row :gutter="16">
             <el-col :span="12">
-              <el-form-item label="课程名称" prop="courseName">
-                <el-input v-model="form.courseName" placeholder="请输入课程名称" />
+              <el-form-item label="课程名称" prop="courseId">
+                <el-select v-model="form.courseId" placeholder="请选择课程" style="width: 100%" filterable @change="handleCourseChange">
+                  <el-option v-for="c in courses" :key="c.id" :label="c.name" :value="c.id" />
+                </el-select>
               </el-form-item>
             </el-col>
             <el-col :span="12">
@@ -55,8 +92,14 @@
               </el-form-item>
             </el-col>
             <el-col :span="8">
-              <el-form-item label="周次">
-                <el-input-number v-model="form.weekNumber" :min="1" :max="20" style="width: 100%" />
+              <el-form-item label="周次范围">
+                <el-select v-model="form.startWeek" placeholder="起始周" style="width: 45%">
+                  <el-option v-for="w in 20" :key="w" :label="w + '周'" :value="w" />
+                </el-select>
+                <span style="margin: 0 4px">至</span>
+                <el-select v-model="form.endWeek" placeholder="结束周" style="width: 45%">
+                  <el-option v-for="w in 20" :key="w" :label="w + '周'" :value="w" />
+                </el-select>
               </el-form-item>
             </el-col>
             <el-col :span="12">
@@ -168,7 +211,7 @@
         />
         <el-descriptions :column="2" border>
           <el-descriptions-item label="学期">{{ selectedSemesterName }}</el-descriptions-item>
-          <el-descriptions-item label="教学周">第{{ form.weekNumber }}周</el-descriptions-item>
+          <el-descriptions-item label="周次范围">第{{ form.startWeek }}-{{ form.endWeek }}周</el-descriptions-item>
           <el-descriptions-item label="星期">{{ weekDays.find(d => d.value === form.dayOfWeek)?.label }}</el-descriptions-item>
           <el-descriptions-item label="节次">第{{ form.periodNumber }}节</el-descriptions-item>
           <el-descriptions-item label="课程名称">{{ form.courseName }}</el-descriptions-item>
@@ -200,6 +243,9 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { ElMessage, type FormInstance } from 'element-plus'
+import { Upload } from '@element-plus/icons-vue'
+import { courseApi, type CourseDto, semesterApi, majorApi, classApi } from '@/api/teaching'
+import { scheduleApi } from '@/api/schedule'
 
 const authHeaders = () => ({
   'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
@@ -216,17 +262,33 @@ const selectedBuildingId = ref<string>('')
 const conflictResult = ref<any>(null)
 const formRef = ref<FormInstance>()
 
+const showImportDialog = ref(false)
+const importSemesterId = ref<string>('')
+const importableTasks = ref<any[]>([])
+const tasksLoading = ref(false)
+const importing = ref(false)
+const selectedTaskIds = ref<string[]>([])
+
+const teachers = ref<any[]>([])
+const classes = ref<any[]>([])
+const majors = ref<any[]>([])
+const courses = ref<CourseDto[]>([])
+
 const form = reactive({
   semesterId: null as string | null,
   labId: undefined as string | undefined,
-  weekNumber: 1,
+  startWeek: 1,
+  endWeek: 1,
   dayOfWeek: 1,
   periodNumber: 1,
   courseName: '',
   courseId: '',
+  teacherId: '',
   teacherName: '',
   className: '',
+  majorId: '',
   majorName: '',
+  classId: '',
   studentCount: 0,
   remark: '',
   forceSchedule: false
@@ -244,6 +306,13 @@ const weekDays = [
 
 const selectedSemesterName = computed(() => semesters.value.find(s => s.id === form.semesterId)?.name || '')
 const selectedLab = computed(() => availableLabs.value.find(l => l.id === form.labId))
+
+const handleCourseChange = (courseId: string) => {
+  const course = courses.value.find(c => c.id === courseId)
+  if (course) {
+    form.courseName = course.name
+  }
+}
 
 const handleTeacherChange = (teacherId: string) => {
   const teacher = teachers.value.find(t => t.id === teacherId)
@@ -282,7 +351,8 @@ const handleCheckConflicts = async () => {
       body: JSON.stringify({
         semesterId: form.semesterId,
         labId: form.labId,
-        weekNumber: form.weekNumber,
+        startWeek: form.startWeek,
+        endWeek: form.endWeek,
         dayOfWeek: form.dayOfWeek,
         periodNumber: form.periodNumber
       })
@@ -304,12 +374,11 @@ const loadAvailableLabs = async () => {
   try {
     const params = new URLSearchParams({
       semesterId: form.semesterId,
-      weekNumber: String(form.weekNumber),
+      startWeek: String(form.startWeek),
+      endWeek: String(form.endWeek),
       dayOfWeek: String(form.dayOfWeek),
       periodNumbers: String(form.periodNumber || 1)
     })
-    if (form.startWeek) params.append('startWeek', String(form.startWeek))
-    if (form.endWeek) params.append('endWeek', String(form.endWeek))
     if (selectedBuildingId.value) params.append('buildingId', selectedBuildingId.value)
     
     console.log('请求可用实验室，参数:', params.toString())
@@ -329,19 +398,25 @@ const loadAvailableLabs = async () => {
   }
 }
 
-// 监听楼宇选择变化，重新加载实验室列表
 watch(selectedBuildingId, () => {
-  if (currentStep.value === 2) {
+  if (currentStep.value >= 2) {
     loadAvailableLabs()
   }
 })
 
 const handleNext = async () => {
-  if (currentStep.value === 1 && !form.courseName) {
-    ElMessage.warning('请输入课程名称')
+  if (currentStep.value === 0 && !form.semesterId) {
+    ElMessage.warning('请选择学期')
+    return
+  }
+  if (currentStep.value === 1 && !form.courseId) {
+    ElMessage.warning('请选择课程')
     return
   }
   if (currentStep.value === 2) {
+    await loadAvailableLabs()
+  }
+  if (currentStep.value === 0) {
     await loadAvailableLabs()
   }
   currentStep.value++
@@ -350,28 +425,58 @@ const handleNext = async () => {
 const handleSubmit = async () => {
   submitting.value = true
   try {
+    const startWeek = form.startWeek
+    const endWeek = form.endWeek || form.startWeek
+    
+    if (startWeek > endWeek) {
+      ElMessage.warning('起始周不能大于结束周')
+      submitting.value = false
+      return
+    }
+    
     const res = await fetch('/api/v1/schedules', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify({
-        ...form,
-        labId: form.labId || undefined
+        semesterId: form.semesterId,
+        labId: form.labId || undefined,
+        weekNumber: startWeek,
+        startWeek: startWeek,
+        endWeek: endWeek,
+        dayOfWeek: form.dayOfWeek,
+        periodNumber: form.periodNumber,
+        courseId: form.courseId || undefined,
+        courseName: form.courseName,
+        teacherId: form.teacherId || undefined,
+        teacherName: form.teacherName,
+        classId: form.classId || undefined,
+        className: form.className,
+        majorId: form.majorId || undefined,
+        majorName: form.majorName,
+        studentCount: form.studentCount || undefined,
+        remark: form.remark,
+        forceSchedule: form.forceSchedule
       })
     }).then(r => r.json())
+    
     if (res.code === 200) {
-      ElMessage.success('排课成功')
+      ElMessage.success(`排课成功，周次范围: 第${startWeek}-${endWeek}周`)
       currentStep.value = 0
       Object.assign(form, {
         semesterId: semesters.value[0]?.id || null,
         labId: undefined,
-        weekNumber: 1,
+        startWeek: 1,
+        endWeek: 1,
         dayOfWeek: 1,
         periodNumber: 1,
         courseName: '',
         courseId: '',
+        teacherId: '',
         teacherName: '',
         className: '',
+        majorId: '',
         majorName: '',
+        classId: '',
         studentCount: 0,
         remark: '',
         forceSchedule: false
@@ -380,28 +485,102 @@ const handleSubmit = async () => {
     } else {
       ElMessage.error(res.message || '提交失败')
     }
-  } catch {
-    ElMessage.error('提交失败')
+  } catch (err) {
+    console.error('提交错误:', err)
+    ElMessage.error('提交失败: ' + (err instanceof Error ? err.message : String(err)))
   } finally {
     submitting.value = false
   }
 }
 
+const loadImportableTasks = async () => {
+  if (!importSemesterId.value) return
+  tasksLoading.value = true
+  try {
+    const res = await fetch(`/api/v1/schedules/importable-tasks?semesterId=${importSemesterId.value}`, {
+      headers: authHeaders()
+    }).then(r => r.json())
+    if (res.code === 200) {
+      importableTasks.value = res.data || []
+    }
+  } catch {
+    ElMessage.error('获取可导入任务失败')
+  } finally {
+    tasksLoading.value = false
+  }
+}
+
+const handleTaskSelection = (selection: any[]) => {
+  selectedTaskIds.value = selection.map(t => t.id)
+}
+
+const handleImportTasks = async () => {
+  if (selectedTaskIds.value.length === 0) return
+  importing.value = true
+  try {
+    const res = await fetch('/api/v1/schedules/import-from-tasks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ taskIds: selectedTaskIds.value })
+    }).then(r => r.json())
+    if (res.code === 200) {
+      ElMessage.success(`成功导入 ${res.data} 条排课记录`)
+      showImportDialog.value = false
+      selectedTaskIds.value = []
+      importableTasks.value = []
+    } else {
+      ElMessage.error(res.message || '导入失败')
+    }
+  } catch {
+    ElMessage.error('导入失败')
+  } finally {
+    importing.value = false
+  }
+}
+
 onMounted(async () => {
   try {
-    const [semRes, buildRes] = await Promise.all([
-      fetch('/api/v1/semesters', { headers: authHeaders() }).then(r => r.json()),
-      fetch('/api/v1/buildings', { headers: authHeaders() }).then(r => r.json())
+    const [semRes, buildRes, teacherRes, classRes, majorRes, courseRes] = await Promise.all([
+      semesterApi.getList(),
+      fetch('/api/v1/buildings', { headers: authHeaders() }).then(r => r.json()),
+      fetch('/api/v1/users?page=1&pageSize=1000', { headers: authHeaders() }).then(r => r.json()),
+      classApi.getList(),
+      majorApi.getList(),
+      courseApi.getList()
     ])
-    if (semRes.code === 200) {
-      semesters.value = semRes.data || []
+    
+    console.log('学期数据:', semRes)
+    console.log('楼宇数据:', buildRes)
+    console.log('教师数据:', teacherRes)
+    console.log('班级数据:', classRes)
+    console.log('专业数据:', majorRes)
+    console.log('课程数据:', courseRes)
+    
+    if (semRes.data?.code === 200) {
+      semesters.value = semRes.data.data || []
       const current = semesters.value.find((s: any) => s.isCurrent) || semesters.value[0]
       if (current) form.semesterId = current.id
     }
     if (buildRes.code === 200) {
       buildings.value = buildRes.data || []
     }
-  } catch {}
+    if (teacherRes.code === 200) {
+      const allUsers = teacherRes.data?.items || teacherRes.data || []
+      teachers.value = allUsers.filter((u: any) => u.roles?.some((r: any) => r.code?.toLowerCase() === 'teacher' || r.name?.includes('教师')))
+    }
+    if (classRes.data?.code === 200) {
+      classes.value = classRes.data.data || []
+    }
+    if (majorRes.data?.code === 200) {
+      majors.value = majorRes.data.data || []
+    }
+    if (courseRes.data?.code === 200) {
+      courses.value = courseRes.data.data || []
+    }
+  } catch (err) {
+    console.error('加载数据失败:', err)
+    ElMessage.error('加载数据失败: ' + (err instanceof Error ? err.message : String(err)))
+  }
 })
 </script>
 

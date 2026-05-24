@@ -102,4 +102,19 @@ public class SchedulesController : ControllerBase
         var list = await _scheduleService.GetScheduleEntriesAsync(query);
         return Ok(new { code = 200, data = list });
     }
+
+    [HttpGet("importable-tasks")]
+    public async Task<ActionResult<IEnumerable<ExperimentTaskImportDto>>> GetImportableTasks([FromQuery] Guid semesterId)
+    {
+        var tasks = await _scheduleService.GetImportableExperimentTasksAsync(semesterId);
+        return Ok(new { code = 200, data = tasks });
+    }
+
+    [HttpPost("import-from-tasks")]
+    public async Task<ActionResult<int>> ImportFromTasks([FromBody] ImportTasksRequest request)
+    {
+        var createdBy = User.Identity?.Name;
+        var count = await _scheduleService.ImportFromExperimentTasksAsync(request.TaskIds, createdBy);
+        return Ok(new { code = 200, data = count, message = $"成功导入 {count} 条排课记录" });
+    }
 }

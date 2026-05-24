@@ -20,6 +20,12 @@ public class ScheduleEntry
     [Column("week_number")]
     public int WeekNumber { get; set; }
 
+    [Column("start_week")]
+    public int? StartWeek { get; set; }
+
+    [Column("end_week")]
+    public int? EndWeek { get; set; }
+
     [Column("day_of_week")]
     public int DayOfWeek { get; set; }
 
