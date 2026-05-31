@@ -55,6 +55,7 @@ builder.Services.AddScoped<IAcademicCalendarService, AcademicCalendarService>();
 // Lab & Equipment Services
 builder.Services.AddScoped<ILabService, LabService>();
 builder.Services.AddScoped<IEquipmentService, EquipmentService>();
+builder.Services.AddScoped<IEquipmentBorrowService, EquipmentBorrowService>();
 
 // Campus & Building Services
 builder.Services.AddScoped<ICampusService, CampusService>();
@@ -120,6 +121,10 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("Permission:equipment:read", policy => policy.RequirePermission("equipment:read"));
     options.AddPolicy("Permission:equipment:update", policy => policy.RequirePermission("equipment:update"));
     options.AddPolicy("Permission:equipment:delete", policy => policy.RequirePermission("equipment:delete"));
+    options.AddPolicy("Permission:equipment:borrow", policy => policy.RequirePermission("equipment:borrow"));
+    options.AddPolicy("Permission:equipment:approve", policy => policy.RequirePermission("equipment:approve"));
+    options.AddPolicy("Permission:equipment:statistics", policy => policy.RequirePermission("equipment:statistics"));
+    options.AddPolicy("Permission:equipment:export", policy => policy.RequirePermission("equipment:export"));
 
     // Course permissions
     options.AddPolicy("Permission:course:create", policy => policy.RequirePermission("course:create"));
@@ -227,6 +232,111 @@ using (var scope = app.Services.CreateScope())
         // 确保数据库和表已创建（使用 EnsureCreated 代替 Migrate，适用于 SQLite）
         await dbContext.Database.EnsureCreatedAsync();
         logger.LogInformation("数据库已创建");
+
+        // 确保 equipment:approve 权限存在（对已有数据库的兼容性处理）
+        var deletePermId = Guid.Parse("50000000-0000-0000-0000-000000000004");
+        var approvePermId = Guid.Parse("50000000-0000-0000-0000-000000000006");
+        var superAdminRoleId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        var labAdminRoleId = Guid.Parse("22222222-2222-2222-2222-222222222222");
+
+        // 确保 equipment:delete 权限及角色分配存在
+        if (!await dbContext.Permissions.AnyAsync(p => p.Code == "equipment:delete"))
+        {
+            dbContext.Permissions.Add(new LimsAuth.Api.Models.Permission
+            {
+                Id = deletePermId,
+                Code = "equipment:delete",
+                Name = "删除设备",
+                Module = "equipment",
+                Description = "删除设备",
+                CreatedAt = DateTime.UtcNow
+            });
+            await dbContext.SaveChangesAsync();
+            logger.LogInformation("已添加 equipment:delete 权限");
+        }
+        if (!await dbContext.RolePermissions.AnyAsync(rp => rp.RoleId == superAdminRoleId && rp.PermissionId == deletePermId))
+        {
+            dbContext.RolePermissions.Add(new LimsAuth.Api.Models.RolePermission
+            {
+                RoleId = superAdminRoleId,
+                PermissionId = deletePermId,
+                AssignedAt = DateTime.UtcNow
+            });
+            await dbContext.SaveChangesAsync();
+            logger.LogInformation("已为超级管理员添加 equipment:delete 权限");
+        }
+        if (!await dbContext.RolePermissions.AnyAsync(rp => rp.RoleId == labAdminRoleId && rp.PermissionId == deletePermId))
+        {
+            dbContext.RolePermissions.Add(new LimsAuth.Api.Models.RolePermission
+            {
+                RoleId = labAdminRoleId,
+                PermissionId = deletePermId,
+                AssignedAt = DateTime.UtcNow
+            });
+            await dbContext.SaveChangesAsync();
+            logger.LogInformation("已为实验室管理员添加 equipment:delete 权限");
+        }
+
+        if (!await dbContext.Permissions.AnyAsync(p => p.Code == "equipment:approve"))
+        {
+            dbContext.Permissions.Add(new LimsAuth.Api.Models.Permission
+            {
+                Id = approvePermId,
+                Code = "equipment:approve",
+                Name = "审批设备",
+                Module = "equipment",
+                Description = "审批设备借用/归还申请",
+                CreatedAt = DateTime.UtcNow
+            });
+            await dbContext.SaveChangesAsync();
+            logger.LogInformation("已添加 equipment:approve 权限");
+        }
+
+        if (!await dbContext.RolePermissions.AnyAsync(rp => rp.RoleId == superAdminRoleId && rp.PermissionId == approvePermId))
+        {
+            dbContext.RolePermissions.Add(new LimsAuth.Api.Models.RolePermission
+            {
+                RoleId = superAdminRoleId,
+                PermissionId = approvePermId,
+                AssignedAt = DateTime.UtcNow
+            });
+            await dbContext.SaveChangesAsync();
+            logger.LogInformation("已为超级管理员添加 equipment:approve 权限");
+        }
+
+        if (!await dbContext.RolePermissions.AnyAsync(rp => rp.RoleId == labAdminRoleId && rp.PermissionId == approvePermId))
+        {
+            dbContext.RolePermissions.Add(new LimsAuth.Api.Models.RolePermission
+            {
+                RoleId = labAdminRoleId,
+                PermissionId = approvePermId,
+                AssignedAt = DateTime.UtcNow
+            });
+            await dbContext.SaveChangesAsync();
+            logger.LogInformation("已为实验室管理员添加 equipment:approve 权限");
+        }
+
+        // 迁移：确保 equipment_borrow_records 表有 is_deleted 列
+        try
+        {
+            var conn = dbContext.Database.GetDbConnection();
+            await conn.OpenAsync();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "PRAGMA table_info(equipment_borrow_records)";
+            var reader = await cmd.ExecuteReaderAsync();
+            var columns = new List<string>();
+            while (await reader.ReadAsync())
+                columns.Add(reader.GetString(1));
+            if (!columns.Contains("is_deleted"))
+            {
+                await reader.CloseAsync();
+                using var cmd2 = conn.CreateCommand();
+                cmd2.CommandText = "ALTER TABLE equipment_borrow_records ADD COLUMN is_deleted INTEGER NOT NULL DEFAULT 0";
+                await cmd2.ExecuteNonQueryAsync();
+                logger.LogInformation("已为借还记录表添加 is_deleted 字段");
+            }
+        }
+        catch { /* 忽略迁移错误，新库会自动创建 */ }
     }
     catch (Exception ex)
     {

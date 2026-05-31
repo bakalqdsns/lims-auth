@@ -222,11 +222,8 @@ const confirmUpdateStatus = async () => {
 
 const getStatusType = (status: string) => {
   const typeMap: Record<string, string> = {
-    '正常': 'success',
-    '维修中': 'warning',
-    '报废': 'danger',
-    '借用中': 'info',
-    '闲置': ''
+    '在库-可用': 'success', '在库-待维修': 'warning', '在库-已预约': 'info',
+    '借出': 'primary', '送修': 'danger', '报废': 'info', '丢失': 'danger'
   }
   return typeMap[status] || ''
 }

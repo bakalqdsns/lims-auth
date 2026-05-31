@@ -1,9 +1,10 @@
 import { useAuthStore } from '../stores/auth'
 import type { Directive, DirectiveBinding } from 'vue'
 
-// 检查是否有指定权限
-function checkPermission(value: string | string[]): boolean {
+// 检查是否有指定权限（user 未加载时返回 null）
+function checkPermission(value: string | string[]): boolean | null {
   const authStore = useAuthStore()
+  if (!authStore.user) return null // user 未加载，延迟决策
   const permissions = authStore.user?.permissions || []
 
   if (Array.isArray(value)) {
@@ -12,9 +13,10 @@ function checkPermission(value: string | string[]): boolean {
   return permissions.includes(value)
 }
 
-// 检查是否有指定角色
-function checkRole(value: string | string[]): boolean {
+// 检查是否有指定角色（user 未加载时返回 null）
+function checkRole(value: string | string[]): boolean | null {
   const authStore = useAuthStore()
+  if (!authStore.user) return null
   const roles = authStore.user?.roles || []
   const roleCodes = roles.map((r: any) => r.code)
 
@@ -30,19 +32,21 @@ export const permission: Directive = {
     const { value } = binding
     if (!value) return
 
-    if (!checkPermission(value)) {
-      el.style.display = 'none'
-    }
+    const has = checkPermission(value)
+    if (has === false) el.style.display = 'none' // 仅当明确无权限时隐藏
+    // has === null 时不处理，等 updated 重新检查
   },
   updated(el: HTMLElement, binding: DirectiveBinding) {
     const { value } = binding
     if (!value) return
 
-    if (checkPermission(value)) {
-      el.style.display = ''
-    } else {
+    const has = checkPermission(value)
+    if (has === false) {
       el.style.display = 'none'
+    } else if (has === true) {
+      el.style.display = ''
     }
+    // has === null 时不处理
   }
 }
 
@@ -52,18 +56,18 @@ export const role: Directive = {
     const { value } = binding
     if (!value) return
 
-    if (!checkRole(value)) {
-      el.style.display = 'none'
-    }
+    const has = checkRole(value)
+    if (has === false) el.style.display = 'none'
   },
   updated(el: HTMLElement, binding: DirectiveBinding) {
     const { value } = binding
     if (!value) return
 
-    if (checkRole(value)) {
-      el.style.display = ''
-    } else {
+    const has = checkRole(value)
+    if (has === false) {
       el.style.display = 'none'
+    } else if (has === true) {
+      el.style.display = ''
     }
   }
 }

@@ -35,6 +35,8 @@ public class AppDbContext : DbContext
     // 实验室设备管理
     public DbSet<Lab> Labs => Set<Lab>();
     public DbSet<Equipment> Equipments => Set<Equipment>();
+    public DbSet<EquipmentBorrowRecord> EquipmentBorrowRecords => Set<EquipmentBorrowRecord>();
+    public DbSet<EquipmentCategory> EquipmentCategories => Set<EquipmentCategory>();
 
     // 实验实训管理
     public DbSet<ExperimentTeachingTask> ExperimentTeachingTasks => Set<ExperimentTeachingTask>();
@@ -302,6 +304,36 @@ public class AppDbContext : DbContext
             .HasForeignKey(e => e.LabId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        modelBuilder.Entity<EquipmentBorrowRecord>()
+            .HasOne(r => r.Equipment)
+            .WithMany()
+            .HasForeignKey(r => r.EquipmentId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<EquipmentBorrowRecord>()
+            .HasOne(r => r.Applicant)
+            .WithMany()
+            .HasForeignKey(r => r.ApplicantId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<EquipmentBorrowRecord>()
+            .HasOne(r => r.Approver)
+            .WithMany()
+            .HasForeignKey(r => r.ApproverId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<EquipmentBorrowRecord>()
+            .HasOne(r => r.ReturnChecker)
+            .WithMany()
+            .HasForeignKey(r => r.ReturnCheckerId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<EquipmentBorrowRecord>()
+            .HasOne(r => r.Recipient)
+            .WithMany()
+            .HasForeignKey(r => r.RecipientId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         // 唯一索引
         modelBuilder.Entity<Lab>()
             .HasIndex(l => l.Code)
@@ -309,6 +341,14 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Equipment>()
             .HasIndex(e => e.Code)
+            .IsUnique();
+
+        modelBuilder.Entity<EquipmentBorrowRecord>()
+            .HasIndex(r => r.RecordNo)
+            .IsUnique();
+
+        modelBuilder.Entity<EquipmentCategory>()
+            .HasIndex(c => c.Code)
             .IsUnique();
 
         // 校区楼宇管理 - 外键关系
@@ -472,6 +512,7 @@ public class AppDbContext : DbContext
             new Permission { Id = Guid.Parse("50000000-0000-0000-0000-000000000003"), Code = "equipment:update", Name = "编辑设备", Module = "equipment", Description = "编辑设备信息", CreatedAt = seedDate },
             new Permission { Id = Guid.Parse("50000000-0000-0000-0000-000000000004"), Code = "equipment:delete", Name = "删除设备", Module = "equipment", Description = "删除设备", CreatedAt = seedDate },
             new Permission { Id = Guid.Parse("50000000-0000-0000-0000-000000000005"), Code = "equipment:borrow", Name = "借用设备", Module = "equipment", Description = "借用设备", CreatedAt = seedDate },
+            new Permission { Id = Guid.Parse("50000000-0000-0000-0000-000000000006"), Code = "equipment:approve", Name = "审批设备", Module = "equipment", Description = "审批设备借用/归还申请", CreatedAt = seedDate },
 
             // 实验室管理权限
             new Permission { Id = Guid.Parse("60000000-0000-0000-0000-000000000001"), Code = "lab:create", Name = "创建实验室", Module = "lab", Description = "创建新实验室", CreatedAt = seedDate },
@@ -547,7 +588,7 @@ public class AppDbContext : DbContext
         // 实验室管理员权限
         var labAdminPermissions = new[]
         {
-            "equipment:create", "equipment:read", "equipment:update", "equipment:delete", "equipment:borrow",
+            "equipment:create", "equipment:read", "equipment:update", "equipment:delete", "equipment:borrow", "equipment:approve",
             "lab:create", "lab:read", "lab:update", "lab:delete",
             "campus:create", "campus:read", "campus:update", "campus:delete",
             "building:create", "building:read", "building:update", "building:delete",
@@ -1003,7 +1044,7 @@ public class AppDbContext : DbContext
             }
         );
 
-        // 种子数据 - 设备
+        // 种子数据 - 设备（保持原有字段，与旧数据库兼容）
         modelBuilder.Entity<Equipment>().HasData(
             new Equipment
             {

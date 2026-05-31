@@ -182,7 +182,7 @@ const resetForm = () => {
   form.purchaseDate = undefined
   form.warrantyMonths = undefined
   form.price = undefined
-  form.status = '正常'
+  form.status = '在库-可用'
   form.requiresBooking = false
   form.maxBookingHours = undefined
   form.imageUrl = ''

@@ -199,6 +199,27 @@ public class Equipment
     public string Category { get; set; } = "通用设备";
 
     /// <summary>
+    /// 计量单位
+    /// </summary>
+    [Column("unit")]
+    [MaxLength(20)]
+    public string Unit { get; set; } = "台";
+
+    /// <summary>
+    /// 品牌
+    /// </summary>
+    [Column("brand")]
+    [MaxLength(100)]
+    public string? Brand { get; set; }
+
+    /// <summary>
+    /// 供应商
+    /// </summary>
+    [Column("supplier")]
+    [MaxLength(200)]
+    public string? Supplier { get; set; }
+
+    /// <summary>
     /// 设备状态
     /// </summary>
     [Column("status")]
@@ -254,6 +275,18 @@ public class Equipment
     /// </summary>
     [Column("max_booking_hours")]
     public int? MaxBookingHours { get; set; }
+
+    /// <summary>
+    /// 总数量
+    /// </summary>
+    [Column("total_quantity")]
+    public int TotalQuantity { get; set; } = 1;
+
+    /// <summary>
+    /// 可用数量
+    /// </summary>
+    [Column("available_quantity")]
+    public int AvailableQuantity { get; set; } = 1;
 
     [Column("description")]
     [MaxLength(1000)]

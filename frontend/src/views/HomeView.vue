@@ -98,6 +98,21 @@
             </el-menu-item>
           </el-sub-menu>
 
+          <el-sub-menu index="/lab" v-if="hasPermission('equipment:read')">
+            <template #title>
+              <el-icon><Monitor /></el-icon>
+              <span>实验室设备管理</span>
+            </template>
+            <el-menu-item index="/lab/equipments">
+              <el-icon><Tools /></el-icon>
+              <span>设备台账</span>
+            </el-menu-item>
+            <el-menu-item index="/lab/borrow-records">
+              <el-icon><Switch /></el-icon>
+              <span>设备借还</span>
+            </el-menu-item>
+          </el-sub-menu>
+
           <el-sub-menu index="/scheduling" class="scheduling-submenu">
             <template #title>
               <el-icon><Calendar /></el-icon>
@@ -127,7 +142,7 @@
               <el-icon><EditPen /></el-icon>
               <span>使用登记</span>
             </el-menu-item>
-            <el-menu-item index="/scheduling/statistics">
+            <el-menu-item index="/Scheduling/statistics">
               <el-icon><DataAnalysis /></el-icon>
               <span>统计分析</span>
             </el-menu-item>
@@ -137,7 +152,7 @@
             </el-menu-item>
           </el-sub-menu>
 
-          <el-sub-menu index="/venue" v-if="hasPermission('lab:read') || hasPermission('equipment:read') || hasPermission('campus:read') || hasPermission('building:read')">
+          <el-sub-menu index="/venue" v-if="hasPermission('lab:read') || hasPermission('campus:read') || hasPermission('building:read')">
             <template #title>
               <el-icon><OfficeBuilding /></el-icon>
               <span>场馆信息管理</span>
@@ -157,10 +172,6 @@
             <el-menu-item v-if="hasPermission('lab:read')" index="/venue/labs">
               <el-icon><HomeFilled /></el-icon>
               <span>实验室管理</span>
-            </el-menu-item>
-            <el-menu-item v-if="hasPermission('equipment:read')" index="/venue/equipments">
-              <el-icon><Tools /></el-icon>
-              <span>设备管理</span>
             </el-menu-item>
           </el-sub-menu>
         </el-menu>
@@ -273,7 +284,9 @@ import {
   Tickets,
   EditPen,
   DataAnalysis,
-  DataBoard
+  DataBoard,
+  Monitor,
+  Switch
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '../stores/auth'
 import { userApi } from '../api/system'

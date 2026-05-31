@@ -1,6 +1,7 @@
 # LIMS 系统已知缺陷与风险清单
 
 > 创建日期: 2026-04-02
+> 更新日期: 2026-05-27
 > 严重程度: 🔴 高 | 🟡 中 | 🟢 低
 
 ---
@@ -12,7 +13,7 @@
 
 **受影响文件**:
 - `MajorsController.cs` - 无权限检查
-- `ClassesController.cs` - 无权限检查  
+- `ClassesController.cs` - 无权限检查
 - `PeriodTimesController.cs` - 无权限检查
 - `CalendarController.cs` - 无权限检查
 
@@ -20,7 +21,7 @@
 
 **修复建议**:
 ```csharp
-[Authorize(Policy = "Permission:department:update")]  // 或其他合适权限
+[Authorize(Policy = "Permission:major:update")]
 ```
 
 ---
@@ -28,9 +29,8 @@
 ### 2. 并发数据冲突
 **问题描述**: 读取-修改-保存非原子操作，并发时数据会错乱
 
-**代码位置**:
+**代码位置**: `ClassService.cs`
 ```csharp
-// ClassService.cs
 var classEntity = await _dbContext.Classes.FindAsync(id);
 classEntity.StudentCount += newStudentIds.Count;  // 并发时计数错误
 await _dbContext.SaveChangesAsync();
@@ -38,11 +38,11 @@ await _dbContext.SaveChangesAsync();
 
 **风险**: 多人同时添加学生到同一班级时，学生数统计不准确
 
-**修复建议**: 使用数据库原子操作或乐观锁
+**修复建议**: 使用数据库原子操作
 ```csharp
 await _dbContext.Classes
     .Where(c => c.Id == classId)
-    .ExecuteUpdateAsync(setters => 
+    .ExecuteUpdateAsync(setters =>
         setters.SetProperty(c => c.StudentCount, c => c.StudentCount + count));
 ```
 
@@ -51,9 +51,8 @@ await _dbContext.Classes
 ### 3. 事务缺失导致数据不一致
 **问题描述**: 多表操作没有事务保护，中间失败会导致脏数据
 
-**代码位置**:
+**代码位置**: `TeachingTaskService.cs`
 ```csharp
-// TeachingTaskService.cs
 _dbContext.TeachingTasks.Add(task);
 await _dbContext.SaveChangesAsync();  // 如果这里成功...
 
@@ -92,7 +91,7 @@ try {
 - 删除专业 - 未检查是否有关联班级
 - 删除班级 - 未检查是否有关联教学任务
 
-**风险**: 
+**风险**:
 - 数据库外键约束异常
 - 产生孤儿数据（如教学任务指向不存在的课程）
 
@@ -102,7 +101,7 @@ public async Task<bool> DeleteAsync(Guid id) {
     // 检查引用
     var hasTasks = await _dbContext.TeachingTasks.AnyAsync(t => t.CourseId == id);
     if (hasTasks) throw new InvalidOperationException("该课程已被教学任务引用，无法删除");
-    
+
     // 执行删除
 }
 ```
@@ -112,9 +111,8 @@ public async Task<bool> DeleteAsync(Guid id) {
 ### 5. N+1 查询性能问题
 **问题描述**: 列表查询时循环查询关联数据
 
-**代码位置**:
+**代码位置**: `MajorService.cs`
 ```csharp
-// MajorService.cs
 var majors = await query.ToListAsync();
 var departments = await _dbContext.Departments  // 每次查询都执行
     .Where(d => departmentIds.Contains(d.Id))
@@ -130,9 +128,8 @@ var departments = await _dbContext.Departments  // 每次查询都执行
 ### 6. 无分页的大列表
 **问题描述**: 班级学生列表没有分页
 
-**代码位置**:
+**代码位置**: `ClassService.cs`
 ```csharp
-// ClassService.cs
 return await _dbContext.Users
     .Where(u => studentIds.Contains(u.Id))
     .ToListAsync();  // 可能返回数千条记录
@@ -147,7 +144,7 @@ return await _dbContext.Users
 ### 7. 缺少操作审计日志
 **问题描述**: 没有记录谁在什么时间做了什么操作
 
-**风险**: 
+**风险**:
 - 无法追溯问题操作
 - 无法审计数据变更历史
 - 安全事故无法溯源
@@ -182,24 +179,63 @@ return await _dbContext.Users
 
 ---
 
+### 11. 前端 API 路径不统一
+**问题描述**: 部分 API 路径前缀不一致
+
+**示例**:
+- `/api/v1/teaching-tasks` (kebab-case)
+- `/api/v1/period-times` (kebab-case)
+- 建议统一使用命名规范
+
+---
+
+### 12. DTO 命名规范不统一
+**问题描述**: 某些 DTO 命名与 RESTful 规范不完全一致
+
+**建议**: 统一使用 `XxxRequest` 和 `XxxResponse` 命名
+
+---
+
 ## 修复优先级建议
 
-| 优先级 | 缺陷 | 预计工时 |
-|--------|------|----------|
-| P0 | 权限控制漏洞 | 2h |
-| P0 | 事务缺失 | 4h |
-| P1 | 并发冲突 | 3h |
-| P1 | 外键约束检查 | 3h |
-| P2 | N+1查询优化 | 2h |
-| P2 | 列表分页 | 2h |
-| P3 | 审计日志 | 8h |
-| P3 | 前端错误处理 | 4h |
+| 优先级 | 缺陷 | 预计工时 | 状态 |
+|--------|------|----------|------|
+| P0 | 权限控制漏洞 | 2h | 待修复 |
+| P0 | 事务缺失 | 4h | 待修复 |
+| P1 | 并发冲突 | 3h | 待修复 |
+| P1 | 外键约束检查 | 3h | 待修复 |
+| P2 | N+1查询优化 | 2h | 待修复 |
+| P2 | 列表分页 | 2h | 待修复 |
+| P3 | 审计日志 | 8h | 规划中 |
+| P3 | 前端错误处理 | 4h | 待修复 |
+| P4 | 数据备份机制 | 6h | 规划中 |
+| P4 | API 路径统一 | 2h | 低优先级 |
 
 ---
 
 ## 代码审查记录
 
-- 审查日期: 2026-04-02
-- 审查范围: 教学管理模块全部后端代码
-- 发现问题: 10项
-- 严重问题: 3项
+| 审查日期 | 审查范围 | 发现问题 | 严重问题 |
+|----------|----------|----------|----------|
+| 2026-04-02 | 教学管理模块全部后端代码 | 10项 | 3项 |
+| 2026-05-27 | 文档更新，补充新增问题 | 12项 | 3项 |
+
+---
+
+## 建议的修复计划
+
+### 第一阶段: 安全修复 (P0)
+1. 为所有控制器添加权限注解
+2. 为多表操作添加事务支持
+
+### 第二阶段: 数据完整性 (P1)
+1. 添加外键约束检查
+2. 修复并发冲突问题
+
+### 第三阶段: 性能优化 (P2)
+1. 优化 N+1 查询
+2. 添加列表分页
+
+### 第四阶段: 可观测性 (P3)
+1. 添加审计日志
+2. 完善前端错误处理

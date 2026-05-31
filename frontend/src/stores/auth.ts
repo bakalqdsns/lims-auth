@@ -39,6 +39,7 @@ export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
+  let userLoadPromise: Promise<boolean> | null = null
 
   // Getters
   const isAuthenticated = computed(() => !!token.value && !!user.value)
@@ -65,7 +66,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   // 检查是否是超级管理员
-  const isSuperAdmin = computed(() => user.value?.roles?.includes('super_admin') || false)
+  const isSuperAdmin = computed(() => user.value?.roles?.some(r => ['super_admin', 'admin', 'lab_admin'].includes(r)) || false)
 
   // Actions
   async function login(username: string, password: string): Promise<boolean> {
@@ -109,10 +110,18 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  // 获取当前用户信息
+  // 获取当前用户信息（幂等，重复调用复用同一个 promise）
   async function fetchCurrentUser(): Promise<boolean> {
     if (!token.value) return false
+    if (user.value) return true // 已加载过，直接返回
 
+    if (!userLoadPromise) {
+      userLoadPromise = doFetchCurrentUser()
+    }
+    return userLoadPromise
+  }
+
+  async function doFetchCurrentUser(): Promise<boolean> {
     try {
       const response = await axios.get<ApiResponse<User>>(`${API_BASE_URL}/auth/me`)
       if (response.data.code === 200) {
@@ -123,6 +132,8 @@ export const useAuthStore = defineStore('auth', () => {
     } catch (err) {
       console.error('获取用户信息失败:', err)
       return false
+    } finally {
+      userLoadPromise = null
     }
   }
 
@@ -136,9 +147,7 @@ export const useAuthStore = defineStore('auth', () => {
   // 初始化时如果有 token，设置 axios header 并获取用户信息
   if (token.value) {
     axios.defaults.headers.common['Authorization'] = `Bearer ${token.value}`
-    // 同步调用，由 useAuthStore() 初始化顺序保证：router 守卫中 token 存在时
-    // 必须先确保 user 已加载，因此这里返回 Promise，由 router.beforeEach 等待
-    fetchCurrentUser()
+    fetchCurrentUser() // 幂等调用，复用同一个 promise
   }
 
   return {
