@@ -233,11 +233,57 @@ using (var scope = app.Services.CreateScope())
         await dbContext.Database.EnsureCreatedAsync();
         logger.LogInformation("数据库已创建");
 
+        // 兼容性修补：确保 equipments 表有所需的新增列（EnsureCreated 不处理后期新增列）
+        var equipmentConn = dbContext.Database.GetDbConnection();
+        await equipmentConn.OpenAsync();
+        using (var cmd = equipmentConn.CreateCommand())
+        {
+            cmd.CommandText = "PRAGMA table_info(equipments)";
+            var reader = await cmd.ExecuteReaderAsync();
+            var existingColumns = new HashSet<string>();
+            while (await reader.ReadAsync())
+            {
+                existingColumns.Add(reader.GetString(1));
+            }
+            await reader.CloseAsync();
+
+            var alterStatements = new List<string>();
+
+            if (!existingColumns.Contains("total_quantity"))
+                alterStatements.Add("ALTER TABLE equipments ADD COLUMN total_quantity INTEGER NOT NULL DEFAULT 1");
+            if (!existingColumns.Contains("available_quantity"))
+                alterStatements.Add("ALTER TABLE equipments ADD COLUMN available_quantity INTEGER NOT NULL DEFAULT 1");
+            if (!existingColumns.Contains("unit"))
+                alterStatements.Add("ALTER TABLE equipments ADD COLUMN unit TEXT DEFAULT '台'");
+            if (!existingColumns.Contains("brand"))
+                alterStatements.Add("ALTER TABLE equipments ADD COLUMN brand TEXT");
+            if (!existingColumns.Contains("supplier"))
+                alterStatements.Add("ALTER TABLE equipments ADD COLUMN supplier TEXT");
+            if (!existingColumns.Contains("updated_at"))
+                alterStatements.Add("ALTER TABLE equipments ADD COLUMN updated_at TEXT");
+
+            foreach (var alterSql in alterStatements)
+            {
+                try
+                {
+                    using var alterCmd = equipmentConn.CreateCommand();
+                    alterCmd.CommandText = alterSql;
+                    await alterCmd.ExecuteNonQueryAsync();
+                    logger.LogInformation("已执行: {Sql}", alterSql);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning("列已存在或跳过: {Sql} — {Msg}", alterSql, ex.Message);
+                }
+            }
+        }
+
         // 确保 equipment:approve 权限存在（对已有数据库的兼容性处理）
         var deletePermId = Guid.Parse("50000000-0000-0000-0000-000000000004");
         var approvePermId = Guid.Parse("50000000-0000-0000-0000-000000000006");
         var superAdminRoleId = Guid.Parse("11111111-1111-1111-1111-111111111111");
         var labAdminRoleId = Guid.Parse("22222222-2222-2222-2222-222222222222");
+        var teacherRoleId = Guid.Parse("33333333-3333-3333-3333-333333333333");
 
         // 确保 equipment:delete 权限及角色分配存在
         if (!await dbContext.Permissions.AnyAsync(p => p.Code == "equipment:delete"))
@@ -314,6 +360,18 @@ using (var scope = app.Services.CreateScope())
             });
             await dbContext.SaveChangesAsync();
             logger.LogInformation("已为实验室管理员添加 equipment:approve 权限");
+        }
+
+        if (!await dbContext.RolePermissions.AnyAsync(rp => rp.RoleId == teacherRoleId && rp.PermissionId == approvePermId))
+        {
+            dbContext.RolePermissions.Add(new LimsAuth.Api.Models.RolePermission
+            {
+                RoleId = teacherRoleId,
+                PermissionId = approvePermId,
+                AssignedAt = DateTime.UtcNow
+            });
+            await dbContext.SaveChangesAsync();
+            logger.LogInformation("已为教师添加 equipment:approve 权限");
         }
 
         // 迁移：确保 equipment_borrow_records 表有 is_deleted 列

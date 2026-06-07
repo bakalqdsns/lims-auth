@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using LimsAuth.Api.Services;
 using LimsAuth.Api.Models.DTOs;
@@ -135,6 +136,42 @@ public class EquipmentsController : ControllerBase
         return File(bytes,
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             fileName);
+    }
+
+    [HttpPost("import")]
+    [Authorize(Policy = "Permission:equipment:create")]
+    public async Task<IActionResult> ImportExcel(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest(new { code = 400, message = "请上传文件" });
+
+        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (ext != ".xlsx" && ext != ".xls")
+            return BadRequest(new { code = 400, message = "仅支持 .xlsx 和 .xls 格式" });
+
+        using var stream = file.OpenReadStream();
+        try
+        {
+            var result = await _equipmentService.ImportExcelAsync(stream, file.FileName);
+
+            if (result.Errors.Count > 0 && result.Success == 0)
+                return Ok(new { code = 200, message = $"导入完成：成功 {result.Success} 条，失败 {result.Failed} 条", data = result });
+
+            return Ok(new { code = 200, message = $"导入完成：成功 {result.Success} 条，失败 {result.Failed} 条", data = result });
+        }
+        catch (Exception ex)
+        {
+            return Ok(new { code = 200, message = "文件解析失败：" + (ex.InnerException?.Message ?? ex.Message), data = new ImportEquipmentResult() });
+        }
+    }
+
+    [HttpGet("import-template")]
+    public async Task<IActionResult> GetImportTemplate()
+    {
+        var bytes = await _equipmentService.GenerateImportTemplateAsync();
+        return File(bytes,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "设备导入模板.xlsx");
     }
 }
 

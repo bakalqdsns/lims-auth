@@ -47,6 +47,11 @@ export const useAuthStore = defineStore('auth', () => {
   const userRoles = computed(() => user.value?.roles || [])
   const userPermissions = computed(() => user.value?.permissions || [])
 
+  const isAdmin = computed(() => ['super_admin', 'admin', 'lab_admin'].some(r => userRoles.value.includes(r)))
+  const isTeacher = computed(() => userRoles.value.includes('teacher'))
+  const isStudent = computed(() => userRoles.value.includes('student'))
+  const isLabAdmin = computed(() => ['lab_admin', 'super_admin', 'admin'].some(r => userRoles.value.includes(r)))
+
   // 检查是否有指定权限
   const hasPermission = (permission: string | string[]): boolean => {
     if (!user.value?.permissions) return false
@@ -150,6 +155,32 @@ export const useAuthStore = defineStore('auth', () => {
     fetchCurrentUser() // 幂等调用，复用同一个 promise
   }
 
+  // 更新个人资料（姓名、邮箱、手机号）
+  async function updateProfile(data: { fullName?: string; email?: string; phone?: string }): Promise<boolean> {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await axios.put<ApiResponse<boolean>>(`${API_BASE_URL}/auth/profile`, data)
+      if (response.data.code === 200) {
+        // 更新本地用户数据
+        if (user.value) {
+          if (data.fullName !== undefined) user.value.fullName = data.fullName
+          if (data.email !== undefined) user.value.email = data.email
+          if (data.phone !== undefined) user.value.phone = data.phone
+        }
+        return true
+      } else {
+        error.value = response.data.message || '更新失败'
+        return false
+      }
+    } catch (err: any) {
+      error.value = err.response?.data?.message || '更新失败'
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     token,
     user,
@@ -160,10 +191,15 @@ export const useAuthStore = defineStore('auth', () => {
     userRoles,
     userPermissions,
     isSuperAdmin,
+    isAdmin,
+    isTeacher,
+    isStudent,
+    isLabAdmin,
     hasPermission,
     hasRole,
     login,
     logout,
-    fetchCurrentUser
+    fetchCurrentUser,
+    updateProfile
   }
 })

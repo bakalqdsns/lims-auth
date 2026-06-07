@@ -35,8 +35,8 @@
         <el-descriptions-item label="成功条数"><el-tag type="success">{{ result?.success || 0 }}</el-tag></el-descriptions-item>
         <el-descriptions-item label="失败条数"><el-tag type="danger">{{ result?.failed || 0 }}</el-tag></el-descriptions-item>
       </el-descriptions>
-      <el-table v-if="result?.errors?.length" :data="result.errors" max-height="250" style="margin-top: 12px">
-        <el-table-column prop="" label="错误信息" />
+      <el-table v-if="result?.errors?.length" :data="result.errors.map((e: string, i: number) => ({ error: e }))" max-height="250" style="margin-top: 12px">
+        <el-table-column prop="error" label="错误信息" />
       </el-table>
       <div v-if="!result?.errors?.length && result?.success > 0" type="success" style="margin-top: 16px; color: #67c23a;">
         全部导入成功！
@@ -79,7 +79,7 @@ const fileObj = ref<File | null>(null)
 const fileName = ref('')
 const importing = ref(false)
 const uploaded = ref(false)
-const result = ref<{ success: number; failed: number; errors: string[] } | null>(null)
+const result = ref<{ success: number; failed: number; errors: string[]; duplicateCodes: string[] } | null>(null)
 
 const handleFileChange = (file: any) => {
   fileObj.value = file.raw
@@ -94,11 +94,17 @@ const handleImport = async () => {
   importing.value = true
   try {
     const res = await equipmentApi.importExcel(fileObj.value)
-    if (res.data.code === 200) {
-      result.value = res.data.data
+    const payload = res.data
+    if (payload.code === 200) {
+      result.value = payload.data
       uploaded.value = true
+      if (payload.data.failed > 0) {
+        ElMessage.warning(`导入完成：成功 ${payload.data.success} 条，失败 ${payload.data.failed} 条`)
+      } else {
+        ElMessage.success('全部导入成功')
+      }
     } else {
-      ElMessage.error(res.data.message)
+      ElMessage.error(payload.message)
     }
   } catch (err: any) {
     ElMessage.error(err?.response?.data?.message || '导入失败')
@@ -112,19 +118,24 @@ const reset = () => {
   result.value = null
   fileObj.value = null
   fileName.value = ''
+  uploadRef.value?.clearFiles()
 }
 
-const downloadTemplate = () => {
-  const headers = ['资产编号', '设备名称', '型号', '品牌', '序列号', '类别', '单位', '价格', '购入日期', '供应商', '存放位置', '所属实验室名称']
-  const row = ['EQ001', '示波器', 'DS1054Z', 'Rigol', 'SN12345', '实验仪器', '台', '3500', '2024-01-01', '供应商A', '实验楼A103', '计算机实验室1']
-  const csv = [headers.join(','), row.join(',')]
-  const blob = new Blob(['\ufeff' + csv.join('\n')], { type: 'text/csv;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = '设备导入模板.csv'
-  a.click()
-  URL.revokeObjectURL(url)
+const downloadTemplate = async () => {
+  try {
+    const res = await equipmentApi.downloadTemplate()
+    const blob = new Blob([res.data], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = '设备导入模板.xlsx'
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch {
+    ElMessage.error('模板下载失败')
+  }
 }
 </script>
 

@@ -9,6 +9,10 @@
         </el-breadcrumb>
       </div>
       <div class="header-actions">
+        <el-button type="info" @click="importDialogVisible = true" v-permission="'equipment:create'">
+          <el-icon><Upload /></el-icon>
+          导入
+        </el-button>
         <el-button type="success" @click="handleExport" :loading="exporting">
           <el-icon><Download /></el-icon>
           导出 Excel
@@ -119,7 +123,7 @@
             <el-button link type="primary" @click="handleEdit(row)" v-permission="'equipment:update'">编辑</el-button>
             <el-button link type="primary" @click="handleUpdateStatus(row)">状态</el-button>
             <el-button v-if="row.status === '在库-可用'" link type="success" @click="handleOpenBorrow(row)">借出</el-button>
-            <el-popconfirm title="确定删除该设备吗？" @confirm="handleDelete(row)" v-permission="'equipment:delete'">
+            <el-popconfirm v-if="canDelete" title="确定删除该设备吗？" @confirm="handleDelete(row)" v-permission="'equipment:delete'">
               <template #reference>
                 <el-button link type="danger">删除</el-button>
               </template>
@@ -143,6 +147,8 @@
     </el-card>
 
     <EquipmentFormDialog v-model="dialogVisible" :type="dialogType" :equipment-data="currentEquipment" :labs="labs" @success="handleSearch" />
+
+    <EquipmentImportDialog v-model="importDialogVisible" @success="handleSearch" />
 
     <!-- 状态更新对话框 -->
     <el-dialog title="更新设备状态" v-model="statusDialogVisible" width="400px">
@@ -195,14 +201,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Plus, Search, Download } from '@element-plus/icons-vue'
+import { Plus, Search, Download, Upload } from '@element-plus/icons-vue'
+import { useAuthStore } from '@/stores/auth'
 import { equipmentApi, labApi, borrowApi, type EquipmentDto, type LabDto, type EquipmentStatisticsDto, EQUIPMENT_CATEGORIES, EQUIPMENT_STATUSES, type CreateBorrowRequest } from '@/api/lab'
 import EquipmentFormDialog from './components/EquipmentFormDialog.vue'
+import EquipmentImportDialog from './components/EquipmentImportDialog.vue'
 
 const route = useRoute()
+const authStore = useAuthStore()
+const canDelete = computed(() => authStore.hasPermission('equipment:delete') || authStore.isSuperAdmin)
 
 const queryForm = reactive({
   keyword: '',
@@ -233,6 +243,7 @@ const stats = reactive<EquipmentStatisticsDto>({
 const dialogVisible = ref(false)
 const dialogType = ref<'create' | 'edit'>('create')
 const currentEquipment = ref<EquipmentDto | null>(null)
+const importDialogVisible = ref(false)
 
 const statusDialogVisible = ref(false)
 const newStatus = ref('')

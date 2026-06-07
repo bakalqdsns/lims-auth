@@ -37,7 +37,16 @@ export const equipmentApi = {
   getStatistics: () =>
     axios.get(`${API_BASE_URL}/equipments/statistics`),
   exportExcel: (params?: { keyword?: string; category?: string; status?: string }) =>
-    axios.get(`${API_BASE_URL}/equipments/export`, { params, responseType: 'blob' })
+    axios.get(`${API_BASE_URL}/equipments/export`, { params, responseType: 'blob' }),
+  importExcel: (file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return axios.post(`${API_BASE_URL}/equipments/import`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+  },
+  downloadTemplate: () =>
+    axios.get(`${API_BASE_URL}/equipments/import-template`, { responseType: 'blob' })
 }
 
 // 设备借还 API

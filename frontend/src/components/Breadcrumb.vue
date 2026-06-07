@@ -48,7 +48,8 @@ const routeNameMap: Record<string, string> = {
   teachingApplications: '教学申请',
   usageRegistration: '使用登记',
   scheduleStatistics: '统计分析',
-  scheduleDashboard: '排课看板'
+  scheduleDashboard: '排课看板',
+  profile: '个人资料'
 }
 
 const breadcrumbList = computed(() => {

@@ -109,8 +109,8 @@ public class EquipmentBorrowService : IEquipmentBorrowService
         var record = await _dbContext.EquipmentBorrowRecords.FindAsync(recordId);
         if (record == null) return (false, "借还记录不存在");
         if (record.IsDeleted) return (false, "借还记录不存在");
-        if (record.Status != BorrowStatus.Returned)
-            return (false, $"仅允许删除已归还的记录，当前状态为「{record.Status}」");
+        if (record.Status != BorrowStatus.Returned && record.Status != BorrowStatus.Rejected)
+            return (false, $"仅允许删除已归还或已拒绝的记录，当前状态为「{record.Status}」");
 
         record.IsDeleted = true;
         await _dbContext.SaveChangesAsync();

@@ -56,7 +56,7 @@
       </el-tab-pane>
 
       <!-- 待审批 -->
-      <el-tab-pane label="待审批" name="pending">
+      <el-tab-pane v-if="canApprove" label="待审批" name="pending">
         <el-card v-if="canApprove" shadow="never">
           <el-table :data="pendingRecords" v-loading="pendingLoading" stripe>
             <el-table-column prop="recordNo" label="单号" width="180" />
@@ -90,7 +90,7 @@
       </el-tab-pane>
 
       <!-- 全部记录 -->
-      <el-tab-pane label="全部记录" name="all">
+      <el-tab-pane v-if="canReadAll" label="全部记录" name="all">
         <el-card v-if="canReadAll" shadow="never">
           <el-form inline>
             <el-form-item label="关键词">
@@ -136,7 +136,7 @@
             <el-table-column label="操作" width="110" fixed="right">
               <template #default="{ row }">
                 <el-button link type="primary" @click="showRecordDetail(row)">详情</el-button>
-                <el-button v-if="row.status === '已归还' && canDelete" link type="danger" @click="handleDelete(row)">删除</el-button>
+                <el-button v-if="(row.status === '已归还' || row.status === '已拒绝') && canDelete" link type="danger" @click="handleDelete(row)">删除</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -145,7 +145,7 @@
       </el-tab-pane>
 
       <!-- 逾期清单 -->
-      <el-tab-pane label="逾期清单" name="overdue">
+      <el-tab-pane v-if="canApprove" label="逾期清单" name="overdue">
         <el-card shadow="never">
           <el-table :data="overdueRecords" v-loading="overdueLoading" stripe>
             <el-table-column prop="recordNo" label="单号" width="180" />
@@ -320,7 +320,7 @@ import { borrowApi, type BorrowRecordDto, BORROW_STATUSES, RETURN_CONDITIONS } f
 import { useAuthStore } from '@/stores/auth'
 
 const authStore = useAuthStore()
-const canApprove = computed(() => authStore.hasPermission('equipment:approve') || authStore.isSuperAdmin)
+const canApprove = computed(() => authStore.hasPermission('equipment:approve') || authStore.isSuperAdmin || authStore.isTeacher)
 const canReadAll = computed(() => authStore.hasPermission('equipment:read') || authStore.isSuperAdmin)
 const canDelete = computed(() => authStore.hasPermission('equipment:delete') || authStore.isSuperAdmin)
 

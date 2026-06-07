@@ -613,7 +613,7 @@ public class AppDbContext : DbContext
         {
             "course:create", "course:read", "course:update", "course:delete", "course:schedule",
             "report:read", "report:approve",
-            "equipment:read", "equipment:borrow",
+            "equipment:read", "equipment:borrow", "equipment:approve",
             "lab:read",
             "campus:read", "building:read",
             "schedule:read",
