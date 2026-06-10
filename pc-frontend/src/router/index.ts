@@ -256,22 +256,6 @@ const router = createRouter({
           meta: { requiresAuth: true, roles: ['super_admin', 'admin', 'lab_admin'], permission: 'statistics:dashboard' }
         }
       ]
-    },
-
-    // ─── 耗材管理 ─── 所有登录用户可见，管理员可管理
-    {
-      path: '/consumables',
-      name: 'consumables',
-      component: HomeView,
-      meta: { requiresAuth: true, roles: ['super_admin', 'admin', 'lab_admin', 'teacher', 'student'] },
-      children: [
-        {
-          path: '',
-          name: 'consumablesMain',
-          component: () => import('../views/consumables/ConsumablesView.vue'),
-          meta: { requiresAuth: true, roles: ['super_admin', 'admin', 'lab_admin', 'teacher', 'student'], permission: 'consumable:read' }
-        }
-      ]
     }
   ]
 })
@@ -282,14 +266,35 @@ router.beforeEach(async (to, _from, next) => {
 
   // 公开页面直接放行
   if (to.meta.public) {
+    // 支持通过 ?token=xxx 自动登录（iframe 场景）
+    if (to.query.token && !authStore.token) {
+      authStore.token = to.query.token as string
+      localStorage.setItem('token', to.query.token as string)
+      axios.defaults.headers.common['Authorization'] = `Bearer ${to.query.token}`
+    }
+    // 清理 iframe 嵌入参数，保持 URL 干净
+    if (to.query.embed === '1') {
+      const cleanQuery = { ...to.query }
+      delete cleanQuery.token
+      delete cleanQuery.embed
+      next({ path: to.path, query: cleanQuery as Record<string, string> })
+      return
+    }
     next()
     return
   }
 
   // 需要登录但未登录
   if (to.meta.requiresAuth && !authStore.token) {
-    next('/')
-    return
+    // iframe 场景：尝试从 query.token 注入
+    if (to.query.token) {
+      authStore.token = to.query.token as string
+      localStorage.setItem('token', to.query.token as string)
+      axios.defaults.headers.common['Authorization'] = `Bearer ${to.query.token}`
+    } else {
+      next('/')
+      return
+    }
   }
 
   // 已登录用户访问登录页，跳转到首页

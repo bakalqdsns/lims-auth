@@ -250,15 +250,16 @@ public class CancelRequest
 public class TeachingApplicationDto
 {
     public Guid Id { get; set; }
-    public Guid SemesterId { get; set; }
+    public Guid? SemesterId { get; set; }
     public string? SemesterName { get; set; }
-    public Guid TeachingTaskId { get; set; }
+    public Guid? TeachingTaskId { get; set; }
     public string CourseName { get; set; } = string.Empty;
-    public Guid MajorId { get; set; }
+    public Guid? MajorId { get; set; }
     public string MajorName { get; set; } = string.Empty;
-    public Guid ClassId { get; set; }
+    public Guid? ClassId { get; set; }
     public string ClassName { get; set; } = string.Empty;
-    public List<int> WeekNumbers { get; set; } = new();
+    public int StartWeek { get; set; }
+    public int EndWeek { get; set; }
     public int DayOfWeek { get; set; }
     public List<int> PeriodNumbers { get; set; } = new();
     public Guid? ExpectedLabId { get; set; }
@@ -279,16 +280,15 @@ public class TeachingApplicationDto
 
 public class CreateTeachingApplicationRequest
 {
-    [Required]
-    public Guid SemesterId { get; set; }
-    [Required]
-    public Guid TeachingTaskId { get; set; }
+    public Guid? SemesterId { get; set; }
+    public Guid? TeachingTaskId { get; set; }
     public string CourseName { get; set; } = string.Empty;
-    public Guid MajorId { get; set; }
+    public Guid? MajorId { get; set; }
     public string MajorName { get; set; } = string.Empty;
-    public Guid ClassId { get; set; }
+    public Guid? ClassId { get; set; }
     public string ClassName { get; set; } = string.Empty;
-    public List<int> WeekNumbers { get; set; } = new();
+    public int StartWeek { get; set; }
+    public int EndWeek { get; set; }
     public int DayOfWeek { get; set; }
     public List<int> PeriodNumbers { get; set; } = new();
     public Guid? ExpectedLabId { get; set; }

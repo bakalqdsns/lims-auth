@@ -1,6 +1,5 @@
 import axios from 'axios'
-
-const API_BASE_URL = '/api/v1'
+import { API_BASE_URL } from '../config/api'
 
 // ============================================================
 // 排课管理 API
@@ -360,16 +359,15 @@ export interface ReservationQuery {
 // 授课申请 DTO
 export interface TeachingApplicationDto {
   id: string
-  semesterId?: string
+  semesterId: string
   semesterName?: string
-  teachingTaskId?: string
+  teachingTaskId: string
   courseName: string
-  majorId?: string
+  majorId: string
   majorName: string
-  classId?: string
+  classId: string
   className: string
-  startWeek: number
-  endWeek: number
+  weekNumbers: number[]
   dayOfWeek: number
   periodNumbers: number[]
   expectedLabId?: string
@@ -392,12 +390,11 @@ export interface CreateTeachingApplicationRequest {
   semesterId: string
   teachingTaskId: string
   courseName: string
-  majorId?: string
+  majorId: string
   majorName: string
-  classId?: string
+  classId: string
   className: string
-  startWeek: number
-  endWeek: number
+  weekNumbers: number[]
   dayOfWeek: number
   periodNumbers: number[]
   expectedLabId?: string

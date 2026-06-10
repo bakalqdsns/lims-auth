@@ -155,7 +155,7 @@ const form = reactive({
   purchaseDate: undefined as string | undefined,
   warrantyMonths: undefined as number | undefined,
   price: undefined as number | undefined,
-  status: '正常',
+  status: '在库-可用',
   requiresBooking: false,
   maxBookingHours: undefined as number | undefined,
   imageUrl: '',

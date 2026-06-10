@@ -1,8 +1,8 @@
 <template>
   <div class="home-container">
     <el-container class="layout-container">
-      <!-- 侧边栏 -->
-      <el-aside width="220px" class="sidebar">
+    <!-- 侧边栏：iframe 嵌入时隐藏 -->
+    <el-aside v-if="!isEmbed" width="220px" class="sidebar">
         <div class="logo">
           <el-icon class="logo-icon"><Collection /></el-icon>
           <span class="logo-text">LIMS 系统</span>
@@ -223,24 +223,12 @@
               <span>实验室管理</span>
             </el-menu-item>
           </el-sub-menu>
-
-          <!-- 耗材管理：所有登录用户可见 -->
-          <el-sub-menu index="/consumables" v-if="hasPermission('consumable:read')">
-            <template #title>
-              <el-icon><Goods /></el-icon>
-              <span>耗材管理</span>
-            </template>
-            <el-menu-item index="/consumables">
-              <el-icon><Goods /></el-icon>
-              <span>耗材总览</span>
-            </el-menu-item>
-          </el-sub-menu>
         </el-menu>
       </el-aside>
 
       <el-container>
-        <!-- 顶部导航 -->
-        <el-header class="header">
+        <!-- 顶部导航：iframe 嵌入时隐藏 -->
+        <el-header v-if="!isEmbed" class="header">
           <div class="header-left">
             <breadcrumb />
           </div>
@@ -266,7 +254,7 @@
         </el-header>
 
         <!-- 主内容区 -->
-        <el-main class="main-content">
+        <el-main class="main-content" :class="{ 'is-embed': isEmbed }">
           <router-view />
         </el-main>
       </el-container>
@@ -349,8 +337,7 @@ import {
   DataAnalysis,
   DataBoard,
   Monitor,
-  Switch,
-  Goods
+  Switch
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '../stores/auth'
 import { userApi } from '../api/system'
@@ -361,6 +348,9 @@ const route = useRoute()
 const authStore = useAuthStore()
 
 const hasPermission = authStore.hasPermission
+
+// 是否为 iframe 嵌入模式（来自移动端），隐藏侧边栏和顶部
+const isEmbed = computed(() => route.query.embed === '1')
 
 const activeMenu = computed(() => route.path)
 
@@ -531,5 +521,10 @@ const handleChangePassword = async () => {
   background-color: #f0f2f5;
   padding: 20px;
   overflow-y: auto;
+}
+
+/* iframe 嵌入模式下撑满全屏 */
+.main-content.is-embed {
+  padding: 0;
 }
 </style>

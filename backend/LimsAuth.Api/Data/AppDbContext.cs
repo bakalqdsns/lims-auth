@@ -55,6 +55,15 @@ public class AppDbContext : DbContext
     public DbSet<UsageRegistration> UsageRegistrations => Set<UsageRegistration>();
     public DbSet<ScheduleStatistics> ScheduleStatistics => Set<ScheduleStatistics>();
 
+    // 耗材管理
+    public DbSet<ConsumableCategory> ConsumableCategories => Set<ConsumableCategory>();
+    public DbSet<Consumable> Consumables => Set<Consumable>();
+    public DbSet<ConsumableInRecord> ConsumableInRecords => Set<ConsumableInRecord>();
+    public DbSet<ConsumableOutRecord> ConsumableOutRecords => Set<ConsumableOutRecord>();
+    public DbSet<ConsumableStockAdjustment> ConsumableStockAdjustments => Set<ConsumableStockAdjustment>();
+    public DbSet<ConsumableStockLog> ConsumableStockLogs => Set<ConsumableStockLog>();
+    public DbSet<ConsumableNotification> ConsumableNotifications => Set<ConsumableNotification>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -215,6 +224,12 @@ public class AppDbContext : DbContext
             .WithMany(c => c.TeachingTasks)
             .HasForeignKey(tt => tt.ClassId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<TeachingTask>()
+            .HasOne(tt => tt.Major)
+            .WithMany()
+            .HasForeignKey(tt => tt.MajorId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<TeachingTaskTeacher>()
             .HasOne(ttt => ttt.TeachingTask)
@@ -866,27 +881,6 @@ public class AppDbContext : DbContext
             }
         );
 
-        // 种子数据 - 教学任务
-        var taskId = Guid.Parse("22222222-3333-4444-5555-666666666666");
-        modelBuilder.Entity<TeachingTask>().HasData(
-            new TeachingTask
-            {
-                Id = taskId,
-                SemesterId = semesterId,
-                CourseId = courseId,
-                ClassId = classId,
-                TaskType = "主讲",
-                Description = "程序设计基础教学任务",
-                IsActive = true,
-                CreatedAt = seedDate
-            }
-        );
-
-        // 种子数据 - 教学任务教师关联
-        modelBuilder.Entity<TeachingTaskTeacher>().HasData(
-            new TeachingTaskTeacher { TeachingTaskId = taskId, TeacherId = teacherUserId, IsMainTeacher = true, AssignedAt = seedDate }
-        );
-
         // ========== 校区和楼宇种子数据 ==========
 
         var mainCampusId = Guid.Parse("c0000000-0000-0000-0000-000000000001");
@@ -1056,7 +1050,7 @@ public class AppDbContext : DbContext
                 SerialNumber = "SN123456789",
                 LabId = lab1Id,
                 Category = "计算机设备",
-                Status = "正常",
+                Status = "在库-可用",
                 PurchaseDate = new DateTime(2023, 9, 1),
                 WarrantyMonths = 36,
                 Price = 8000,
@@ -1076,7 +1070,7 @@ public class AppDbContext : DbContext
                 SerialNumber = "SN123456790",
                 LabId = lab1Id,
                 Category = "计算机设备",
-                Status = "正常",
+                Status = "在库-可用",
                 PurchaseDate = new DateTime(2023, 9, 1),
                 WarrantyMonths = 36,
                 Price = 8000,
@@ -1096,7 +1090,7 @@ public class AppDbContext : DbContext
                 SerialNumber = "SN987654321",
                 LabId = lab2Id,
                 Category = "网络设备",
-                Status = "正常",
+                Status = "在库-可用",
                 PurchaseDate = new DateTime(2023, 6, 15),
                 WarrantyMonths = 24,
                 Price = 5000,
@@ -1117,7 +1111,7 @@ public class AppDbContext : DbContext
                 SerialNumber = "SN987654322",
                 LabId = lab2Id,
                 Category = "网络设备",
-                Status = "正常",
+                Status = "在库-可用",
                 PurchaseDate = new DateTime(2023, 6, 15),
                 WarrantyMonths = 24,
                 Price = 12000,
@@ -1138,7 +1132,7 @@ public class AppDbContext : DbContext
                 SerialNumber = "SN555566667",
                 LabId = lab3Id,
                 Category = "测试仪器",
-                Status = "正常",
+                Status = "在库-可用",
                 PurchaseDate = new DateTime(2023, 3, 10),
                 WarrantyMonths = 24,
                 Price = 3500,
@@ -1159,7 +1153,7 @@ public class AppDbContext : DbContext
                 SerialNumber = "SN777788889",
                 LabId = lab3Id,
                 Category = "开发板",
-                Status = "正常",
+                Status = "在库-可用",
                 PurchaseDate = new DateTime(2023, 9, 1),
                 WarrantyMonths = 12,
                 Price = 200,
@@ -2280,25 +2274,21 @@ public class AppDbContext : DbContext
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.DayOfWeek);
 
+            entity.HasOne(e => e.Applicant)
+                .WithMany()
+                .HasForeignKey(e => e.ApplicantId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             entity.HasOne(e => e.Semester)
                 .WithMany()
                 .HasForeignKey(e => e.SemesterId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne(e => e.TeachingTask)
-                .WithMany()
-                .HasForeignKey(e => e.TeachingTaskId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .HasPrincipalKey(e => e.Id)
+                .OnDelete(DeleteBehavior.SetNull);
 
             entity.HasOne(e => e.ExpectedLab)
                 .WithMany()
                 .HasForeignKey(e => e.ExpectedLabId)
                 .OnDelete(DeleteBehavior.SetNull);
-
-            entity.HasOne(e => e.Applicant)
-                .WithMany()
-                .HasForeignKey(e => e.ApplicantId)
-                .OnDelete(DeleteBehavior.Restrict);
         });
 
         // =========================
@@ -2377,7 +2367,7 @@ public class AppDbContext : DbContext
                 Status = "Active",
                 CourseId = courseId,
                 CourseName = "程序设计基础",
-                TeachingTaskId = taskId,
+                TeachingTaskId = tasksId,
                 TeacherId = teacherUserId,
                 TeacherName = "张老师",
                 ClassId = classId,
@@ -2420,7 +2410,7 @@ public class AppDbContext : DbContext
                 Status = "Active",
                 CourseId = courseId,
                 CourseName = "程序设计基础",
-                TeachingTaskId = taskId,
+                TeachingTaskId = tasksId,
                 TeacherId = teacherUserId,
                 TeacherName = "张老师",
                 ClassId = classId,
@@ -2563,7 +2553,7 @@ public class AppDbContext : DbContext
                 PeriodNumber = 1,
                 Source = ScheduleSource.CentralScheduling,
                 ScheduleEntryId = entry1Id,
-                TeachingTaskId = taskId,
+                TeachingTaskId = tasksId,
                 CourseName = "程序设计基础",
                 ExperimentItemName = "顺序结构程序设计",
                 ExperimentItemType = "验证性实验",
@@ -2620,7 +2610,7 @@ public class AppDbContext : DbContext
                 PeriodNumber = 1,
                 Source = ScheduleSource.CentralScheduling,
                 ScheduleEntryId = entry1Id,
-                TeachingTaskId = taskId,
+                TeachingTaskId = tasksId,
                 CourseName = "程序设计基础",
                 ExperimentItemName = "选择结构程序设计",
                 ExperimentItemType = "验证性实验",
@@ -2673,13 +2663,15 @@ public class AppDbContext : DbContext
             {
                 Id = ta1Id,
                 SemesterId = semesterId,
-                TeachingTaskId = taskId,
+                TeachingTaskId = tasksId,
                 CourseName = "程序设计基础",
                 MajorId = majorId,
                 MajorName = "计算机科学与技术",
                 ClassId = classId,
                 ClassName = "计算机科学与技术2024级1班",
                 WeekNumbersJson = "[1,2,3,4,5,6,7,8,9,10]",
+                StartWeek = 1,
+                EndWeek = 10,
                 DayOfWeek = 1,
                 PeriodNumbersJson = "[1, 2]",
                 ExpectedLabId = lab1Id,
@@ -2697,13 +2689,15 @@ public class AppDbContext : DbContext
             {
                 Id = ta2Id,
                 SemesterId = semesterId,
-                TeachingTaskId = taskId,
+                TeachingTaskId = tasksId,
                 CourseName = "计算机网络实验",
                 MajorId = majorId,
                 MajorName = "计算机科学与技术",
                 ClassId = classId,
                 ClassName = "计算机科学与技术2024级1班",
                 WeekNumbersJson = "[2,4,6,8,10,12,14,16]",
+                StartWeek = 2,
+                EndWeek = 16,
                 DayOfWeek = 2,
                 PeriodNumbersJson = "[3, 4, 5]",
                 ExpectedLabId = lab2Id,
@@ -2718,13 +2712,15 @@ public class AppDbContext : DbContext
             {
                 Id = ta3Id,
                 SemesterId = semesterId,
-                TeachingTaskId = taskId,
+                TeachingTaskId = tasksId,
                 CourseName = "数据结构与算法实验",
                 MajorId = majorId,
                 MajorName = "计算机科学与技术",
                 ClassId = classId,
                 ClassName = "计算机科学与技术2024级1班",
                 WeekNumbersJson = "[3,5,7,9,11,13,15,17]",
+                StartWeek = 3,
+                EndWeek = 17,
                 DayOfWeek = 3,
                 PeriodNumbersJson = "[2, 3]",
                 ExpectedLabId = lab1Id,

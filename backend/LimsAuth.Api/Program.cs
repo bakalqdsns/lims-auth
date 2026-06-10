@@ -68,6 +68,9 @@ builder.Services.AddScoped<ITeachingApplicationService, TeachingApplicationServi
 builder.Services.AddScoped<IUsageRegistrationService, UsageRegistrationService>();
 builder.Services.AddScoped<IStatisticsService, StatisticsService>();
 
+// 耗材管理
+builder.Services.AddScoped<IConsumableService, ConsumableService>();
+
 // JWT Authentication
 var secretKey = builder.Configuration["Jwt:SecretKey"] ?? "your-super-secret-key-min-32-chars-long!!";
 
@@ -192,6 +195,17 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("Permission:statistics:read", policy => policy.RequirePermission("statistics:read"));
     options.AddPolicy("Permission:statistics:export", policy => policy.RequirePermission("statistics:export"));
     options.AddPolicy("Permission:statistics:dashboard", policy => policy.RequirePermission("statistics:dashboard"));
+
+    // 耗材管理权限
+    options.AddPolicy("Permission:consumable:read", policy => policy.RequirePermission("consumable:read"));
+    options.AddPolicy("Permission:consumable:create", policy => policy.RequirePermission("consumable:create"));
+    options.AddPolicy("Permission:consumable:update", policy => policy.RequirePermission("consumable:update"));
+    options.AddPolicy("Permission:consumable:delete", policy => policy.RequirePermission("consumable:delete"));
+    options.AddPolicy("Permission:consumable:in", policy => policy.RequirePermission("consumable:in"));
+    options.AddPolicy("Permission:consumable:out", policy => policy.RequirePermission("consumable:out"));
+    options.AddPolicy("Permission:consumable:approve", policy => policy.RequirePermission("consumable:approve"));
+    options.AddPolicy("Permission:consumable:adjust", policy => policy.RequirePermission("consumable:adjust"));
+    options.AddPolicy("Permission:consumable:statistics", policy => policy.RequirePermission("consumable:statistics"));
 });
 
 // CORS
@@ -232,6 +246,147 @@ using (var scope = app.Services.CreateScope())
         // 确保数据库和表已创建（使用 EnsureCreated 代替 Migrate，适用于 SQLite）
         await dbContext.Database.EnsureCreatedAsync();
         logger.LogInformation("数据库已创建");
+
+        // 兼容性修补：为已有数据库创建新的耗材相关表
+        var conn = dbContext.Database.GetDbConnection();
+        await conn.OpenAsync();
+
+        var consumableTables = new[]
+        {
+            (@"
+                CREATE TABLE IF NOT EXISTS consumable_categories (
+                    id TEXT NOT NULL PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    remark TEXT,
+                    is_active INTEGER NOT NULL DEFAULT 1,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                )", "consumable_categories"),
+            (@"
+                CREATE TABLE IF NOT EXISTS consumables (
+                    id TEXT NOT NULL PRIMARY KEY,
+                    code TEXT NOT NULL,
+                    name TEXT NOT NULL,
+                    category_id TEXT,
+                    specification TEXT,
+                    unit TEXT NOT NULL DEFAULT '个',
+                    current_stock REAL NOT NULL DEFAULT 0,
+                    available_stock REAL NOT NULL DEFAULT 0,
+                    locked_stock REAL NOT NULL DEFAULT 0,
+                    min_stock REAL NOT NULL DEFAULT 0,
+                    location TEXT,
+                    supplier TEXT,
+                    unit_price REAL,
+                    max_single_request REAL NOT NULL DEFAULT 999999,
+                    monthly_limit REAL NOT NULL DEFAULT 999999,
+                    description TEXT,
+                    is_active INTEGER NOT NULL DEFAULT 1,
+                    is_deleted INTEGER NOT NULL DEFAULT 0,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    FOREIGN KEY (category_id) REFERENCES consumable_categories(id)
+                )", "consumables"),
+            (@"
+                CREATE TABLE IF NOT EXISTS consumable_in_records (
+                    id TEXT NOT NULL PRIMARY KEY,
+                    record_no TEXT NOT NULL,
+                    consumable_id TEXT NOT NULL,
+                    quantity REAL NOT NULL,
+                    unit_price REAL,
+                    supplier TEXT,
+                    in_time TEXT NOT NULL,
+                    handler_id TEXT NOT NULL,
+                    handler_name TEXT,
+                    remark TEXT,
+                    status TEXT NOT NULL DEFAULT 'Pending',
+                    approved_by TEXT,
+                    approver_name TEXT,
+                    approved_at TEXT,
+                    approval_remark TEXT,
+                    is_deleted INTEGER NOT NULL DEFAULT 0,
+                    created_at TEXT NOT NULL,
+                    FOREIGN KEY (consumable_id) REFERENCES consumables(id)
+                )", "consumable_in_records"),
+            (@"
+                CREATE TABLE IF NOT EXISTS consumable_out_records (
+                    id TEXT NOT NULL PRIMARY KEY,
+                    record_no TEXT NOT NULL,
+                    consumable_id TEXT NOT NULL,
+                    quantity REAL NOT NULL,
+                    usage_purpose TEXT,
+                    usage_lab TEXT,
+                    out_time TEXT NOT NULL,
+                    applicant_id TEXT NOT NULL,
+                    applicant_name TEXT,
+                    remark TEXT,
+                    status TEXT NOT NULL DEFAULT 'Pending',
+                    approved_by TEXT,
+                    approver_name TEXT,
+                    approved_at TEXT,
+                    approval_remark TEXT,
+                    is_deleted INTEGER NOT NULL DEFAULT 0,
+                    created_at TEXT NOT NULL,
+                    FOREIGN KEY (consumable_id) REFERENCES consumables(id)
+                )", "consumable_out_records"),
+            (@"
+                CREATE TABLE IF NOT EXISTS consumable_stock_adjustments (
+                    id TEXT NOT NULL PRIMARY KEY,
+                    consumable_id TEXT NOT NULL,
+                    adjustment_type TEXT NOT NULL,
+                    before_quantity REAL NOT NULL,
+                    adjustment_quantity REAL NOT NULL,
+                    after_quantity REAL NOT NULL,
+                    reason TEXT,
+                    operator_id TEXT NOT NULL,
+                    operator_name TEXT,
+                    created_at TEXT NOT NULL,
+                    FOREIGN KEY (consumable_id) REFERENCES consumables(id)
+                )", "consumable_stock_adjustments"),
+            (@"
+                CREATE TABLE IF NOT EXISTS consumable_stock_logs (
+                    id TEXT NOT NULL PRIMARY KEY,
+                    consumable_id TEXT NOT NULL,
+                    change_type TEXT NOT NULL,
+                    change_quantity REAL NOT NULL,
+                    before_stock REAL NOT NULL,
+                    after_stock REAL NOT NULL,
+                    reference_id TEXT,
+                    reference_no TEXT,
+                    operator_id TEXT NOT NULL,
+                    operator_name TEXT,
+                    remark TEXT,
+                    created_at TEXT NOT NULL,
+                    FOREIGN KEY (consumable_id) REFERENCES consumables(id)
+                )", "consumable_stock_logs"),
+            (@"
+                CREATE TABLE IF NOT EXISTS consumable_notifications (
+                    id TEXT NOT NULL PRIMARY KEY,
+                    user_id TEXT NOT NULL,
+                    type TEXT NOT NULL,
+                    title TEXT NOT NULL,
+                    content TEXT,
+                    related_id TEXT,
+                    is_read INTEGER NOT NULL DEFAULT 0,
+                    read_at TEXT,
+                    created_at TEXT NOT NULL,
+                    FOREIGN KEY (user_id) REFERENCES users(id)
+                )", "consumable_notifications"),
+        };
+
+        foreach (var (sql, tableName) in consumableTables)
+        {
+            try
+            {
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = sql;
+                await cmd.ExecuteNonQueryAsync();
+                logger.LogInformation("耗材表 {TableName} 已就绪", tableName);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "耗材表 {TableName} 创建失败", tableName);
+            }
+        }
 
         // 兼容性修补：确保 equipments 表有所需的新增列（EnsureCreated 不处理后期新增列）
         var equipmentConn = dbContext.Database.GetDbConnection();
@@ -377,8 +532,6 @@ using (var scope = app.Services.CreateScope())
         // 迁移：确保 equipment_borrow_records 表有 is_deleted 列
         try
         {
-            var conn = dbContext.Database.GetDbConnection();
-            await conn.OpenAsync();
             using var cmd = conn.CreateCommand();
             cmd.CommandText = "PRAGMA table_info(equipment_borrow_records)";
             var reader = await cmd.ExecuteReaderAsync();
@@ -395,6 +548,117 @@ using (var scope = app.Services.CreateScope())
             }
         }
         catch { /* 忽略迁移错误，新库会自动创建 */ }
+
+        // 耗材管理：初始化默认分类
+        try
+        {
+            if (!await dbContext.ConsumableCategories.AnyAsync())
+            {
+                var defaultCategories = new[]
+                {
+                    new LimsAuth.Api.Models.ConsumableCategory { Id = Guid.NewGuid(), Name = "化学试剂", Remark = "化学实验用试剂" },
+                    new LimsAuth.Api.Models.ConsumableCategory { Id = Guid.NewGuid(), Name = "电子元件", Remark = "电子电路相关元件" },
+                    new LimsAuth.Api.Models.ConsumableCategory { Id = Guid.NewGuid(), Name = "医疗耗材", Remark = "医疗实验用耗材" },
+                    new LimsAuth.Api.Models.ConsumableCategory { Id = Guid.NewGuid(), Name = "办公耗材", Remark = "办公常用耗材" },
+                    new LimsAuth.Api.Models.ConsumableCategory { Id = Guid.NewGuid(), Name = "工具类", Remark = "实验室常用工具" }
+                };
+                dbContext.ConsumableCategories.AddRange(defaultCategories);
+                await dbContext.SaveChangesAsync();
+                logger.LogInformation("已添加耗材默认分类");
+            }
+        }
+        catch { /* 忽略错误 */ }
+
+        // 耗材管理：初始化权限并分配给角色
+        try
+        {
+            var consumablePerms = new[]
+            {
+                ("consumable:read", "查看耗材"),
+                ("consumable:create", "创建耗材"),
+                ("consumable:update", "更新耗材"),
+                ("consumable:delete", "删除耗材"),
+                ("consumable:in", "耗材入库"),
+                ("consumable:out", "耗材出库"),
+                ("consumable:approve", "审批耗材申请"),
+                ("consumable:adjust", "调整库存"),
+                ("consumable:statistics", "耗材统计")
+            };
+
+            var labAdminPermIds = new List<Guid>();
+            foreach (var (code, name) in consumablePerms)
+            {
+                if (!await dbContext.Permissions.AnyAsync(p => p.Code == code))
+                {
+                    var permId = Guid.NewGuid();
+                    dbContext.Permissions.Add(new LimsAuth.Api.Models.Permission
+                    {
+                        Id = permId,
+                        Code = code,
+                        Name = name,
+                        Module = "consumable",
+                        Description = name,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                    await dbContext.SaveChangesAsync();
+                    logger.LogInformation("已添加权限：{Code}", code);
+
+                    if (!await dbContext.RolePermissions.AnyAsync(rp => rp.RoleId == superAdminRoleId && rp.PermissionId == permId))
+                    {
+                        dbContext.RolePermissions.Add(new LimsAuth.Api.Models.RolePermission
+                        {
+                            RoleId = superAdminRoleId,
+                            PermissionId = permId,
+                            AssignedAt = DateTime.UtcNow
+                        });
+                        await dbContext.SaveChangesAsync();
+                    }
+
+                    if (code != "consumable:delete" && code != "consumable:statistics")
+                    {
+                        labAdminPermIds.Add(permId);
+                    }
+                }
+            }
+
+            var existingLabAdminPerms = await dbContext.RolePermissions
+                .Where(rp => rp.RoleId == labAdminRoleId)
+                .Select(rp => rp.PermissionId)
+                .ToListAsync();
+
+            foreach (var permId in labAdminPermIds)
+            {
+                if (!existingLabAdminPerms.Contains(permId))
+                {
+                    dbContext.RolePermissions.Add(new LimsAuth.Api.Models.RolePermission
+                    {
+                        RoleId = labAdminRoleId,
+                        PermissionId = permId,
+                        AssignedAt = DateTime.UtcNow
+                    });
+                    await dbContext.SaveChangesAsync();
+                }
+            }
+
+            var userReadPermId = (await dbContext.Permissions.FirstOrDefaultAsync(p => p.Code == "consumable:read"))?.Id;
+            var userOutPermId = (await dbContext.Permissions.FirstOrDefaultAsync(p => p.Code == "consumable:out"))?.Id;
+
+            if (userReadPermId.HasValue && !await dbContext.RolePermissions.AnyAsync(rp => rp.RoleId == teacherRoleId && rp.PermissionId == userReadPermId.Value))
+            {
+                dbContext.RolePermissions.Add(new LimsAuth.Api.Models.RolePermission { RoleId = teacherRoleId, PermissionId = userReadPermId.Value, AssignedAt = DateTime.UtcNow });
+                await dbContext.SaveChangesAsync();
+            }
+            if (userOutPermId.HasValue && !await dbContext.RolePermissions.AnyAsync(rp => rp.RoleId == teacherRoleId && rp.PermissionId == userOutPermId.Value))
+            {
+                dbContext.RolePermissions.Add(new LimsAuth.Api.Models.RolePermission { RoleId = teacherRoleId, PermissionId = userOutPermId.Value, AssignedAt = DateTime.UtcNow });
+                await dbContext.SaveChangesAsync();
+            }
+            logger.LogInformation("耗材权限初始化完成");
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "耗材权限初始化失败");
+        }
     }
     catch (Exception ex)
     {

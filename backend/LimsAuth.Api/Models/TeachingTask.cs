@@ -34,6 +34,9 @@ public class TeachingTask
     [Column("class_id")]
     public Guid ClassId { get; set; }
 
+    [Column("major_id")]
+    public Guid MajorId { get; set; }
+
     /// <summary>
     /// 任务类型(主讲/辅导/实验)
     /// </summary>
@@ -55,6 +58,7 @@ public class TeachingTask
     public virtual Semester Semester { get; set; } = null!;
     public virtual Course Course { get; set; } = null!;
     public virtual Class Class { get; set; } = null!;
+    public virtual Major Major { get; set; } = null!;
     public virtual ICollection<TeachingTaskTeacher> Teachers { get; set; } = new List<TeachingTaskTeacher>();
 }
 

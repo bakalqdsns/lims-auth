@@ -224,7 +224,7 @@ public class Equipment
     /// </summary>
     [Column("status")]
     [MaxLength(20)]
-    public string Status { get; set; } = "正常"; // 正常, 维修中, 报废, 借用中
+    public string Status { get; set; } = "在库-可用";
 
     /// <summary>
     /// 购买日期
