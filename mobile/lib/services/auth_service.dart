@@ -1,81 +1,136 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
+import 'package:get/get.dart' hide Response;
 import 'package:shared_preferences/shared_preferences.dart';
-import '../config/api_config.dart';
+import '../models/models.dart';
+import 'api_service.dart';
 
+/// 认证服务
 class AuthService {
-  static String get _baseUrl => ApiConfig.effectiveBaseUrl;
-  static String? _token;
+  ApiService get _api => ApiService.to;
 
-  static String? get token => _token;
-
-  static Future<Map<String, dynamic>> login(String username, String password) async {
+  /// 登录
+  Future<User?> login(String username, String password) async {
     try {
-      final url = Uri.parse('$_baseUrl/auth/login');
-      print('正在连接: $url');
-      
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'username': username,
-          'password': password,
-        }),
-      ).timeout(
-        const Duration(seconds: 10),
-        onTimeout: () {
-          throw Exception('连接超时，请检查服务器地址和网络');
-        },
-      );
+      final resp = await _api.post('/auth/login', data: {
+        'username': username,
+        'password': password,
+      });
 
-      final data = jsonDecode(response.body);
-
+      final data = resp.data;
       if (data['code'] == 200 && data['data'] != null) {
-        _token = data['data']['token'];
+        final token = data['data']['token']?.toString() ?? '';
+        final userData = data['data']['user'];
+
+        // 持久化存储
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('token', _token!);
-        await prefs.setString('user', jsonEncode(data['data']['user']));
-        return {'success': true, 'data': data['data']};
+        await prefs.setString('token', token);
+        await prefs.setString('user', jsonEncode(userData));
+
+        return User.fromJson(userData as Map<String, dynamic>);
       } else {
-        return {'success': false, 'message': data['message'] ?? '登录失败'};
+        throw ApiException(
+          code: data['code'] ?? -1,
+          message: data['message'] ?? '登录失败',
+        );
       }
-    } on FormatException catch (e) {
-      return {
-        'success': false, 
-        'message': '服务器响应格式错误，请检查服务器地址是否正确'
-      };
-    } on http.ClientException catch (_) {
-      return {
-        'success': false, 
-        'message': '无法连接到服务器 ($_baseUrl)\n请检查：\n1. 服务器是否运行\n2. 服务器地址是否正确\n3. 手机和服务器是否在同一网络'
-      };
-    } catch (e) {
-      return {
-        'success': false, 
-        'message': '网络错误: ${e.toString()}'
-      };
+    } on DioException catch (e) {
+      throw ApiException.fromDio(e);
     }
   }
 
-  static Future<Map<String, dynamic>?> getCurrentUser() async {
+  /// 获取当前用户（从服务器）
+  Future<User?> getCurrentUser() async {
+    try {
+      final resp = await _api.get('/auth/me');
+      final data = resp.data;
+      if (data['code'] == 200 && data['data'] != null) {
+        final user = User.fromJson(data['data'] as Map<String, dynamic>);
+        // 缓存到本地
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('user', jsonEncode(data['data']));
+        return user;
+      }
+      return null;
+    } on DioException catch (e) {
+      throw ApiException.fromDio(e);
+    }
+  }
+
+  /// 从本地缓存获取用户
+  Future<User?> getCachedUser() async {
     final prefs = await SharedPreferences.getInstance();
     final userStr = prefs.getString('user');
     if (userStr != null) {
-      return jsonDecode(userStr);
+      try {
+        return User.fromJson(jsonDecode(userStr) as Map<String, dynamic>);
+      } catch (_) {
+        return null;
+      }
     }
     return null;
   }
 
-  static Future<bool> isLoggedIn() async {
+  /// 检查是否已登录
+  Future<bool> isLoggedIn() async {
     final prefs = await SharedPreferences.getInstance();
-    _token = prefs.getString('token');
-    return _token != null;
+    return prefs.getString('token') != null;
   }
 
-  static Future<void> logout() async {
-    _token = null;
+  /// 获取 Token
+  Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('token');
+  }
+
+  /// 退出登录
+  Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
     await prefs.remove('user');
+  }
+
+  /// 更新个人资料
+  Future<bool> updateProfile(UpdateProfileRequest req) async {
+    try {
+      final resp = await _api.put('/auth/profile', data: req.toJson());
+      final data = resp.data;
+      if (data['code'] == 200) {
+        // 更新本地缓存
+        if (data['data'] != null) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('user', jsonEncode(data['data']));
+        }
+        return true;
+      } else {
+        throw ApiException(
+          code: data['code'] ?? -1,
+          message: data['message'] ?? '更新失败',
+        );
+      }
+    } on DioException catch (e) {
+      throw ApiException.fromDio(e);
+    }
+  }
+
+  /// 修改密码
+  Future<bool> changePassword(String oldPassword, String newPassword) async {
+    try {
+      final resp = await _api.post('/users/change-password', data: {
+        'oldPassword': oldPassword,
+        'newPassword': newPassword,
+      });
+      final data = resp.data;
+      if (data['code'] == 200) {
+        return true;
+      } else {
+        throw ApiException(
+          code: data['code'] ?? -1,
+          message: data['message'] ?? '修改密码失败',
+        );
+      }
+    } on DioException catch (e) {
+      throw ApiException.fromDio(e);
+    }
   }
 }

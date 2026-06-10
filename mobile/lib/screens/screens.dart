@@ -1,0 +1,21 @@
+// Screens barrel file
+export 'login_screen.dart';
+export 'home_screen.dart';
+export 'dashboard_screen.dart';
+export 'users_screen.dart';
+export 'profile_screen.dart';
+export 'roles_screen.dart';
+export 'departments_screen.dart';
+export 'semesters_screen.dart';
+export 'courses_screen.dart';
+export 'majors_screen.dart';
+export 'classes_screen.dart';
+export 'teaching_tasks_screen.dart';
+export 'labs_screen.dart';
+export 'equipments_screen.dart';
+export 'borrow_records_screen.dart';
+export 'schedules_screen.dart';
+export 'reservations_screen.dart';
+export 'teaching_applications_screen.dart';
+export 'usage_registrations_screen.dart';
+export 'statistics_screen.dart';
