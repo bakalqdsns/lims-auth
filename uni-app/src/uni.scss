@@ -1,0 +1,52 @@
+/* LimsAuth UniApp 实验室管理系统 - 全局 SCSS 主题变量 */
+
+/* LimsAuth 主题色 - 与 Flutter AppTheme 保持一致 */
+$lims-primary: #667eea;
+$lims-primary-dark: #764ba2;
+$lims-primary-light: #8490ff;
+
+/* 成功/警告/错误 */
+$lims-success: #4cd964;
+$lims-warning: #f0ad4e;
+$lims-error: #dd524d;
+$lims-info: #909399;
+
+/* 背景色 */
+$lims-bg-page: #f5f7fa;
+$lims-bg-card: #ffffff;
+$lims-bg-hover: #f1f1f1;
+
+/* 文字颜色 */
+$lims-text-primary: #303133;
+$lims-text-regular: #606266;
+$lims-text-secondary: #909399;
+$lims-text-placeholder: #c0c4cc;
+
+/* 边框 */
+$lims-border: #dcdfe6;
+$lims-border-light: #e4e7ed;
+$lims-border-lighter: #ebeef5;
+
+/* 间距 */
+$lims-spacing-xs: 8rpx;
+$lims-spacing-sm: 16rpx;
+$lims-spacing-base: 24rpx;
+$lims-spacing-lg: 32rpx;
+$lims-spacing-xl: 48rpx;
+
+/* 圆角 */
+$lims-radius-sm: 8rpx;
+$lims-radius-base: 16rpx;
+$lims-radius-lg: 24rpx;
+
+/* 阴影 */
+$lims-shadow-sm: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+$lims-shadow-base: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
+$lims-shadow-lg: 0 8rpx 32rpx rgba(0, 0, 0, 0.12);
+
+/* 状态色值 */
+$lims-status-pending: #e6a23c;
+$lims-status-approved: #67c23a;
+$lims-status-rejected: #f56c6c;
+$lims-status-processing: #409eff;
+$lims-status-completed: #909399;

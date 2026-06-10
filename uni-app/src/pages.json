@@ -1,0 +1,177 @@
+{
+  "pages": [
+    {
+      "path": "pages/login/index",
+      "style": {
+        "navigationBarTitleText": "登录",
+        "navigationStyle": "custom",
+        "disableScroll": true
+      }
+    },
+    {
+      "path": "pages/home/index",
+      "style": {
+        "navigationBarTitleText": "首页",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/dashboard/index",
+      "style": {
+        "navigationBarTitleText": "数据看板",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/labs/index",
+      "style": {
+        "navigationBarTitleText": "实验室列表",
+        "navigationBarBackgroundColor": "#667eea"
+      }
+    },
+    {
+      "path": "pages/lab-detail/index",
+      "style": {
+        "navigationBarTitleText": "实验室详情",
+        "navigationBarBackgroundColor": "#667eea"
+      }
+    },
+    {
+      "path": "pages/reservations/index",
+      "style": {
+        "navigationBarTitleText": "我的预约",
+        "navigationBarBackgroundColor": "#667eea"
+      }
+    },
+    {
+      "path": "pages/equipment/index",
+      "style": {
+        "navigationBarTitleText": "设备列表",
+        "navigationBarBackgroundColor": "#667eea"
+      }
+    },
+    {
+      "path": "pages/borrow/index",
+      "style": {
+        "navigationBarTitleText": "借用记录",
+        "navigationBarBackgroundColor": "#667eea"
+      }
+    },
+    {
+      "path": "pages/borrow-detail/index",
+      "style": {
+        "navigationBarTitleText": "借用详情",
+        "navigationBarBackgroundColor": "#667eea"
+      }
+    },
+    {
+      "path": "pages/courses/index",
+      "style": {
+        "navigationBarTitleText": "课程中心",
+        "navigationBarBackgroundColor": "#667eea"
+      }
+    },
+    {
+      "path": "pages/schedules/index",
+      "style": {
+        "navigationBarTitleText": "我的课表",
+        "navigationBarBackgroundColor": "#667eea"
+      }
+    },
+    {
+      "path": "pages/profile/index",
+      "style": {
+        "navigationBarTitleText": "个人中心",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/admin/users/index",
+      "style": {
+        "navigationBarTitleText": "用户管理",
+        "navigationBarBackgroundColor": "#667eea"
+      }
+    },
+    {
+      "path": "pages/admin/roles/index",
+      "style": {
+        "navigationBarTitleText": "角色管理",
+        "navigationBarBackgroundColor": "#667eea"
+      }
+    },
+    {
+      "path": "pages/admin/departments/index",
+      "style": {
+        "navigationBarTitleText": "部门管理",
+        "navigationBarBackgroundColor": "#667eea"
+      }
+    },
+    {
+      "path": "pages/admin/semesters/index",
+      "style": {
+        "navigationBarTitleText": "学期管理",
+        "navigationBarBackgroundColor": "#667eea"
+      }
+    },
+    {
+      "path": "pages/admin/equipment/index",
+      "style": {
+        "navigationBarTitleText": "设备管理",
+        "navigationBarBackgroundColor": "#667eea"
+      }
+    },
+    {
+      "path": "pages/admin/teaching-apps/index",
+      "style": {
+        "navigationBarTitleText": "审批中心",
+        "navigationBarBackgroundColor": "#667eea"
+      }
+    },
+    {
+      "path": "pages/admin/statistics/index",
+      "style": {
+        "navigationBarTitleText": "数据统计",
+        "navigationBarBackgroundColor": "#667eea"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "white",
+    "navigationBarTitleText": "实验室管理系统",
+    "navigationBarBackgroundColor": "#667eea",
+    "backgroundColor": "#f5f7fa"
+  },
+  "tabBar": {
+    "color": "#909399",
+    "selectedColor": "#667eea",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/home/index",
+        "text": "首页",
+        "iconPath": "static/tab-home.png",
+        "selectedIconPath": "static/tab-home-active.png"
+      },
+      {
+        "pagePath": "pages/labs/index",
+        "text": "实验室",
+        "iconPath": "static/tab-lab.png",
+        "selectedIconPath": "static/tab-lab-active.png"
+      },
+      {
+        "pagePath": "pages/reservations/index",
+        "text": "预约",
+        "iconPath": "static/tab-reserve.png",
+        "selectedIconPath": "static/tab-reserve-active.png"
+      },
+      {
+        "pagePath": "pages/profile/index",
+        "text": "我的",
+        "iconPath": "static/tab-my.png",
+        "selectedIconPath": "static/tab-my-active.png"
+      }
+    ]
+  },
+  "uniIdRouter": {}
+}
