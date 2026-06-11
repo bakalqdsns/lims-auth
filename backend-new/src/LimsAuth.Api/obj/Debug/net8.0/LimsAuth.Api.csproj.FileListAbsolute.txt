@@ -1,0 +1,9 @@
+E:\lims-auth\backend-new\src\LimsAuth.Api\obj\Debug\net8.0\LimsAuth.Api.csproj.AssemblyReference.cache
+E:\lims-auth\backend-new\src\LimsAuth.Api\obj\Debug\net8.0\rpswa.dswa.cache.json
+E:\lims-auth\backend-new\src\LimsAuth.Api\obj\Debug\net8.0\LimsAuth.Api.GeneratedMSBuildEditorConfig.editorconfig
+E:\lims-auth\backend-new\src\LimsAuth.Api\obj\Debug\net8.0\LimsAuth.Api.AssemblyInfoInputs.cache
+E:\lims-auth\backend-new\src\LimsAuth.Api\obj\Debug\net8.0\LimsAuth.Api.AssemblyInfo.cs
+E:\lims-auth\backend-new\src\LimsAuth.Api\obj\Debug\net8.0\LimsAuth.Api.csproj.CoreCompileInputs.cache
+E:\lims-auth\backend-new\src\LimsAuth.Api\obj\Debug\net8.0\LimsAuth.Api.MvcApplicationPartsAssemblyInfo.cs
+E:\lims-auth\backend-new\src\LimsAuth.Api\obj\Debug\net8.0\LimsAuth.Api.MvcApplicationPartsAssemblyInfo.cache
+E:\lims-auth\backend-new\src\LimsAuth.Api\obj\Debug\net8.0\LimsAuth.Api.sourcelink.json
