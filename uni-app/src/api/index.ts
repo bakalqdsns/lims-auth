@@ -1,0 +1,21 @@
+/**
+ * API 统一导出
+ */
+export * from './auth'
+export * from './user'
+export * from './role'
+export * from './semester'
+export * from './course'
+export * from './major'
+export * from './class'
+export * from './teaching-task'
+export * from './teaching-app'
+export * from './lab'
+export * from './equipment'
+export * from './borrow-record'
+export * from './reservation'
+export * from './schedule'
+export * from './usage-reg'
+export * from './statistics'
+export * from './campus'
+export * from './export'

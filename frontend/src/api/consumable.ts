@@ -130,6 +130,7 @@ export interface UpdateConsumableRequest {
   categoryId?: string
   specification?: string
   unit?: string
+  currentStock?: number
   minStock?: number
   location?: string
   supplier?: string

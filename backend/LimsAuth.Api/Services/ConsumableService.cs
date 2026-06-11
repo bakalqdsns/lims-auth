@@ -429,6 +429,7 @@ public class ConsumableService : IConsumableService
         if (request.Specification != null) consumable.Specification = request.Specification;
         if (request.Unit != null) consumable.Unit = request.Unit;
         if (request.MinStock.HasValue) consumable.MinStock = request.MinStock.Value;
+        if (request.CurrentStock.HasValue) consumable.CurrentStock = request.CurrentStock.Value;
         if (request.Location != null) consumable.Location = request.Location;
         if (request.Supplier != null) consumable.Supplier = request.Supplier;
         if (request.UnitPrice.HasValue) consumable.UnitPrice = request.UnitPrice.Value;

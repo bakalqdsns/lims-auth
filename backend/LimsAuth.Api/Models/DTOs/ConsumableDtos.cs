@@ -109,6 +109,8 @@ public class UpdateConsumableRequest
 
     public decimal? MinStock { get; set; }
 
+    public decimal? CurrentStock { get; set; }
+
     [MaxLength(200)]
     public string? Location { get; set; }
 

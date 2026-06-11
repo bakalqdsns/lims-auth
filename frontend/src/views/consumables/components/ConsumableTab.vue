@@ -406,6 +406,7 @@ const handleSave = async () => {
         categoryId: form.categoryId || undefined,
         specification: form.specification || undefined,
         unit: form.unit,
+        currentStock: form.currentStock,
         minStock: form.minStock,
         location: form.location || undefined,
         supplier: form.supplier || undefined,
