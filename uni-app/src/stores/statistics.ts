@@ -28,7 +28,8 @@ export const useStatisticsStore = defineStore(
 
     async function loadLabUsage() {
       try {
-        labUsage.value = await getLabUsageStats()
+        const resp = await getLabUsageStats()
+        labUsage.value = resp?.items ?? []
       } catch {
         // ignore
       }
@@ -36,7 +37,8 @@ export const useStatisticsStore = defineStore(
 
     async function loadReservationTrend(startDate?: string, endDate?: string) {
       try {
-        reservationTrend.value = await getReservationStats(startDate, endDate)
+        const resp = await getReservationStats({ startDate, endDate })
+        reservationTrend.value = resp?.items ?? []
       } catch {
         // ignore
       }
@@ -44,7 +46,8 @@ export const useStatisticsStore = defineStore(
 
     async function loadWeeklySummary() {
       try {
-        weeklySummary.value = await getWeeklySummary()
+        const resp = await getWeeklySummary()
+        weeklySummary.value = resp?.items ?? []
       } catch {
         // ignore
       }

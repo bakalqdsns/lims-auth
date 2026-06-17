@@ -4,7 +4,7 @@
  */
 
 export interface UserInfo {
-  id: number
+  id: string
   username: string
   fullName: string
   email?: string
@@ -12,7 +12,7 @@ export interface UserInfo {
   employeeId?: string
   studentId?: string
   avatar?: string
-  departmentId?: number
+  departmentId?: string
   departmentName?: string
   roles: string[]
   permissions: string[]
@@ -30,10 +30,11 @@ export interface LoginRequest {
 }
 
 /**
- * 登录响应
+ * 登录响应 (后端 LoginData)
  */
 export interface LoginResponse {
   token: string
+  expiresAt?: string
   user: UserInfo
 }
 
@@ -44,6 +45,7 @@ export interface UpdateProfileRequest {
   fullName?: string
   email?: string
   phone?: string
+  avatar?: string
 }
 
 /**
@@ -51,6 +53,13 @@ export interface UpdateProfileRequest {
  */
 export interface ChangePasswordRequest {
   oldPassword: string
+  newPassword: string
+}
+
+/**
+ * 重置密码请求 (管理员操作)
+ */
+export interface ResetPasswordRequest {
   newPassword: string
 }
 
@@ -65,8 +74,50 @@ export interface CreateUserRequest {
   phone?: string
   employeeId?: string
   studentId?: string
-  departmentId?: number
-  roleIds?: number[]
+  departmentId?: string
+  roleIds?: string[]
+  status?: number
+}
+
+/**
+ * 更新用户请求
+ */
+export interface UpdateUserRequest {
+  fullName?: string
+  email?: string
+  phone?: string
+  employeeId?: string
+  studentId?: string
+  departmentId?: string
+  status?: number
+}
+
+/**
+ * 用户列表项 (UserListItemDto)
+ */
+export interface UserListItem {
+  id: string
+  username: string
+  fullName: string
+  email?: string
+  phone?: string
+  employeeId?: string
+  studentId?: string
+  departmentId?: string
+  departmentName?: string
+  roles: { id: string; name: string; code: string }[]
+  status: number
+  lastLoginAt?: string
+  createdAt: string
+}
+
+/**
+ * 用户详情 (UserDetailDto)
+ */
+export interface UserDetail extends UserListItem {
+  permissions: string[]
+  classIds?: string[]
+  majorId?: string
 }
 
 /**
@@ -77,7 +128,7 @@ export interface UserQuery {
   pageSize?: number
   search?: string
   keyword?: string
-  roleId?: number
-  departmentId?: number
+  roleId?: string
+  departmentId?: string
   status?: number
 }

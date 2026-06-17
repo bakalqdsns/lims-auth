@@ -223,6 +223,42 @@ public class BorrowRecordsController : ControllerBase
         return Ok(new { code = 200, data = list });
     }
 
+    /// <summary>获取借还记录的流程步骤</summary>
+    [HttpGet("{id}/flow")]
+    public async Task<IActionResult> GetRecordFlow(Guid id)
+    {
+        var record = await _borrowService.GetByIdAsync(id);
+        if (record == null)
+            return NotFound(new { code = 404, message = "记录不存在" });
+
+        var steps = new List<object>();
+
+        steps.Add(new { step = 1, action = "提交申请", operatorId = record.ApplicantId.ToString(), operatorName = record.Applicant?.FullName ?? "未知", operatedAt = record.CreatedAt.ToString("o"), remark = record.Remarks });
+
+        if (!string.IsNullOrEmpty(record.SupervisorApprovalStatus))
+        {
+            var supervisorName = record.Approver?.FullName ?? record.ApproverId?.ToString() ?? "未知";
+            steps.Add(new { step = 2, action = record.SupervisorApprovalStatus == "Approved" ? "导师审批通过" : "导师审批拒绝", operatorId = record.ApproverId?.ToString() ?? "", operatorName = supervisorName, operatedAt = record.SupervisorApprovalDate?.ToString("o") ?? "", remark = record.SupervisorApprovalRemark });
+        }
+
+        if (!string.IsNullOrEmpty(record.AdminApprovalStatus))
+        {
+            steps.Add(new { step = 3, action = record.AdminApprovalStatus == "Approved" ? "管理员审批通过" : "管理员审批拒绝", operatorId = record.ApproverId?.ToString() ?? "", operatorName = "", operatedAt = record.AdminApprovalDate?.ToString("o") ?? "", remark = record.AdminApprovalRemark });
+        }
+
+        if (record.ActualBorrowDate.HasValue)
+        {
+            steps.Add(new { step = 4, action = "确认借出", operatorId = record.RecipientId?.ToString() ?? "", operatorName = record.RecipientName ?? "", operatedAt = record.ActualBorrowDate?.ToString("o") ?? "" });
+        }
+
+        if (record.ActualReturnDate.HasValue)
+        {
+            steps.Add(new { step = 5, action = "确认归还", operatorId = record.ReturnCheckerId?.ToString() ?? "", operatorName = "", operatedAt = record.ActualReturnDate?.ToString("o") ?? "", remark = record.ReturnRemarks });
+        }
+
+        return Ok(new { code = 200, data = new { steps } });
+    }
+
     /// <summary>删除借还记录（仅已归还）</summary>
     [HttpDelete("{id}")]
     [Authorize(Policy = "Permission:equipment:delete")]

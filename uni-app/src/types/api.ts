@@ -48,17 +48,36 @@ export interface UploadResponse {
  * 通用 ID Name 项 (下拉选项)
  */
 export interface IdNameItem {
-  id: number
+  id: number | string
   name: string
 }
 
 /**
  * 通用树形节点
  */
-export interface TreeNode {
-  id: number
+export interface TreeNode<T = unknown> {
+  id: string
   name: string
-  parentId: number | null
-  children?: TreeNode[]
+  parentId: string | null
+  children?: TreeNode<T>[]
   [key: string]: unknown
+}
+
+/** 通用开关请求 */
+export interface ToggleStatusRequest {
+  isActive: boolean
+}
+
+/** 通用审批请求 */
+export interface ApprovalRequest {
+  approved: boolean
+  comment?: string
+}
+
+/** 通用导入结果 */
+export interface ImportResult {
+  success: number
+  failed: number
+  total: number
+  errors: string[]
 }

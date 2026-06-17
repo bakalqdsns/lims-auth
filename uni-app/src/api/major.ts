@@ -1,34 +1,49 @@
 /**
  * 专业管理 API
+ * 对应后端 MajorsController
+ *  GET    /api/v1/majors
+ *  GET    /api/v1/majors/all
+ *  GET    /api/v1/majors/{id}
+ *  POST   /api/v1/majors
+ *  PUT    /api/v1/majors/{id}
+ *  DELETE /api/v1/majors/{id}
+ *  PATCH  /api/v1/majors/{id}/status
  */
 import { get, post, put, del, patch } from '@/utils/request'
-import type { ApiResponse, PagedResponse } from '@/types/api'
-import type { Major } from '@/types/teaching'
+import type { ApiResponse } from '@/types/api'
+import type { Major, MajorQuery, CreateMajorRequest, UpdateMajorRequest } from '@/types/teaching'
 
-export function getMajors(query?: { page?: number; pageSize?: number; search?: string }) {
-  return get<PagedResponse<Major>>('/majors', query as Record<string, string | number>)
+/** 专业列表 */
+export function getMajors(query?: MajorQuery) {
+  return get<ApiResponse<Major[]>>('/majors', query as Record<string, string>)
 }
 
+/** 所有专业 (下拉) */
 export function getAllMajors() {
-  return get<Major[]>('/majors/all')
+  return get<ApiResponse<Major[]>>('/majors/all')
 }
 
-export function getMajorById(id: number) {
-  return get<Major>(`/majors/${id}`)
+/** 专业详情 */
+export function getMajorById(id: string) {
+  return get<ApiResponse<Major>>(`/majors/${id}`)
 }
 
-export function createMajor(data: Partial<Major>) {
+/** 创建专业 */
+export function createMajor(data: CreateMajorRequest) {
   return post<ApiResponse>('/majors', data)
 }
 
-export function updateMajor(id: number, data: Partial<Major>) {
+/** 更新专业 */
+export function updateMajor(id: string, data: UpdateMajorRequest) {
   return put<ApiResponse>(`/majors/${id}`, data)
 }
 
-export function deleteMajor(id: number) {
+/** 删除专业 */
+export function deleteMajor(id: string) {
   return del<ApiResponse>(`/majors/${id}`)
 }
 
-export function updateMajorStatus(id: number, status: number) {
-  return patch<ApiResponse>(`/majors/${id}/status`, { status })
+/** 启用/禁用专业 */
+export function toggleMajorStatus(id: string, isActive: boolean) {
+  return patch<ApiResponse>(`/majors/${id}/status`, { isActive })
 }

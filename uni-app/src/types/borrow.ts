@@ -15,12 +15,12 @@ export type BorrowStatus =
   | 'overdue'   // 已逾期
 
 export interface BorrowRecord {
-  id: number
+  id: string
   recordNo: string
-  equipmentId: number
+  equipmentId: string
   equipmentName: string
   equipmentCode: string
-  userId: number
+  userId: string
   userName: string
   userPhone?: string
   borrowDate: string
@@ -29,7 +29,7 @@ export interface BorrowRecord {
   status: BorrowStatus
   purpose?: string
   remark?: string
-  approverId?: number
+  approverId?: string
   approverName?: string
   approvedAt?: string
   flowSteps?: BorrowFlowStep[]
@@ -39,7 +39,7 @@ export interface BorrowRecord {
 export interface BorrowFlowStep {
   step: number
   action: string
-  operatorId: number
+  operatorId: string
   operatorName: string
   operatedAt: string
   remark?: string
@@ -49,15 +49,17 @@ export interface BorrowQuery {
   page?: number
   pageSize?: number
   status?: BorrowStatus
-  equipmentId?: number
-  userId?: number
+  equipmentId?: string
+  userId?: string
   keyword?: string
   startDate?: string
   endDate?: string
 }
 
 export interface CreateBorrowRequest {
-  equipmentId: number
+  equipmentId: string
+  equipmentName?: string
+  quantity?: number
   borrowDate: string
   expectedReturnDate: string
   purpose?: string

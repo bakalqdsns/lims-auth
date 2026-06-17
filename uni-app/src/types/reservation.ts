@@ -13,12 +13,12 @@ export type ReservationStatus =
   | 'no_show'   // 未签到
 
 export interface Reservation {
-  id: number
+  id: string
   reservationNo: string
-  labId: number
+  labId: string
   labName: string
   labCode: string
-  userId: number
+  userId: string
   userName: string
   userPhone?: string
   date: string
@@ -28,7 +28,7 @@ export interface Reservation {
   purpose?: string
   attendeeCount?: number
   status: ReservationStatus
-  approverId?: number
+  approverId?: string
   approverName?: string
   approvedAt?: string
   checkedInAt?: string
@@ -41,8 +41,8 @@ export interface ReservationQuery {
   page?: number
   pageSize?: number
   status?: ReservationStatus
-  labId?: number
-  userId?: number
+  labId?: string
+  userId?: string
   keyword?: string
   date?: string
   startDate?: string
@@ -50,14 +50,27 @@ export interface ReservationQuery {
 }
 
 export interface CreateReservationRequest {
-  labId: number
+  labId: string
+  semesterId?: string
   date: string
-  timeSlot: string
-  periodStart?: string
-  periodEnd?: string
+  weekNumber?: number
+  dayOfWeek?: number
+  startPeriod?: number
+  endPeriod?: number
+  timeSlot?: string
   purpose?: string
   attendeeCount?: number
   remark?: string
+}
+
+export interface ApprovalRequest {
+  approved: boolean
+  comment?: string
+  remark?: string
+}
+
+export interface CancelRequest {
+  reason: string
 }
 
 export interface TimeSlot {

@@ -1,43 +1,69 @@
 /**
  * 授课申请 API
+ * 对应后端 TeachingApplicationsController
+ *  GET  /api/v1/teaching-applications
+ *  GET  /api/v1/teaching-applications/{id}
+ *  POST /api/v1/teaching-applications
+ *  PUT  /api/v1/teaching-applications/{id}/approve
+ *  PUT  /api/v1/teaching-applications/{id}/reject
+ *  PUT  /api/v1/teaching-applications/{id}/cancel
+ *  GET  /api/v1/teaching-applications/pending
+ *  GET  /api/v1/teaching-applications/my
  */
 import { get, post, put } from '@/utils/request'
-import type { ApiResponse, PagedResponse } from '@/types/api'
-import type { TeachingApplication } from '@/types/teaching'
+import type { ApiResponse } from '@/types/api'
+import type {
+  TeachingApplication,
+  TeachingApplicationQuery,
+  CreateTeachingApplicationRequest,
+  ApprovalRequest,
+} from '@/types/teaching'
 
-export function getTeachingApplications(query?: {
-  page?: number
-  pageSize?: number
-  status?: number
-  semesterId?: number
-}) {
-  return get<PagedResponse<TeachingApplication>>('/teaching-applications', query as Record<string, string | number>)
+/** 申请分页列表 */
+export function getTeachingApplications(query?: TeachingApplicationQuery) {
+  return get<ApiResponse<TeachingApplication[]>>(
+    '/teaching-applications',
+    query as Record<string, string>
+  )
 }
 
-export function getMyTeachingApplications() {
-  return get<PagedResponse<TeachingApplication>>('/teaching-applications/my')
+/** 我的申请 */
+export function getMyTeachingApplications(semesterId?: string) {
+  return get<ApiResponse<TeachingApplication[]>>(
+    '/teaching-applications/my',
+    semesterId ? { semesterId } : {}
+  )
 }
 
-export function getPendingTeachingApplications() {
-  return get<PagedResponse<TeachingApplication>>('/teaching-applications/pending')
+/** 待审批申请 */
+export function getPendingTeachingApplications(semesterId?: string) {
+  return get<ApiResponse<TeachingApplication[]>>(
+    '/teaching-applications/pending',
+    semesterId ? { semesterId } : {}
+  )
 }
 
-export function getTeachingApplicationById(id: number) {
-  return get<TeachingApplication>(`/teaching-applications/${id}`)
+/** 申请详情 */
+export function getTeachingApplicationById(id: string) {
+  return get<ApiResponse<TeachingApplication>>(`/teaching-applications/${id}`)
 }
 
-export function createTeachingApplication(data: Partial<TeachingApplication>) {
+/** 提交申请 */
+export function createTeachingApplication(data: CreateTeachingApplicationRequest) {
   return post<ApiResponse>('/teaching-applications', data)
 }
 
-export function approveTeachingApplication(id: number, remark?: string) {
-  return put<ApiResponse>(`/teaching-applications/${id}/approve`, { remark })
+/** 审批通过 */
+export function approveTeachingApplication(id: string, request: ApprovalRequest = { approved: true }) {
+  return put<ApiResponse>(`/teaching-applications/${id}/approve`, request)
 }
 
-export function rejectTeachingApplication(id: number, remark?: string) {
-  return put<ApiResponse>(`/teaching-applications/${id}/reject`, { remark })
+/** 审批驳回 */
+export function rejectTeachingApplication(id: string, request: ApprovalRequest) {
+  return put<ApiResponse>(`/teaching-applications/${id}/reject`, request)
 }
 
-export function cancelTeachingApplication(id: number) {
+/** 取消申请 */
+export function cancelTeachingApplication(id: string) {
   return put<ApiResponse>(`/teaching-applications/${id}/cancel`, {})
 }

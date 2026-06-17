@@ -82,13 +82,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-import { getBorrowRecordById, getBorrowRecordFlow, submitReturn as submitReturnApi, renewBorrow, adminApprove, approveReturn } from '@/api/borrow-record'
+import { getBorrowRecordById, getBorrowRecordFlow, submitReturn as submitReturnApi, renewBorrow, adminApprove } from '@/api/borrow-record'
 import type { BorrowRecord, BorrowStatus } from '@/types/borrow'
 
 interface BorrowFlowStepData {
   step: number
   action: string
-  operatorId: number
+  operatorId: string
   operatorName: string
   operatedAt: string
   remark?: string
@@ -133,7 +133,7 @@ async function approveRecord() {
   if (!record.value) return
   try {
     uni.showLoading({ title: '审批中...' })
-    await adminApprove(record.value.id)
+    await adminApprove(record.value.id, true)
     uni.hideLoading()
     uni.showToast({ title: '已通过', icon: 'success' })
     await loadDetail()
@@ -144,10 +144,17 @@ async function rejectRecord() {
   if (!record.value) return
   uni.showModal({
     title: '拒绝申请',
-    content: '确定要拒绝该借用申请吗？',
+    editable: true,
+    placeholderText: '请输入拒绝原因（可选）',
     success: async (res) => {
-      if (res.confirm) {
-        uni.showToast({ title: '已拒绝', icon: 'none' })
+      if (res.confirm && record.value) {
+        try {
+          uni.showLoading({ title: '提交中...' })
+          await adminApprove(record.value.id, false, res.content || undefined)
+          uni.hideLoading()
+          uni.showToast({ title: '已拒绝', icon: 'none' })
+          await loadDetail()
+        } catch { uni.hideLoading() }
       }
     },
   })
@@ -168,7 +175,7 @@ async function confirmRenew() {
 async function loadDetail() {
   const pages = getCurrentPages()
   const currentPage = pages[pages.length - 1] as { options?: { id?: string } }
-  const id = Number(currentPage.options?.id || 1)
+  const id = currentPage.options?.id || '1'
 
   try {
     record.value = await getBorrowRecordById(id)

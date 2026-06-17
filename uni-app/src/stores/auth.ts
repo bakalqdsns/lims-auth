@@ -6,8 +6,8 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { storage } from '@/utils/storage'
-import { login as loginApi, getCurrentUser as getMeApi, updateProfile as updateProfileApi, changePassword as changePwdApi } from '@/api/auth'
-import { getMyPermissions } from '@/api/user'
+import { login as loginApi, getCurrentUser as getMeApi, updateProfile as updateProfileApi } from '@/api/auth'
+import { getMyPermissions, changePassword as changePwdApi } from '@/api/user'
 import type { UserInfo, LoginRequest, UpdateProfileRequest } from '@/types/user'
 
 export const useAuthStore = defineStore(
@@ -108,7 +108,7 @@ export const useAuthStore = defineStore(
     async function changePassword(oldPassword: string, newPassword: string) {
       isLoading.value = true
       try {
-        await changePwdApi({ oldPassword, newPassword })
+        await changePwdApi(oldPassword, newPassword)
         return true
       } catch (e: unknown) {
         const err = e as { message?: string }

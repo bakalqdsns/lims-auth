@@ -56,8 +56,8 @@ async function loadData() {
   page.value = 1
   try {
     const resp = await getCourses({ page: 1, pageSize, search: keyword.value || undefined })
-    courses.value = resp.items
-    total.value = resp.total
+    courses.value = resp?.items ?? []
+    total.value = resp?.total ?? 0
   } catch { /* ignore */ } finally { isLoading.value = false }
 }
 
@@ -66,7 +66,7 @@ async function loadMore() {
   page.value++
   try {
     const resp = await getCourses({ page: page.value, pageSize, search: keyword.value || undefined })
-    courses.value.push(...resp.items)
+    courses.value.push(...(resp?.items ?? []))
   } catch { /* ignore */ }
 }
 

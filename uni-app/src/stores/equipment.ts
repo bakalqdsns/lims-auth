@@ -35,7 +35,7 @@ export const useEquipmentStore = defineStore(
       }
     }
 
-    async function loadEquipmentById(id: number) {
+    async function loadEquipmentById(id: string) {
       try {
         currentEquipment.value = await getEquipmentById(id)
       } catch {

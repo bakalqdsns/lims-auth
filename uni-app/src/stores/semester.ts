@@ -33,7 +33,7 @@ export const useSemesterStore = defineStore(
       }
     }
 
-    async function loadCalendar(semesterId: number) {
+    async function loadCalendar(semesterId: string) {
       try {
         calendarItems.value = await getSemesterCalendar(semesterId)
       } catch {
@@ -41,7 +41,7 @@ export const useSemesterStore = defineStore(
       }
     }
 
-    async function loadWeekInfo(semesterId: number) {
+    async function loadWeekInfo(semesterId: string) {
       try {
         const info = await getWeekInfo(semesterId)
         currentWeek.value = info.currentWeek

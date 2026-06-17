@@ -1,59 +1,43 @@
 /**
  * 校区管理 API
+ * 对应后端 CampusesController
+ *  GET    /api/v1/campuses
+ *  GET    /api/v1/campuses/{id}
+ *  POST   /api/v1/campuses
+ *  PUT    /api/v1/campuses/{id}
+ *  DELETE /api/v1/campuses/{id}
+ *  PATCH  /api/v1/campuses/{id}/status
  */
 import { get, post, put, del, patch } from '@/utils/request'
-import type { ApiResponse, PagedResponse } from '@/types/api'
-import type { Campus, Building } from '@/types/campus'
+import type { ApiResponse } from '@/types/api'
+import type { Campus, CreateCampusRequest, UpdateCampusRequest } from '@/types/campus'
 
-export function getCampuses() {
-  return get<Campus[]>('/campuses')
+/** 校区列表 (按关键字过滤) */
+export function getCampuses(keyword?: string) {
+  return get<ApiResponse<Campus[]>>('/campuses', keyword ? { keyword } : {})
 }
 
+/** 校区详情 */
 export function getCampusById(id: string) {
-  return get<Campus>(`/campuses/${id}`)
+  return get<ApiResponse<Campus>>(`/campuses/${id}`)
 }
 
-export function createCampus(data: Partial<Campus>) {
+/** 创建校区 */
+export function createCampus(data: CreateCampusRequest) {
   return post<ApiResponse>('/campuses', data)
 }
 
-export function updateCampus(id: string, data: Partial<Campus>) {
+/** 更新校区 */
+export function updateCampus(id: string, data: UpdateCampusRequest) {
   return put<ApiResponse>(`/campuses/${id}`, data)
 }
 
+/** 删除校区 */
 export function deleteCampus(id: string) {
   return del<ApiResponse>(`/campuses/${id}`)
 }
 
-export function updateCampusStatus(id: string, status: number) {
-  return patch<ApiResponse>(`/campuses/${id}/status`, { status })
-}
-
-// 楼宇
-export function getBuildings(campusId?: string) {
-  return get<Building[]>('/buildings', campusId ? { campusId } as Record<string, string | number> : {})
-}
-
-export function getBuildingsByCampus(campusId: string) {
-  return get<Building[]>(`/buildings/by-campus/${campusId}`)
-}
-
-export function getBuildingById(id: string) {
-  return get<Building>(`/buildings/${id}`)
-}
-
-export function createBuilding(data: Partial<Building>) {
-  return post<ApiResponse>('/buildings', data)
-}
-
-export function updateBuilding(id: string, data: Partial<Building>) {
-  return put<ApiResponse>(`/buildings/${id}`, data)
-}
-
-export function deleteBuilding(id: string) {
-  return del<ApiResponse>(`/buildings/${id}`)
-}
-
-export function updateBuildingStatus(id: string, status: number) {
-  return patch<ApiResponse>(`/buildings/${id}/status`, { status })
+/** 启用/禁用校区 */
+export function toggleCampusStatus(id: string, isActive: boolean) {
+  return patch<ApiResponse>(`/campuses/${id}/status`, { isActive })
 }

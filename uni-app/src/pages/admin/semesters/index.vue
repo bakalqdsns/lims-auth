@@ -85,7 +85,7 @@ async function loadData() {
   isLoading.value = true
   try {
     const resp = await getSemesters({ pageSize: 100 })
-    semesters.value = resp.items
+    semesters.value = resp?.items ?? []
   } catch { /* ignore */ } finally { isLoading.value = false }
 }
 

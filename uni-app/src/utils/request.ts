@@ -14,8 +14,8 @@ import { storage } from './storage'
 // 微信小程序开发环境: 使用局域网 IP（如 http://192.168.x.x:5047）
 // 生产环境: 使用域名（如 https://api.example.com）
 // 开发时需将开发者电脑的局域网 IP 加入微信开发者工具的"不校验合法域名"设置
-const BASE_URL = 'http://172.16.155.113:5047'
-const API_PREFIX = '/api/v1'
+export const BASE_URL = 'http://172.16.155.113:5047'
+export const API_PREFIX = '/api/v1'
 const TIMEOUT = 30000
 
 // 无需认证的路径
@@ -30,6 +30,8 @@ export interface RequestOptions {
   loading?: boolean
   loadingText?: string
   showError?: boolean
+  /** 自定义路径前缀:false=不拼接,string=覆盖默认 /api/v1 */
+  prefix?: string | false
 }
 
 type RequestData = Record<string, unknown> | unknown[] | string | null
@@ -60,6 +62,7 @@ export function request<T = unknown>(options: RequestOptions): Promise<T> {
     loading = true,
     loadingText = '加载中...',
     showError = true,
+    prefix = API_PREFIX,
   } = options
 
   if (loading) {
@@ -74,7 +77,11 @@ export function request<T = unknown>(options: RequestOptions): Promise<T> {
   header['Content-Type'] = header['Content-Type'] ?? 'application/json'
   header['Accept'] = 'application/json'
 
-  const fullUrl = `${BASE_URL}${API_PREFIX}${buildUrl(url.startsWith('/') ? url : '/' + url, params)}`
+  const normalizedPath = url.startsWith('/') ? url : '/' + url
+  const fullUrl =
+    prefix === false
+      ? `${BASE_URL}${buildUrl(normalizedPath, params)}`
+      : `${BASE_URL}${prefix}${buildUrl(normalizedPath, params)}`
 
   return new Promise((resolve, reject) => {
     uni.request({
@@ -99,8 +106,20 @@ export function request<T = unknown>(options: RequestOptions): Promise<T> {
         }
 
         if (statusCode >= 200 && statusCode < 300) {
+          const raw = responseData.data ?? responseData
+          // 兼容后端部分接口直接返回数组：自动包装为分页结构
+          if (Array.isArray(raw)) {
+            resolve({ items: raw, total: raw.length, page: 1, pageSize: raw.length } as unknown as T)
+            return
+          }
+          // 兼容后端返回 { data: [...], total: N } 的格式（同级 total）
+          if (raw && typeof raw === 'object' && !Array.isArray(raw) && (raw as { total?: unknown }).total !== undefined && (raw as { items?: unknown }).items === undefined && Array.isArray((raw as { data?: unknown }).data)) {
+            const nested = (raw as { data: unknown[]; total: number })
+            resolve({ items: nested.data, total: nested.total, page: 1, pageSize: nested.data.length } as unknown as T)
+            return
+          }
           if (responseData.code === 200 || responseData.code === undefined) {
-            resolve((responseData.data ?? responseData) as T)
+            resolve(raw as T)
           } else {
             if (showError && responseData.message) {
               uni.showToast({ title: responseData.message as string, icon: 'none' })

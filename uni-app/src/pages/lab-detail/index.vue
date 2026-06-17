@@ -79,7 +79,7 @@
           <text class="equip-card__count">{{ lab.equipmentCount }} 台</text>
         </view>
         <view v-if="equipments.length > 0" class="equip-list">
-          <view v-for="eq in equipments" :key="eq.id" class="equip-item" @tap="goEquipDetail(eq.id)">
+          <view v-for="eq in equipments" :key="eq.id" class="equip-item" @tap="goEquipDetail(String(eq.id))">
             <text class="equip-item__name">{{ eq.name }}</text>
             <text class="equip-item__status" :class="eq.availableQuantity > 0 ? 'available' : 'unavailable'">
               可用 {{ eq.availableQuantity }}/{{ eq.totalQuantity }}
@@ -167,6 +167,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useLabStore } from '@/stores/lab'
 import { useEquipmentStore } from '@/stores/equipment'
 import { createReservation } from '@/api/reservation'
+import type { CreateReservationRequest } from '@/types/reservation'
 import type { Equipment } from '@/types/equipment'
 
 const labStore = useLabStore()
@@ -219,13 +220,13 @@ async function submitReservation() {
   try {
     uni.showLoading({ title: '提交中...' })
     await createReservation({
-      labId: lab.value.id as unknown as number,
+      labId: lab.value.id,
       date: reserveDate.value,
       timeSlot: reserveTimeSlot.value,
       purpose: purpose.value,
       attendeeCount: attendeeCount.value,
       remark: remark.value || undefined,
-    })
+    } as CreateReservationRequest)
     uni.hideLoading()
     uni.showToast({ title: '预约成功，请等待审批', icon: 'success' })
     showReserveSheet.value = false
@@ -235,7 +236,7 @@ async function submitReservation() {
   }
 }
 
-function goEquipDetail(id: number) {
+function goEquipDetail(id: string) {
   uni.navigateTo({ url: `/pages/equipment/index?id=${id}` })
 }
 

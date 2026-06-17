@@ -1,44 +1,61 @@
 /**
  * 授课任务 API
+ * 对应后端 TeachingTasksController
+ *  GET    /api/v1/teaching-tasks
+ *  GET    /api/v1/teaching-tasks/{id}
+ *  POST   /api/v1/teaching-tasks
+ *  PUT    /api/v1/teaching-tasks/{id}
+ *  DELETE /api/v1/teaching-tasks/{id}
+ *  PATCH  /api/v1/teaching-tasks/{id}/status
+ *  POST   /api/v1/teaching-tasks/{id}/teachers
+ *  DELETE /api/v1/teaching-tasks/{id}/teachers/{teacherId}
  */
 import { get, post, put, del, patch } from '@/utils/request'
-import type { ApiResponse, PagedResponse } from '@/types/api'
-import type { TeachingTask } from '@/types/teaching'
+import type { ApiResponse } from '@/types/api'
+import type {
+  TeachingTask,
+  TeachingTaskQuery,
+  CreateTeachingTaskRequest,
+  UpdateTeachingTaskRequest,
+  AddTeachingTaskTeacherRequest,
+} from '@/types/teaching'
 
-export function getTeachingTasks(query?: {
-  page?: number
-  pageSize?: number
-  semesterId?: number
-  teacherId?: number
-  classId?: number
-}) {
-  return get<PagedResponse<TeachingTask>>('/teaching-tasks', query as Record<string, string | number>)
+/** 授课任务列表 */
+export function getTeachingTasks(query?: TeachingTaskQuery) {
+  return get<ApiResponse<TeachingTask[]>>('/teaching-tasks', query as Record<string, string>)
 }
 
-export function getTeachingTaskById(id: number) {
-  return get<TeachingTask>(`/teaching-tasks/${id}`)
+/** 授课任务详情 */
+export function getTeachingTaskById(id: string) {
+  return get<ApiResponse<TeachingTask>>(`/teaching-tasks/${id}`)
 }
 
-export function createTeachingTask(data: Partial<TeachingTask>) {
+/** 创建授课任务 */
+export function createTeachingTask(data: CreateTeachingTaskRequest) {
   return post<ApiResponse>('/teaching-tasks', data)
 }
 
-export function updateTeachingTask(id: number, data: Partial<TeachingTask>) {
+/** 更新授课任务 */
+export function updateTeachingTask(id: string, data: UpdateTeachingTaskRequest) {
   return put<ApiResponse>(`/teaching-tasks/${id}`, data)
 }
 
-export function deleteTeachingTask(id: number) {
+/** 删除授课任务 */
+export function deleteTeachingTask(id: string) {
   return del<ApiResponse>(`/teaching-tasks/${id}`)
 }
 
-export function updateTeachingTaskStatus(id: number, status: number) {
-  return patch<ApiResponse>(`/teaching-tasks/${id}/status`, { status })
+/** 启用/禁用 */
+export function toggleTeachingTaskStatus(id: string, isActive: boolean) {
+  return patch<ApiResponse>(`/teaching-tasks/${id}/status`, { isActive })
 }
 
-export function addTeachingTaskTeacher(taskId: number, teacherId: number) {
-  return post<ApiResponse>(`/teaching-tasks/${taskId}/teachers`, { teacherId })
+/** 添加教师 */
+export function addTeachingTaskTeacher(taskId: string, data: AddTeachingTaskTeacherRequest) {
+  return post<ApiResponse>(`/teaching-tasks/${taskId}/teachers`, data)
 }
 
-export function removeTeachingTaskTeacher(taskId: number, teacherId: number) {
+/** 移除教师 */
+export function removeTeachingTaskTeacher(taskId: string, teacherId: string) {
   return del<ApiResponse>(`/teaching-tasks/${taskId}/teachers/${teacherId}`)
 }

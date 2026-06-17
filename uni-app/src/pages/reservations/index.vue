@@ -127,7 +127,7 @@ async function loadData() {
     }
     const resp = await getReservations(query)
     reservations.value = resp?.items ?? []
-    total.value = resp.total
+    total.value = resp?.total ?? 0
   } catch {
     // ignore
   } finally {
@@ -153,12 +153,13 @@ async function loadMore() {
 async function cancelReservation(item: Reservation) {
   uni.showModal({
     title: '确认取消',
-    content: '确定要取消该预约吗？',
+    editable: true,
+    placeholderText: '请输入取消原因（可选）',
     success: async (res) => {
       if (res.confirm) {
         try {
           uni.showLoading({ title: '处理中...' })
-          await cancelApi(item.id)
+          await cancelApi(item.id, { reason: res.content || '用户取消' })
           uni.hideLoading()
           uni.showToast({ title: '已取消', icon: 'success' })
           await loadData()

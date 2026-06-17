@@ -198,19 +198,19 @@ public class ReservationDto
 
 public class CreateReservationRequest
 {
-    [Required]
-    public Guid SemesterId { get; set; }
-    [Required]
-    public Guid LabId { get; set; }
-    public DateTime UseDate { get; set; }
-    public int DayOfWeek { get; set; }
-    public List<int> PeriodNumbers { get; set; } = new();
-    public int WeekNumber { get; set; }
+    // 兼容前端简化格式
+    public Guid? LabId { get; set; }
+    public DateTime? UseDate { get; set; }
+    public int? DayOfWeek { get; set; }
+    public List<int>? PeriodNumbers { get; set; }
+    public int? WeekNumber { get; set; }
     public double? ExpectedDurationHours { get; set; }
-    [Required]
-    public string ProjectName { get; set; } = string.Empty;
-    public string ProjectCategory { get; set; } = string.Empty;
     public string? Remark { get; set; }
+
+    // 兼容旧格式
+    public Guid? SemesterId { get; set; }
+    public string? ProjectName { get; set; }
+    public string? ProjectCategory { get; set; }
     public Guid? ProjectLeaderId { get; set; }
     public string? ProjectLeaderName { get; set; }
     public string? ProjectLeaderPhone { get; set; }

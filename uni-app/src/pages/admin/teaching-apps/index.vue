@@ -77,8 +77,8 @@ async function loadData() {
   page.value = 1
   try {
     const resp = await getTeachingApplications({ page: 1, pageSize })
-    applications.value = resp.items
-    total.value = resp.total
+    applications.value = resp?.items ?? []
+    total.value = resp?.total ?? 0
   } catch { /* ignore */ } finally { isLoading.value = false }
 }
 
@@ -87,7 +87,7 @@ async function loadMore() {
   page.value++
   try {
     const resp = await getTeachingApplications({ page: page.value, pageSize })
-    applications.value.push(...resp.items)
+    applications.value.push(...(resp?.items ?? []))
   } catch { /* ignore */ }
 }
 
@@ -95,11 +95,13 @@ async function approve(app: TeachingApplication) {
   uni.showModal({
     title: '确认通过',
     content: `确定通过 "${app.courseName}" 的申请吗？`,
+    editable: true,
+    placeholderText: '审批备注（可选）',
     success: async (res) => {
       if (res.confirm) {
         try {
           uni.showLoading({ title: '处理中...' })
-          await approveTeachingApplication(app.id)
+          await approveTeachingApplication(app.id, { approved: true, remark: res.content || undefined })
           uni.hideLoading()
           uni.showToast({ title: '已通过', icon: 'success' })
           await loadData()
@@ -113,11 +115,13 @@ async function reject(app: TeachingApplication) {
   uni.showModal({
     title: '确认拒绝',
     content: `确定拒绝 "${app.courseName}" 的申请吗？`,
+    editable: true,
+    placeholderText: '请输入拒绝原因',
     success: async (res) => {
       if (res.confirm) {
         try {
           uni.showLoading({ title: '处理中...' })
-          await rejectTeachingApplication(app.id)
+          await rejectTeachingApplication(app.id, { approved: false, remark: res.content || '不符合条件' })
           uni.hideLoading()
           uni.showToast({ title: '已拒绝', icon: 'success' })
           await loadData()

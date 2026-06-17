@@ -1,68 +1,105 @@
 /**
- * 排课 API
+ * 排课管理 API
+ * 对应后端 SchedulesController
+ *  GET  /api/v1/schedules
+ *  GET  /api/v1/schedules/{id}
+ *  POST /api/v1/schedules
+ *  PUT  /api/v1/schedules/{id}
+ *  DEL  /api/v1/schedules/{id}
+ *  GET  /api/v1/schedules/table-view
+ *  GET  /api/v1/schedules/available-labs
+ *  POST /api/v1/schedules/check-conflicts
+ *  GET  /api/v1/schedules/by-lab/{labId}
+ *  GET  /api/v1/schedules/by-teacher/{teacherId}
+ *  GET  /api/v1/schedules/by-class/{classId}
+ *  GET  /api/v1/schedules/importable-tasks
+ *  POST /api/v1/schedules/import-from-tasks
  */
 import { get, post, put, del } from '@/utils/request'
-import type { ApiResponse, PagedResponse } from '@/types/api'
-import type { Schedule, ScheduleQuery } from '@/types/schedule'
+import type { ApiResponse } from '@/types/api'
+import type {
+  Schedule,
+  ScheduleQuery,
+  CreateScheduleRequest,
+  UpdateScheduleRequest,
+  ScheduleTableRow,
+  AvailabilityQuery,
+  ScheduleEntry,
+  ConflictCheckResult,
+  ExperimentTaskImportDto,
+  ImportTasksRequest,
+} from '@/types/schedule'
 
+/** 排课列表 */
 export function getSchedules(query?: ScheduleQuery) {
-  return get<PagedResponse<Schedule>>('/schedules', query as Record<string, string | number>)
+  return get<ApiResponse<Schedule[]>>('/schedules', query as Record<string, string>)
 }
 
-export function getScheduleById(id: number) {
-  return get<Schedule>(`/schedules/${id}`)
+/** 排课详情 */
+export function getScheduleById(id: string) {
+  return get<ApiResponse<Schedule>>(`/schedules/${id}`)
 }
 
-export function createSchedule(data: Partial<Schedule>) {
+/** 创建排课 */
+export function createSchedule(data: CreateScheduleRequest) {
   return post<ApiResponse>('/schedules', data)
 }
 
-export function updateSchedule(id: number, data: Partial<Schedule>) {
+/** 更新排课 */
+export function updateSchedule(id: string, data: UpdateScheduleRequest) {
   return put<ApiResponse>(`/schedules/${id}`, data)
 }
 
-export function deleteSchedule(id: number) {
+/** 删除排课 */
+export function deleteSchedule(id: string) {
   return del<ApiResponse>(`/schedules/${id}`)
 }
 
-export function getScheduleTableView(query?: {
-  semesterId?: number
-  classId?: number
-  teacherId?: number
-  labId?: number
-}) {
-  return get<{ days: { dayOfWeek: number; dayName: string; periods: { period: number; courses: Schedule[] }[] }[] }>(
-    '/schedules/table-view',
-    query as Record<string, string | number>
-  )
+/** 课表视图 (按天/节次聚合) */
+export function getScheduleTableView(query?: ScheduleQuery) {
+  return get<ApiResponse<ScheduleTableRow[]>>('/schedules/table-view', query as Record<string, string>)
 }
 
-export function checkScheduleConflicts(data: Partial<Schedule>) {
-  return post<{ hasConflict: boolean; conflicts: { labName: string; date: string; period: string }[] }>(
-    '/schedules/check-conflicts',
-    data
-  )
-}
-
-export function getAvailableLabs(date: string, startPeriod: number, endPeriod: number) {
-  return get<{ id: number; name: string; code: string; capacity: number }[]>(
+/** 可用实验室 */
+export function getAvailableLabs(query: AvailabilityQuery) {
+  return get<ApiResponse<{ id: string; name: string; code: string; capacity: number }[]>>(
     '/schedules/available-labs',
-    { date, startPeriod, endPeriod } as Record<string, string | number>
+    query as unknown as Record<string, string>
   )
 }
 
-export function getSchedulesByClass(classId: number) {
-  return get<Schedule[]>(`/schedules/by-class/${classId}`)
+/** 冲突检测 */
+export function checkScheduleConflicts(entry: Partial<ScheduleEntry>) {
+  return post<ApiResponse<ConflictCheckResult>>('/schedules/check-conflicts', entry)
 }
 
-export function getSchedulesByLab(labId: number) {
-  return get<Schedule[]>(`/schedules/by-lab/${labId}`)
+/** 按实验室筛选 */
+export function getSchedulesByLab(labId: string, query?: Omit<ScheduleQuery, 'labId'>) {
+  return get<ApiResponse<Schedule[]>>(`/schedules/by-lab/${labId}`, query as Record<string, string>)
 }
 
-export function getSchedulesByTeacher(teacherId: number) {
-  return get<Schedule[]>(`/schedules/by-teacher/${teacherId}`)
+/** 按教师筛选 */
+export function getSchedulesByTeacher(teacherId: string, query?: Omit<ScheduleQuery, 'teacherId'>) {
+  return get<ApiResponse<Schedule[]>>(
+    `/schedules/by-teacher/${teacherId}`,
+    query as Record<string, string>
+  )
 }
 
-export function importSchedulesFromTasks(semesterId: number) {
-  return post<ApiResponse>('/schedules/import-from-tasks', { semesterId })
+/** 按班级筛选 */
+export function getSchedulesByClass(classId: string, query?: Omit<ScheduleQuery, 'classId'>) {
+  return get<ApiResponse<Schedule[]>>(
+    `/schedules/by-class/${classId}`,
+    query as Record<string, string>
+  )
+}
+
+/** 可导入的实验任务 */
+export function getImportableTasks(semesterId: string) {
+  return get<ApiResponse<ExperimentTaskImportDto[]>>('/schedules/importable-tasks', { semesterId })
+}
+
+/** 从实验任务批量导入 */
+export function importSchedulesFromTasks(data: ImportTasksRequest) {
+  return post<ApiResponse<number>>('/schedules/import-from-tasks', data)
 }

@@ -23,8 +23,7 @@ onHide(() => {
 </script>
 
 <style lang="scss">
-/* 全局样式 */
-@import '@/uni.scss';
+/* 全局样式 - uni.scss 变量由 @dcloudio/vite-plugin-uni 自动注入,无需手动 import */
 
 page {
   background-color: $lims-bg-page;

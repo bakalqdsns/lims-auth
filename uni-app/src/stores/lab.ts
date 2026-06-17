@@ -4,7 +4,8 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { getLabs, getLabById } from '@/api/lab'
-import { getCampuses, getBuildings } from '@/api/campus'
+import { getCampuses } from '@/api/campus'
+import { getBuildings, getBuildingsByCampus } from '@/api/building'
 import type { Lab, LabQuery } from '@/types/campus'
 import type { Campus, Building } from '@/types/campus'
 
@@ -23,7 +24,7 @@ export const useLabStore = defineStore(
       try {
         const resp = await getLabs(query)
         labs.value = resp?.items ?? []
-        total.value = resp.total
+        total.value = resp?.total ?? 0
       } catch {
         // ignore
       } finally {
@@ -41,7 +42,8 @@ export const useLabStore = defineStore(
 
     async function loadCampuses() {
       try {
-        campuses.value = await getCampuses()
+        const resp = await getCampuses()
+        campuses.value = resp?.items ?? []
       } catch {
         // ignore
       }
@@ -49,7 +51,10 @@ export const useLabStore = defineStore(
 
     async function loadBuildings(campusId?: string) {
       try {
-        buildings.value = await getBuildings(campusId)
+        const resp = campusId
+          ? await getBuildingsByCampus(campusId)
+          : await getBuildings()
+        buildings.value = resp?.items ?? []
       } catch {
         // ignore
       }

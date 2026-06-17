@@ -16,7 +16,7 @@
 
     <!-- 列表 -->
     <scroll-view class="list-area" scroll-y refresher-enabled @refresherrefresh="loadData" @scrolltolower="loadMore">
-      <view v-for="item in records" :key="item.id" class="borrow-card" @tap="goDetail(item.id)">
+      <view v-for="item in records" :key="item.id" class="borrow-card" @tap="goDetail(String(item.id))">
         <view class="borrow-card__header">
           <view class="borrow-card__equip">
             <text class="borrow-card__name">{{ item.equipmentName }}</text>
@@ -96,7 +96,7 @@
 
 <script setup lang="ts">
 import { ref, computed, reactive, onMounted } from 'vue'
-import { getBorrowRecords, createBorrowRecord } from '@/api/borrow-record'
+import { getMyBorrowRecords, createBorrowRequest } from '@/api/borrow-record'
 import { getEquipments } from '@/api/equipment'
 import type { BorrowRecord, BorrowStatus, CreateBorrowRequest } from '@/types/borrow'
 import type { Equipment } from '@/types/equipment'
@@ -111,7 +111,7 @@ const showBorrowSheet = ref(false)
 const allEquipments = ref<Equipment[]>([])
 
 const newBorrow = reactive({
-  equipmentId: undefined as number | undefined,
+  equipmentId: '' as string,
   equipmentName: '',
   borrowDate: '',
   expectedReturnDate: '',
@@ -161,13 +161,13 @@ async function loadData() {
   isLoading.value = true
   page.value = 1
   try {
-    const query: Record<string, string | number> = { page: 1, pageSize }
-    if (currentTab.value === 'pending') query.status = 'borrowed'
-    else if (currentTab.value !== 'all') query.status = currentTab.value
+    const status = currentTab.value === 'all' || currentTab.value === 'pending'
+      ? (currentTab.value === 'pending' ? 'borrowed' : undefined)
+      : currentTab.value
 
-    const resp = await getBorrowRecords(query)
+    const resp = await getMyBorrowRecords(status)
     records.value = resp?.items ?? []
-    total.value = resp.total
+    total.value = resp?.total ?? records.value.length
   } catch {
     // ignore
   } finally {
@@ -176,17 +176,11 @@ async function loadData() {
 }
 
 async function loadMore() {
-  if (!hasMore.value || isLoading.value) return
-  page.value++
-  try {
-    const resp = await getBorrowRecords({ page: page.value, pageSize })
-    records.value.push(...(resp?.items ?? []))
-  } catch {
-    // ignore
-  }
+  // getMyBorrowRecords 暂不分页,加载更多直接刷新即可
+  await loadData()
 }
 
-function goDetail(id: number) {
+function goDetail(id: string) {
   uni.navigateTo({ url: `/pages/borrow-detail/index?id=${id}` })
 }
 
@@ -208,13 +202,13 @@ async function submitBorrow() {
   if (!canSubmit.value || !newBorrow.equipmentId) return
   try {
     uni.showLoading({ title: '提交中...' })
-    await createBorrowRecord({
+    await createBorrowRequest({
       equipmentId: newBorrow.equipmentId,
       borrowDate: newBorrow.borrowDate,
       expectedReturnDate: newBorrow.expectedReturnDate,
       purpose: newBorrow.purpose,
       remark: newBorrow.remark || undefined,
-    } as CreateBorrowRequest)
+    })
     uni.hideLoading()
     uni.showToast({ title: '申请已提交', icon: 'success' })
     showBorrowSheet.value = false

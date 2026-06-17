@@ -88,18 +88,15 @@ async function loadData() {
     const user = authStore.currentUser
     if (!user) return
 
-    // 根据用户角色加载课表
     if (authStore.isStudent) {
-      // 学生通过班级ID加载 (需要先获取班级ID)
       const resp = await getSchedulesByClass(user.id)
-      schedules.value = resp
+      schedules.value = resp?.items ?? []
     } else if (authStore.isTeacher) {
       const resp = await getSchedulesByTeacher(user.id)
-      schedules.value = resp
+      schedules.value = resp?.items ?? []
     } else {
-      // 管理员加载全部
       const resp = await getSchedulesByClass(user.id)
-      schedules.value = resp
+      schedules.value = resp?.items ?? []
     }
   } catch { /* ignore */ } finally { isLoading.value = false }
 }

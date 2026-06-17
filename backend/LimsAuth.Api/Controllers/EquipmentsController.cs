@@ -32,7 +32,7 @@ public class EquipmentsController : ControllerBase
         if (pageSize > 200) pageSize = 200;
 
         var (items, total) = await _equipmentService.GetListAsync(keyword, labId, category, status, page, pageSize);
-        return Ok(new { code = 200, data = items, total });
+        return Ok(new { code = 200, data = new { items, total, page, pageSize } });
     }
 
     [HttpGet("{id}")]

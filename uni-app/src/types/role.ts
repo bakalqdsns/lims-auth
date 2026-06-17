@@ -1,10 +1,10 @@
 /**
- * 角色相关类型定义
- * 与 Flutter lib/models/role.dart 对齐
+ * 角色与权限相关类型定义
+ * 与后端 RoleDto / RoleDetailDto / PermissionDto 对齐
  */
 
 export interface Role {
-  id: number
+  id: string
   name: string
   code: string
   description?: string
@@ -14,6 +14,19 @@ export interface Role {
   createdAt: string
 }
 
+/** 下拉角色 */
+export interface RoleBrief {
+  id: string
+  name: string
+  code: string
+}
+
+export interface RoleDetail extends Role {
+  permissionIds: string[]
+  createdBy?: string
+  updatedAt?: string
+}
+
 /**
  * 创建角色请求
  */
@@ -21,7 +34,23 @@ export interface CreateRoleRequest {
   name: string
   code: string
   description?: string
-  permissionIds?: number[]
+  permissionIds?: string[]
+}
+
+/**
+ * 更新角色请求
+ */
+export interface UpdateRoleRequest {
+  name?: string
+  code?: string
+  description?: string
+}
+
+/**
+ * 分配权限请求
+ */
+export interface UpdateRolePermissionsRequest {
+  permissionIds: string[]
 }
 
 /**
@@ -30,17 +59,20 @@ export interface CreateRoleRequest {
 export interface RoleQuery {
   page?: number
   pageSize?: number
-  search?: string
+  keyword?: string
+  name?: string
+  code?: string
 }
 
 /**
  * 权限项
  */
 export interface Permission {
-  id: number
+  id: string
   name: string
   code: string
   module: string
+  moduleName?: string
   description?: string
 }
 
@@ -49,5 +81,6 @@ export interface Permission {
  */
 export interface PermissionModule {
   module: string
+  moduleName: string
   items: Permission[]
 }
