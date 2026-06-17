@@ -171,12 +171,80 @@
 
 ---
 
+## 2026-06-11 - 编译修复
+
+**问题**: 还原完成后编译失败，共 149 个错误。
+
+**根因**: 多个 `using` 语句缺失和类型定义不完整。
+
+**修复内容**:
+
+1. **实体文件 (6个)** - 添加缺失的 `using Microsoft.EntityFrameworkCore;` 和 `using LimsAuth.Api.Data.Configuration;`
+   - `SystemEntities.cs`
+   - `ConsumableEntities.cs`
+   - `DeviceEntities.cs`
+   - `ScheduleEntities.cs`
+   - `TeachingEntities.cs`
+   - `VenEntities.cs`
+
+2. **ApiCommon.cs** - 添加非泛型 `ApiResponse` 类，让 `Task<ApiResponse>` 返回类型合法
+
+3. **AuthService.cs** - 添加 `using LimsAuth.Api.Models.Entities;` 解决 `SysUser` 类型引用
+
+4. **SeedData.cs** - 添加 `using Microsoft.EntityFrameworkCore;` 解决 `AnyAsync` 扩展方法
+
+5. **ConsumableDtos.cs** - `InboundDto` 添加 `AuditRemark` 属性（漏字段）
+
+6. **PermissionService.cs** - 移除不存在的 `IAuthorizationBuilder` 和 `JwtBearerOptions` 引用
+
+7. **TeachingDtos.cs** - `SemesterDto.CreatedBy` 类型修正为 `Guid?`（与 EduSemester 实体一致）
+
+8. **ScheduleService.cs** - `RegisterUserId` 赋值添加 `?? Guid.Empty` 解决 `Guid?` 到 `Guid` 转换
+
+9. **ConsumableService.cs** - `GroupBy + ToDictionary` 改用 foreach 循环，绕过编译器对 lambda 的歧义解析
+
+**结果**: 编译成功，0 错误，12 个 CS8601 null 赋值警告（非阻塞）。
+
+---
+
+## 2026-06-11 - 最简测试前端
+
+**完成内容**:
+
+在 `test-client/index.html` 创建了一个单文件 API 测试前端，无需任何构建工具，直接在浏览器打开即可使用。
+
+**功能清单**:
+- JWT 登录/登出（Token 持久化到 localStorage）
+- 12 个快速测试按钮（覆盖权限、角色、学期、机构、部门、课程、专业、班级、楼宇、场地、耗材、设备）
+- 自定义请求（支持 GET/POST/PUT/DELETE，可自定义路径和 JSON Body）
+- 彩色语法高亮响应展示（HTTP 成功绿色 / 失败红色）
+- 请求历史记录（最近 20 条）
+- 可切换后端地址
+
+**使用方式**: 直接在浏览器打开 `backend-new/test-client/index.html` 即可。
+
+**文件清单**:
+- `test-client/index.html`
+
+---
+
+## 2026-06-11 - 文档更新
+
+**完成内容**:
+1. `README.md` — 补充完整的快速开始指南（前置要求、还原依赖、自动建库流程、Swagger 认证步骤、配置文件说明）
+2. 目录结构新增 `test-client/` 说明
+3. 新增"API 测试客户端"章节（8 号步骤）
+4. `backend-new/README.md` — 同步目录结构
+5. `TODO.md` — 标记快速开始指南为已完成
+
+---
+
 ## 待完成工作
 
-- [ ] 编译验证,修复所有编译错误
+- [x] 编译验证,修复所有编译错误
 - [ ] 补充 Program.cs 中的权限策略注册
 - [ ] 完善单元测试
-- [ ] 补充 README.md 中的快速开始指南
+- [x] 补充 README.md 中的快速开始指南
 - [ ] 添加 HealthCheck 接口
 - [ ] 添加全局异常处理中间件
 - [ ] 补充 SeedData 中的初始数据(如初始楼栋、实验室等)

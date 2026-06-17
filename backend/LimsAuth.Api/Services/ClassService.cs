@@ -113,6 +113,21 @@ public class ClassService : IClassService
 
     public async Task<ClassDto> CreateAsync(CreateClassRequest request)
     {
+        if (string.IsNullOrWhiteSpace(request.Code))
+            throw new ArgumentException("班级编码不能为空", nameof(request));
+        if (string.IsNullOrWhiteSpace(request.Name))
+            throw new ArgumentException("班级名称不能为空", nameof(request));
+        if (string.IsNullOrWhiteSpace(request.Grade))
+            throw new ArgumentException("年级(Grade)不能为空", nameof(request));
+        if (request.MajorId == Guid.Empty)
+            throw new ArgumentException("所属专业ID(MajorId)不能为空", nameof(request));
+        if (request.DepartmentId == Guid.Empty)
+            throw new ArgumentException("所属部门ID(DepartmentId)不能为空", nameof(request));
+        if (!await _dbContext.Majors.AnyAsync(m => m.Id == request.MajorId))
+            throw new ArgumentException($"所属专业不存在: {request.MajorId}", nameof(request));
+        if (!await _dbContext.Departments.AnyAsync(d => d.Id == request.DepartmentId))
+            throw new ArgumentException($"所属部门不存在: {request.DepartmentId}", nameof(request));
+
         var classEntity = new Class
         {
             Code = request.Code,

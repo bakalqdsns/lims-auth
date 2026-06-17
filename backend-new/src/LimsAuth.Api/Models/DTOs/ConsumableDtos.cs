@@ -137,6 +137,7 @@ public class InboundDto
     public Guid? AuditorId { get; set; }
     public string? AuditorName { get; set; }
     public DateTime? AuditTime { get; set; }
+    public string? AuditRemark { get; set; }
     public DateTime CreatedAt { get; set; }
 }
 

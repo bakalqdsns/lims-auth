@@ -127,14 +127,24 @@ public class DepartmentService : IDepartmentService
 
     public async Task<ApiResponse<List<DepartmentDto>>> GetTreeAsync()
     {
-        var all = await _db.SysDepartments
-            .Include(d => d.Institution)
-            .Where(d => d.Status == 1)
-            .ToListAsync();
+        try
+        {
+            var all = await _db.SysDepartments
+                .Include(d => d.Institution)
+                .Where(d => d.Status == 1)
+                .ToListAsync();
 
-        var roots = all.Where(d => d.ParentId == null).ToList();
-        var result = roots.Select(r => MapToDto(r, all)).ToList();
-        return ApiResponse<List<DepartmentDto>>.Success(result);
+            System.Diagnostics.Debug.WriteLine($"[DEPT-TREE] count={all.Count}");
+
+            var roots = all.Where(d => d.ParentId == null).ToList();
+            var result = roots.Select(r => MapToDto(r, all)).ToList();
+            return ApiResponse<List<DepartmentDto>>.Success(result);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[DEPT-TREE-ERROR] {ex.GetType().Name}: {ex.Message}");
+            return ApiResponse<List<DepartmentDto>>.Error(500, ex.Message);
+        }
     }
 
     public async Task<ApiResponse<DepartmentDto>> GetByIdAsync(Guid id)

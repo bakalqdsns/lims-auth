@@ -1,6 +1,6 @@
 # LIMS 后端 API 接口规范
 
-> 本文档详细描述 backend-new 后端所有 API 接口定义。所有字段均来自原始需求文档，无任何猜测。
+> 本文档描述 backend-new 后端的 API 接口定义。字段说明参考 DATABASE_DESIGN.md 中的实际数据库设计。
 
 ---
 

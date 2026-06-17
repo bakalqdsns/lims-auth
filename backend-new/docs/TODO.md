@@ -8,7 +8,19 @@
 
 ### 高优先级
 
-- [ ] 编译验证,修复所有编译错误和警告
+- [x] 编译验证,修复所有编译错误和警告
+  - 完成时间: 2026-06-11
+  - 修复内容:
+    - 实体文件(6个)添加 `using Microsoft.EntityFrameworkCore;` 和 `using LimsAuth.Api.Data.Configuration;`
+    - `ApiCommon.cs` 添加非泛型 `ApiResponse` 类
+    - `AuthService.cs` 添加 `using LimsAuth.Api.Models.Entities;`
+    - `SeedData.cs` 添加 EF Core using
+    - `ConsumableDtos.cs` 的 `InboundDto` 添加 `AuditRemark` 属性
+    - `PermissionService.cs` 移除不存在的 `IAuthorizationBuilder` 引用
+    - `TeachingDtos.cs` 的 `SemesterDto.CreatedBy` 类型修正为 `Guid?`
+    - `ScheduleService.cs` `RegisterUserId` 添加 `?? Guid.Empty`
+    - `ConsumableService.cs` `GroupBy+ToDictionary` 改用 foreach 循环绕过编译器歧义
+  - 剩余: 12个 CS8601 null赋值警告(非阻塞)
 - [ ] 补充 Program.cs 中 PermissionPolicies 的完整注册 (AddPermissionAuthorization 调用)
 - [ ] 补充 SeedData 中的初始数据(课程、专业、班级的更多示例数据)
 - [ ] 补充 Room.RoomType 枚举值定义
@@ -80,6 +92,8 @@
 - [ ] 补充 docs/README.md 主索引文档
 - [ ] 补充 docs/TODO.md 本文件(待办任务)
 - [ ] 补充 README.md 中的快速开始指南(编译、运行命令)
+  - 完成时间: 2026-06-11
+  - 补充内容: 前置要求、还原依赖、自动建库流程、Swagger 认证步骤、配置文件说明
 - [ ] 添加 API 变更日志 (CHANGELOG.md)
 - [ ] 添加 CONTRIBUTING.md (贡献指南)
 - [ ] 添加 DEPLOY.md (部署指南)

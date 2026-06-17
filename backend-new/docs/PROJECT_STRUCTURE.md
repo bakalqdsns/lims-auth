@@ -39,13 +39,13 @@ backend-new/
         │   ├── UserService.cs         # 用户服务
         │   ├── RoleService.cs         # 角色服务
         │   ├── PermissionService.cs    # 权限服务
-        │   ├── InstitutionDepartmentService.cs # 机构 + 部门
-        │   ├── SemesterCourseMajorService.cs # 学期 + 课程 + 专业
-        │   ├── ClassTeachingTaskService.cs # 班级 + 教学任务
-        │   ├── BuildingRoomService.cs # 楼宇 + 实验室
-        │   ├── ScheduleService.cs    # 排课 + 预约 + 使用登记
-        │   ├── AssetLoanService.cs   # 设备 + 借还
-        │   └── ConsumableService.cs   # 耗材 + 出入库 + 库存日志
+        │   ├── InstitutionDepartmentService.cs # 机构 + 部门（合并服务）
+        │   ├── SemesterCourseMajorService.cs # 学期 + 课程 + 专业（合并服务）
+        │   ├── ClassTeachingTaskService.cs # 班级 + 教学任务（合并服务）
+        │   ├── BuildingRoomService.cs # 楼宇 + 场地（合并服务）
+        │   ├── ScheduleService.cs    # 排课 + 预约 + 使用登记（合并服务）
+        │   ├── AssetLoanService.cs   # 设备 + 借还（合并服务）
+        │   └── ConsumableService.cs   # 耗材 + 出入库 + 库存日志（合并服务）
         │
         ├── Models/                    # 数据模型
         │   ├── ApiCommon.cs           # 通用响应、分页请求

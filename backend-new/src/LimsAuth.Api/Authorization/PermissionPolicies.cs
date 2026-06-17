@@ -1,6 +1,7 @@
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
+using LimsAuth.Api.Data;
 
 namespace LimsAuth.Api.Authorization;
 
@@ -29,22 +30,20 @@ public static class PermissionPolicies
         ["consumable"] = "耗材管理"
     };
 
+    private static readonly string[] AllPermissionCodes = SeedData.AllPermissionCodes;
+
     public static IServiceCollection AddPermissionAuthorization(this IServiceCollection services)
     {
         services.AddAuthorization(options =>
         {
-            foreach (var module in PermissionModules)
+            foreach (var code in AllPermissionCodes)
             {
-                var actions = new[] { "create", "read", "update", "delete" };
-                foreach (var action in actions)
+                var policyName = $"Permission:{code}";
+                options.AddPolicy(policyName, policy =>
                 {
-                    var policyName = $"Permission:{module.Key}:{action}";
-                    options.AddPolicy(policyName, policy =>
-                    {
-                        policy.RequireAuthenticatedUser();
-                        policy.AddRequirements(new PermissionRequirement($"{module.Key}:{action}"));
-                    });
-                }
+                    policy.RequireAuthenticatedUser();
+                    policy.AddRequirements(new PermissionRequirement(code));
+                });
             }
         });
 

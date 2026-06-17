@@ -1,0 +1,89 @@
+# ============================================================
+# LIMS backend-new (.NET 8.0) - Git Ignore
+# ============================================================
+# 注：本文件位于 backend-new/ 目录内
+# 路径以 .gitignore 所在目录为根(即为 backend-new/),无需前缀
+# 根目录 .gitignore 的 backend/*/bin/ 不会匹配 backend-new(因带 -new)
+
+# --- Build 输出 ---
+/bin/
+/obj/
+/out/
+/publish/
+/Artifacts/
+/TestResults/
+**/bin/
+**/obj/
+**/out/
+**/publish/
+**/publish-*/
+**/Artifacts/
+**/TestResults/
+
+# --- 自包含部署 / 单文件发布产物 ---
+*.deps.json
+*.runtimeconfig.json
+*.runtimeconfig.dev.json
+**/apphost.exe
+**/apphost
+
+# --- Rider / ReSharper ---
+_ReSharper*/
+*.[Rr]e[Ss]harper
+**/.idea/
+*.DotSettings.user
+*.sln.DotSettings.user
+
+# --- VS Code ---
+/.vscode/
+**/.vscode/
+
+# --- Visual Studio 解决方案用户选项 ---
+*.suo
+*.user
+*.userprefs
+*.lock.json
+*.swp
+
+# --- NuGet ---
+*.nupkg
+*.snupkg
+**/packages/
+**/project.assets.json
+**/project.fragment.lock.json
+
+# --- 单元测试结果 ---
+coverage*.json
+coverage*.xml
+coverage*.info
+
+# --- SQLite 数据库(运行时生成) ---
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# --- 调试日志(本次调试 session 产物) ---
+debug-*.log
+
+# --- appsettings 本地覆盖 ---
+# 保留 appsettings.json 入库
+# 忽略本地开发覆盖
+**/appsettings.Development.json
+**/appsettings.Local.json
+
+# --- 临时文件 ---
+**/tmp/
+**/temp/
+*.tmp
+*.bak
+**/.DS_Store
+**/Thumbs.db
+
+# --- 生成的文档产物(若用工具自动生成) ---
+**/wwwroot/dist/
+
+# --- EF Core Migrations 备份(可选) ---
+# 默认不忽略,保留迁移;若要忽略请取消下一行注释
+# **/Migrations/*Snapshot*

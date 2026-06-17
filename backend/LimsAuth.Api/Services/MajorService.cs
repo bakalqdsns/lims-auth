@@ -112,6 +112,15 @@ public class MajorService : IMajorService
 
     public async Task<MajorDto> CreateAsync(CreateMajorRequest request)
     {
+        if (string.IsNullOrWhiteSpace(request.Code))
+            throw new ArgumentException("专业编码不能为空", nameof(request));
+        if (string.IsNullOrWhiteSpace(request.Name))
+            throw new ArgumentException("专业名称不能为空", nameof(request));
+        if (request.DepartmentId == Guid.Empty)
+            throw new ArgumentException("所属部门ID(DepartmentId)不能为空", nameof(request));
+        if (!await _dbContext.Departments.AnyAsync(d => d.Id == request.DepartmentId))
+            throw new ArgumentException($"所属部门不存在: {request.DepartmentId}", nameof(request));
+
         var major = new Major
         {
             Code = request.Code,

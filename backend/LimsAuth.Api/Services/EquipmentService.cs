@@ -114,6 +114,14 @@ public class EquipmentService : IEquipmentService
 
     public async Task<Equipment> CreateAsync(CreateEquipmentRequest request)
     {
+        if (string.IsNullOrWhiteSpace(request.Code))
+            throw new ArgumentException("设备编码不能为空", nameof(request));
+        if (string.IsNullOrWhiteSpace(request.Name))
+            throw new ArgumentException("设备名称不能为空", nameof(request));
+        if (request.LabId.HasValue && request.LabId.Value != Guid.Empty
+            && !await _dbContext.Labs.AnyAsync(l => l.Id == request.LabId.Value))
+            throw new ArgumentException($"所属实验室不存在: {request.LabId}", nameof(request));
+
         var equipment = new Equipment
         {
             Code = request.Code,

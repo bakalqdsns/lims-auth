@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using LimsAuth.Api.Authorization;
 using LimsAuth.Api.Data;
 using LimsAuth.Api.Services;
 
@@ -32,10 +33,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization(options =>
-{
-    // Permission policies will be registered by PermissionService
-});
+// Permission policies (Authorization)
+builder.Services.AddPermissionAuthorization();
 
 // Services
 builder.Services.AddScoped<IAuthService, AuthService>();

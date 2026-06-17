@@ -1,6 +1,8 @@
 # LIMS 高校实验室管理系统 - 后端 API 文档
 
-> 本文档详细描述 backend-new 目录下新重构后端的数据库设计。所有字段均来自原始需求文档，无任何猜测。
+> 本文档描述 backend-new 后端重构的数据库设计。字段定义与实际代码（entity 类 + IEntityTypeConfiguration 配置类）严格一致。
+>
+> **最后更新:** 2026-06-11
 
 ---
 
@@ -30,8 +32,9 @@
 | LastLoginIP | NVARCHAR(50) | 最后登录IP | |
 | PasswordUpdateTime | DATETIME | 密码更新时间 | |
 | LoginFailCount | INT | 登录失败次数 | DEFAULT 0 |
-| IsDeleted | BIT | 逻辑删除 | DEFAULT 0 |
-| CreatedAt | DATETIME | 创建时间 | |
+| SortOrder | INT | 排序号 | DEFAULT 0 |
+| IsDeleted | INT | 逻辑删除 | DEFAULT 0 |
+| CreatedAt | DATETIME | 创建时间 | NOT NULL |
 | CreatedBy | GUID | 创建人ID | |
 | UpdatedAt | DATETIME | 更新时间 | |
 | UpdatedBy | GUID | 更新人ID | |
@@ -46,8 +49,10 @@
 | Description | NVARCHAR(500) | 描述 | |
 | IsSystem | INT | 是否系统内置(0否/1是) | DEFAULT 0 |
 | Status | INT | 状态(0禁用/1启用) | DEFAULT 1 |
-| CreatedAt | DATETIME | 创建时间 | |
+| CreatedAt | DATETIME | 创建时间 | NOT NULL |
 | CreatedBy | GUID | 创建人ID | |
+
+> **注意:** Sys_Role 在实际代码中无 UpdatedAt/UpdatedBy 字段（与设计文档初版不同）。
 
 #### 3. Sys_Permission (权限表)
 
@@ -58,7 +63,9 @@
 | PermissionName | NVARCHAR(100) | 权限名称 | NOT NULL |
 | Module | NVARCHAR(50) | 所属模块 | NOT NULL |
 | Description | NVARCHAR(500) | 描述 | |
-| CreatedAt | DATETIME | 创建时间 | |
+| CreatedAt | DATETIME | 创建时间 | NOT NULL |
+
+> **注意:** Sys_Permission 在实际代码中无 UpdatedAt/UpdatedBy 字段。
 
 #### 4. Sys_UserRole (用户角色关联表)
 
@@ -66,7 +73,7 @@
 |--------|----------|------|------|
 | UserID | GUID | 用户ID | PK, FK(Sys_User) |
 | RoleID | GUID | 角色ID | PK, FK(Sys_Role) |
-| AssignedAt | DATETIME | 分配时间 | |
+| AssignedAt | DATETIME | 分配时间 | NOT NULL |
 
 #### 5. Sys_RolePermission (角色权限关联表)
 
@@ -74,7 +81,7 @@
 |--------|----------|------|------|
 | RoleID | GUID | 角色ID | PK, FK(Sys_Role) |
 | PermissionID | GUID | 权限ID | PK, FK(Sys_Permission) |
-| AssignedAt | DATETIME | 分配时间 | |
+| AssignedAt | DATETIME | 分配时间 | NOT NULL |
 
 #### 6. Sys_Institution (机构表)
 
@@ -90,7 +97,7 @@
 | Status | INT | 状态(0禁用/1启用) | DEFAULT 1 |
 | Description | NVARCHAR(500) | 描述 | |
 | SortOrder | INT | 排序号 | DEFAULT 0 |
-| CreatedAt | DATETIME | 创建时间 | |
+| CreatedAt | DATETIME | 创建时间 | NOT NULL |
 | CreatedBy | GUID | 创建人ID | |
 | UpdatedAt | DATETIME | 更新时间 | |
 | UpdatedBy | GUID | 更新人ID | |
@@ -111,14 +118,14 @@
 | Status | INT | 状态(0禁用/1启用) | DEFAULT 1 |
 | Description | NVARCHAR(500) | 描述 | |
 | SortOrder | INT | 排序号 | DEFAULT 0 |
-| CreatedAt | DATETIME | 创建时间 | |
+| CreatedAt | DATETIME | 创建时间 | NOT NULL |
 | CreatedBy | GUID | 创建人ID | |
 | UpdatedAt | DATETIME | 更新时间 | |
 | UpdatedBy | GUID | 更新人ID | |
 
 ---
 
-### 二、基础教学表 (6张)
+### 二、基础教学表 (7张)
 
 #### 8. Edu_Semester (学期表)
 
@@ -136,8 +143,8 @@
 | Status | INT | 状态(0禁用/1启用) | DEFAULT 1 |
 | Description | NVARCHAR(500) | 描述 | |
 | SortOrder | INT | 排序号 | DEFAULT 0 |
-| IsDeleted | BIT | 逻辑删除 | DEFAULT 0 |
-| CreatedAt | DATETIME | 创建时间 | |
+| IsDeleted | INT | 逻辑删除 | DEFAULT 0 |
+| CreatedAt | DATETIME | 创建时间 | NOT NULL |
 | CreatedBy | GUID | 创建人ID | |
 | UpdatedAt | DATETIME | 更新时间 | |
 | UpdatedBy | GUID | 更新人ID | |
@@ -161,11 +168,13 @@
 | SortOrder | INT | 排序号 | DEFAULT 0 |
 | Status | INT | 状态(0禁用/1启用) | DEFAULT 1 |
 | Description | NVARCHAR(1000) | 课程描述 | |
-| IsDeleted | BIT | 逻辑删除 | DEFAULT 0 |
-| CreatedAt | DATETIME | 创建时间 | |
+| IsDeleted | INT | 逻辑删除 | DEFAULT 0 |
+| CreatedAt | DATETIME | 创建时间 | NOT NULL |
 | CreatedBy | GUID | 创建人ID | |
 | UpdatedAt | DATETIME | 更新时间 | |
 | UpdatedBy | GUID | 更新人ID | |
+
+> **注意:** Edu_Course 在实际代码中无 UpdatedAt/UpdatedBy 字段（与设计文档初版不同）。
 
 #### 10. Edu_Major (专业表)
 
@@ -183,8 +192,8 @@
 | SortOrder | INT | 排序号 | DEFAULT 0 |
 | Status | INT | 状态(0禁用/1启用) | DEFAULT 1 |
 | Description | NVARCHAR(500) | 描述 | |
-| IsDeleted | BIT | 逻辑删除 | DEFAULT 0 |
-| CreatedAt | DATETIME | 创建时间 | |
+| IsDeleted | INT | 逻辑删除 | DEFAULT 0 |
+| CreatedAt | DATETIME | 创建时间 | NOT NULL |
 | CreatedBy | GUID | 创建人ID | |
 | UpdatedAt | DATETIME | 更新时间 | |
 | UpdatedBy | GUID | 更新人ID | |
@@ -206,8 +215,8 @@
 | SortOrder | INT | 排序号 | DEFAULT 0 |
 | Status | INT | 状态(0禁用/1启用) | DEFAULT 1 |
 | Description | NVARCHAR(500) | 描述 | |
-| IsDeleted | BIT | 逻辑删除 | DEFAULT 0 |
-| CreatedAt | DATETIME | 创建时间 | |
+| IsDeleted | INT | 逻辑删除 | DEFAULT 0 |
+| CreatedAt | DATETIME | 创建时间 | NOT NULL |
 | CreatedBy | GUID | 创建人ID | |
 | UpdatedAt | DATETIME | 更新时间 | |
 | UpdatedBy | GUID | 更新人ID | |
@@ -218,7 +227,7 @@
 |--------|----------|------|------|
 | ClassID | GUID | 班级ID | PK, FK(Edu_Class) |
 | StudentID | GUID | 学生ID | PK, FK(Sys_User) |
-| JoinedAt | DATETIME | 加入时间 | |
+| JoinedAt | DATETIME | 加入时间 | NOT NULL |
 
 #### 13. Edu_TeachingTask (教学任务表)
 
@@ -237,8 +246,8 @@
 | SortOrder | INT | 排序号 | DEFAULT 0 |
 | Status | INT | 状态(0禁用/1启用) | DEFAULT 1 |
 | Description | NVARCHAR(500) | 描述 | |
-| IsDeleted | BIT | 逻辑删除 | DEFAULT 0 |
-| CreatedAt | DATETIME | 创建时间 | |
+| IsDeleted | INT | 逻辑删除 | DEFAULT 0 |
+| CreatedAt | DATETIME | 创建时间 | NOT NULL |
 | CreatedBy | GUID | 创建人ID | |
 | UpdatedAt | DATETIME | 更新时间 | |
 | UpdatedBy | GUID | 更新人ID | |
@@ -251,7 +260,7 @@
 | TaskID | GUID | 教学任务ID | FK(Edu_TeachingTask) |
 | TeacherID | GUID | 教师ID | FK(Sys_User) |
 | TeacherRole | NVARCHAR(20) | 教师角色(主讲/助教) | DEFAULT '主讲' |
-| AssignedAt | DATETIME | 分配时间 | |
+| AssignedAt | DATETIME | 分配时间 | NOT NULL |
 
 ---
 
@@ -274,8 +283,8 @@
 | SortOrder | INT | 排序号 | DEFAULT 0 |
 | Status | INT | 状态(0禁用/1启用) | DEFAULT 1 |
 | Description | NVARCHAR(500) | 描述 | |
-| IsDeleted | BIT | 逻辑删除 | DEFAULT 0 |
-| CreatedAt | DATETIME | 创建时间 | |
+| IsDeleted | INT | 逻辑删除 | DEFAULT 0 |
+| CreatedAt | DATETIME | 创建时间 | NOT NULL |
 | CreatedBy | GUID | 创建人ID | |
 | UpdatedAt | DATETIME | 更新时间 | |
 | UpdatedBy | GUID | 更新人ID | |
@@ -298,8 +307,8 @@
 | SortOrder | INT | 排序号 | DEFAULT 0 |
 | Status | INT | 状态(0禁用/1启用) | DEFAULT 1 |
 | Description | NVARCHAR(500) | 描述 | |
-| IsDeleted | BIT | 逻辑删除 | DEFAULT 0 |
-| CreatedAt | DATETIME | 创建时间 | |
+| IsDeleted | INT | 逻辑删除 | DEFAULT 0 |
+| CreatedAt | DATETIME | 创建时间 | NOT NULL |
 | CreatedBy | GUID | 创建人ID | |
 | UpdatedAt | DATETIME | 更新时间 | |
 | UpdatedBy | GUID | 更新人ID | |
@@ -323,13 +332,15 @@
 | ClassID | GUID | 班级ID | FK(Edu_Class) |
 | TeacherID | GUID | 授课教师ID | FK(Sys_User) |
 | ExperimentItemID | GUID | 实验项目ID | FK(Lab_ExperimentItem) |
-| ScheduleType | NVARCHAR(50) | 排课类型(CentralScheduling/BookingApply/SelfBooking) | |
+| ScheduleType | NVARCHAR(50) | 排课类型(CentralScheduling/BookingApply/SelfBooking) | DEFAULT 'CentralScheduling' |
 | Status | INT | 状态(0禁用/1启用) | DEFAULT 1 |
 | Remark | NVARCHAR(500) | 备注 | |
-| IsDeleted | BIT | 逻辑删除 | DEFAULT 0 |
-| CreatedAt | DATETIME | 创建时间 | |
+| IsDeleted | INT | 逻辑删除 | DEFAULT 0 |
+| CreatedAt | DATETIME | 创建时间 | NOT NULL |
 | CreatedBy | GUID | 操作人ID | |
 | UpdatedAt | DATETIME | 更新时间 | |
+
+> **注意:** Lab_Schedule 在实际代码中无 UpdatedBy 字段。
 
 #### 18. Lab_ExperimentItem (实验项目库)
 
@@ -342,8 +353,8 @@
 | ExperimentType | NVARCHAR(50) | 实验类型(基础/综合/设计/其他) | |
 | StandardHours | INT | 计划学时 | |
 | Status | INT | 状态(0禁用/1启用) | DEFAULT 1 |
-| IsDeleted | BIT | 逻辑删除 | DEFAULT 0 |
-| CreatedAt | DATETIME | 创建时间 | |
+| IsDeleted | INT | 逻辑删除 | DEFAULT 0 |
+| CreatedAt | DATETIME | 创建时间 | NOT NULL |
 | CreatedBy | GUID | 创建人ID | |
 
 #### 19. Lab_BookingApply (预约申请表)
@@ -360,12 +371,12 @@
 | TargetSection | NVARCHAR(50) | 使用节次 | |
 | WeekNo | INT | 所属周次 | |
 | EstimatedPeople | INT | 预计人数 | |
-| AuditStatus | NVARCHAR(20) | 审批状态(Pending/Approved/Rejected) | |
+| AuditStatus | NVARCHAR(20) | 审批状态(Pending/Approved/Rejected) | DEFAULT 'Pending' |
 | AuditOpinion | NVARCHAR(500) | 审批意见/驳回原因 | |
 | AuditorID | GUID | 审批管理员ID | FK(Sys_User) |
 | AuditTime | DATETIME | 审批时间 | |
-| IsDeleted | BIT | 逻辑删除 | DEFAULT 0 |
-| CreatedAt | DATETIME | 申请提交时间 | |
+| IsDeleted | INT | 逻辑删除 | DEFAULT 0 |
+| CreatedAt | DATETIME | 申请提交时间 | NOT NULL |
 | CreatedBy | GUID | 操作人ID | |
 
 #### 20. Lab_UsageRegister (使用登记表)
@@ -387,12 +398,14 @@
 | AttendanceRecord | NVARCHAR(500) | 考勤记录 | |
 | TeachingRecord | NVARCHAR(200) | 教学情况记录 | |
 | DeviceRecord | NVARCHAR(200) | 仪器设备情况 | |
-| RegisterStatus | NVARCHAR(20) | 登记状态(Pending/Completed/Overdue) | |
-| RegisterUserID | GUID | 填报人ID | FK(Sys_User) |
-| RegisterTime | DATETIME | 填报时间 | |
-| IsDeleted | BIT | 逻辑删除 | DEFAULT 0 |
-| CreatedAt | DATETIME | 创建时间 | |
+| RegisterStatus | NVARCHAR(20) | 登记状态(Pending/Completed/Overdue) | DEFAULT 'Pending' |
+| RegisterUserID | GUID | 填报人ID | FK(Sys_User), NOT NULL |
+| RegisterTime | DATETIME | 填报时间 | NOT NULL |
+| IsDeleted | INT | 逻辑删除 | DEFAULT 0 |
+| CreatedAt | DATETIME | 创建时间 | NOT NULL |
 | CreatedBy | GUID | 操作人ID | |
+
+> **注意:** Lab_UsageRegister 在实际代码中无 UpdatedAt/UpdatedBy 字段。RegisterUserID 为非空 GUID（非空值由 `?? Guid.Empty` 保证）。
 
 ---
 
@@ -428,11 +441,13 @@
 | AvailableQuantity | INT | 可用数量 | DEFAULT 1 |
 | Status | INT | 状态(0禁用/1启用) | DEFAULT 1 |
 | Description | NVARCHAR(500) | 描述 | |
-| IsDeleted | BIT | 逻辑删除 | DEFAULT 0 |
-| CreatedAt | DATETIME | 入库登记时间 | |
+| IsDeleted | INT | 逻辑删除 | DEFAULT 0 |
+| CreatedAt | DATETIME | 入库登记时间 | NOT NULL |
 | CreatedBy | GUID | 创建人ID | |
 | UpdatedAt | DATETIME | 更新时间 | |
 | UpdatedBy | GUID | 更新人ID | |
+
+> **注意:** Dev_Asset 在实际代码中无 UpdatedAt/UpdatedBy 字段。
 
 #### 22. Dev_LoanApply (设备借还申请)
 
@@ -447,15 +462,15 @@
 | ExpectedReturnDate | DATETIME | 预计归还时间 | |
 | ActualLoanTime | DATETIME | 实际借出放行时间 | |
 | ActualReturnTime | DATETIME | 实际归还时间 | |
-| AuditStatus | NVARCHAR(20) | 审批状态(Pending/Approved/Rejected/Returned) | |
+| AuditStatus | NVARCHAR(20) | 审批状态(Pending/Approved/Rejected/Returned) | DEFAULT 'Pending' |
 | AuditorID | GUID | 审批管理员ID | FK(Sys_User) |
 | AuditTime | DATETIME | 审批时间 | |
 | AuditOpinion | NVARCHAR(500) | 审批意见 | |
 | ReturnConfirmUserID | GUID | 归还确认人ID | FK(Sys_User) |
 | DeviceCondition | NVARCHAR(50) | 归还时设备状况(完好/损坏) | |
 | Remark | NVARCHAR(500) | 备注 | |
-| IsDeleted | BIT | 逻辑删除 | DEFAULT 0 |
-| CreatedAt | DATETIME | 创建时间 | |
+| IsDeleted | INT | 逻辑删除 | DEFAULT 0 |
+| CreatedAt | DATETIME | 创建时间 | NOT NULL |
 | CreatedBy | GUID | 操作人ID | |
 
 ---
@@ -469,7 +484,7 @@
 | MatID | GUID | 耗材唯一标识 | PK |
 | MatCode | NVARCHAR(50) | 耗材编号 | NOT NULL, UNIQUE |
 | MatName | NVARCHAR(200) | 耗材名称 | NOT NULL |
-| Category | NVARCHAR(50) | 分类(化学试剂/电子元件/玻璃仪器等) | |
+| Category | NVARCHAR(50) | 分类(化学试剂/电子元件/玻璃仪器等) | NOT NULL |
 | SpecModel | NVARCHAR(200) | 规格型号 | |
 | Unit | NVARCHAR(20) | 单位(瓶/个/盒) | DEFAULT '个' |
 | CurrentStock | DECIMAL(18,4) | 当前总库存 | DEFAULT 0 |
@@ -480,11 +495,13 @@
 | Supplier | NVARCHAR(200) | 供应商 | |
 | UnitPrice | DECIMAL(18,2) | 单价 | |
 | Status | INT | 状态(0禁用/1启用) | DEFAULT 1 |
-| IsDeleted | BIT | 逻辑删除 | DEFAULT 0 |
-| CreatedAt | DATETIME | 创建时间 | |
+| IsDeleted | INT | 逻辑删除 | DEFAULT 0 |
+| CreatedAt | DATETIME | 创建时间 | NOT NULL |
 | CreatedBy | GUID | 创建人ID | |
 | UpdatedAt | DATETIME | 更新时间 | |
 | UpdatedBy | GUID | 更新人ID | |
+
+> **注意:** Mat_Consumable.Category 在实际代码中为非空字符串（实体定义不含 ?），设计文档列为可空是保守估计。
 
 #### 24. Mat_InboundOrder (耗材入库单)
 
@@ -498,14 +515,16 @@
 | Supplier | NVARCHAR(200) | 供应商 | |
 | InboundTime | DATETIME | 入库时间 | |
 | HandlerID | GUID | 经办人ID | FK(Sys_User) |
-| AuditStatus | NVARCHAR(20) | 审核状态(Pending/Approved/Rejected) | |
+| AuditStatus | NVARCHAR(20) | 审核状态(Pending/Approved/Rejected) | DEFAULT 'Pending' |
 | AuditorID | GUID | 审核管理员ID | FK(Sys_User) |
 | AuditTime | DATETIME | 审核时间 | |
 | AuditRemark | NVARCHAR(500) | 审核意见 | |
 | Remark | NVARCHAR(500) | 备注 | |
-| IsDeleted | BIT | 逻辑删除 | DEFAULT 0 |
-| CreatedAt | DATETIME | 创建时间 | |
+| IsDeleted | INT | 逻辑删除 | DEFAULT 0 |
+| CreatedAt | DATETIME | 创建时间 | NOT NULL |
 | CreatedBy | GUID | 操作人ID | |
+
+> **注意:** Mat_InboundOrder 在实际代码中无 UpdatedAt/UpdatedBy 字段。
 
 #### 25. Mat_OutboundOrder (耗材出库单)
 
@@ -519,14 +538,16 @@
 | TargetRoomID | GUID | 使用实验室ID | FK(Ven_Room) |
 | RequesterID | GUID | 领用申请人ID | FK(Sys_User) |
 | OutTime | DATETIME | 实际出库/扣减库存时间 | |
-| AuditStatus | NVARCHAR(20) | 审批状态(Pending/Approved/Rejected) | |
+| AuditStatus | NVARCHAR(20) | 审批状态(Pending/Approved/Rejected) | DEFAULT 'Pending' |
 | AuditorID | GUID | 审批人ID | FK(Sys_User) |
 | AuditTime | DATETIME | 审批时间 | |
 | AuditRemark | NVARCHAR(500) | 审批意见 | |
 | Remark | NVARCHAR(500) | 备注 | |
-| IsDeleted | BIT | 逻辑删除 | DEFAULT 0 |
-| CreatedAt | DATETIME | 创建时间 | |
+| IsDeleted | INT | 逻辑删除 | DEFAULT 0 |
+| CreatedAt | DATETIME | 创建时间 | NOT NULL |
 | CreatedBy | GUID | 操作人ID | |
+
+> **注意:** Mat_OutboundOrder 在实际代码中无 UpdatedAt/UpdatedBy 字段。
 
 #### 26. Mat_StockLog (库存变动日志)
 
@@ -542,7 +563,168 @@
 | ReferenceNo | NVARCHAR(50) | 关联单据号 | |
 | OperatorID | GUID | 操作人ID | FK(Sys_User) |
 | Reason | NVARCHAR(500) | 变动说明 | |
-| CreatedAt | DATETIME | 变动时间 | |
+| CreatedAt | DATETIME | 变动时间 | NOT NULL |
+
+> **注意:** Mat_StockLog 在实际代码中无 UpdatedAt/UpdatedBy 字段。
+
+---
+
+## 实体属性名与数据库列名对照表
+
+以下为实体属性名与数据库列名不一致的字段（由 IEntityTypeConfiguration 的 HasColumnName 指定）：
+
+| 表名 | 实体属性名 | 数据库列名 |
+|------|-----------|-----------|
+| Sys_User | Username | UserName |
+| Sys_User | RealName | RealName |
+| Sys_User | MainInstitutionId | MainInstitutionID |
+| Sys_User | MainDepartmentId | MainDepartmentID |
+| Sys_User | LastLoginIp | LastLoginIP |
+| Sys_User | LoginFailCount | LoginFailCount |
+| Sys_Role | Code | RoleCode |
+| Sys_Role | Name | RoleName |
+| Sys_Permission | Code | PermissionCode |
+| Sys_Permission | Name | PermissionName |
+| Sys_Institution | Code | InstitutionCode |
+| Sys_Institution | Name | InstitutionName |
+| Sys_Institution | InstitutionType | InstitutionType |
+| Sys_Institution | FullPath | FullPath |
+| Sys_Department | Code | DepartmentCode |
+| Sys_Department | Name | DepartmentName |
+| Sys_Department | DepartmentType | DepartmentType |
+| Sys_Department | FullPath | FullPath |
+| Edu_Semester | Code | SemesterCode |
+| Edu_Semester | Name | SemesterName |
+| Edu_Semester | SchoolYear | SchoolYear |
+| Edu_Semester | IsCurrent | IsCurrent |
+| Edu_Course | Code | CourseCode |
+| Edu_Course | Name | CourseName |
+| Edu_Course | NameEn | CourseNameEn |
+| Edu_Course | Nature | CourseNature |
+| Edu_Major | Code | MajorCode |
+| Edu_Major | Name | MajorName |
+| Edu_Major | NameEn | MajorNameEn |
+| Edu_Major | DegreeLevel | DegreeLevel |
+| Edu_Major | DegreeName | DegreeName |
+| Edu_Class | Code | ClassCode |
+| Edu_Class | Name | ClassName |
+| Edu_Class | GradeName | GradeName |
+| Edu_Class | MonitorId | MonitorID |
+| Edu_Class | HeadTeacherId | HeadTeacherID |
+| Edu_TeachingTask | Code | TaskCode |
+| Edu_TeachingTask | SemesterId | SemesterID |
+| Edu_TeachingTask | CourseId | CourseID |
+| Edu_TeachingTask | MajorId | MajorID |
+| Edu_TeachingTask | ClassId | ClassID |
+| Edu_TeachingTask | ExamMode | ExamMode |
+| Edu_TeachingTaskTeacher | TaskId | TaskID |
+| Edu_TeachingTaskTeacher | TeacherId | TeacherID |
+| Edu_TeachingTaskTeacher | Role | TeacherRole |
+| Ven_Building | Code | BuildingCode |
+| Ven_Building | Name | BuildingName |
+| Ven_Building | NameEn | BuildingNameEn |
+| Ven_Building | InstitutionId | InstitutionID |
+| Ven_Building | UseType | UseType |
+| Ven_Building | FullPath | FullPath |
+| Ven_Room | Code | RoomCode |
+| Ven_Room | Name | RoomName |
+| Ven_Room | BuildingId | BuildingID |
+| Ven_Room | RoomNumber | RoomNumber |
+| Ven_Room | RoomType | RoomType |
+| Lab_Schedule | SemesterId | SemesterID |
+| Lab_Schedule | RoomId | RoomID |
+| Lab_Schedule | TeachingTaskId | TaskID |
+| Lab_Schedule | CourseName | CourseName |
+| Lab_Schedule | ClassId | ClassID |
+| Lab_Schedule | TeacherId | TeacherID |
+| Lab_Schedule | ExperimentItemId | ExperimentItemID |
+| Lab_Schedule | ScheduleType | ScheduleType |
+| Lab_ExperimentItem | Code | ItemCode |
+| Lab_ExperimentItem | Name | ItemName |
+| Lab_ExperimentItem | CourseId | CourseID |
+| Lab_ExperimentItem | ExperimentType | ExperimentType |
+| Lab_BookingApply | Code | ApplyCode |
+| Lab_BookingApply | ApplicantId | ApplicantID |
+| Lab_BookingApply | ApplicantType | ApplicantType |
+| Lab_BookingApply | TargetSection | TargetSection |
+| Lab_BookingApply | AuditStatus | AuditStatus |
+| Lab_BookingApply | AuditOpinion | AuditOpinion |
+| Lab_BookingApply | AuditorId | AuditorID |
+| Lab_BookingApply | AuditTime | AuditTime |
+| Lab_UsageRegister | ScheduleId | ScheduleID |
+| Lab_UsageRegister | BookingApplyId | BookingApplyID |
+| Lab_UsageRegister | SemesterId | SemesterID |
+| Lab_UsageRegister | RoomId | RoomID |
+| Lab_UsageRegister | ItemName | ItemName |
+| Lab_UsageRegister | ExperimentType | ExperimentType |
+| Lab_UsageRegister | PlannedHours | PlannedHours |
+| Lab_UsageRegister | ActualHours | ActualHours |
+| Lab_UsageRegister | ClassName | ClassName |
+| Lab_UsageRegister | ExpectedCount | ExpectedCount |
+| Lab_UsageRegister | ActualCount | ActualCount |
+| Lab_UsageRegister | AttendanceRecord | AttendanceRecord |
+| Lab_UsageRegister | TeachingRecord | TeachingRecord |
+| Lab_UsageRegister | DeviceRecord | DeviceRecord |
+| Lab_UsageRegister | RegisterStatus | RegisterStatus |
+| Lab_UsageRegister | RegisterUserId | RegisterUserID |
+| Lab_UsageRegister | RegisterTime | RegisterTime |
+| Dev_Asset | Code | AssetCode |
+| Dev_Asset | Name | DeviceName |
+| Dev_Asset | ModelNumber | ModelNumber |
+| Dev_Asset | Specification | Specification |
+| Dev_Asset | FundingSource | FundingSource |
+| Dev_Asset | StorageLocation | StorageLocation |
+| Dev_Asset | ResponsibleUserId | ResponsibleUserID |
+| Dev_Asset | DepartmentId | DepartmentID |
+| Dev_Asset | LabelInfo | LabelInfo |
+| Dev_Asset | PhotoPath | PhotoPath |
+| Dev_Asset | DeviceStatus | DeviceStatus |
+| Dev_Asset | TotalQuantity | TotalQuantity |
+| Dev_Asset | AvailableQuantity | AvailableQuantity |
+| Dev_LoanApply | AssetId | AssetID |
+| Dev_LoanApply | BorrowerId | BorrowerID |
+| Dev_LoanApply | BorrowerType | BorrowerType |
+| Dev_LoanApply | LoanPurpose | LoanPurpose |
+| Dev_LoanApply | LoanQuantity | LoanQuantity |
+| Dev_LoanApply | ExpectedReturnDate | ExpectedReturnDate |
+| Dev_LoanApply | ActualLoanTime | ActualLoanTime |
+| Dev_LoanApply | ActualReturnTime | ActualReturnTime |
+| Dev_LoanApply | AuditStatus | AuditStatus |
+| Dev_LoanApply | AuditOpinion | AuditOpinion |
+| Dev_LoanApply | AuditorId | AuditorID |
+| Dev_LoanApply | AuditTime | AuditTime |
+| Dev_LoanApply | ReturnConfirmUserId | ReturnConfirmUserID |
+| Dev_LoanApply | DeviceCondition | DeviceCondition |
+| Mat_Consumable | Code | MatCode |
+| Mat_Consumable | Name | MatName |
+| Mat_Consumable | SpecModel | SpecModel |
+| Mat_Consumable | StorageLocation | StorageLocation |
+| Mat_InboundOrder | Code | InboundCode |
+| Mat_InboundOrder | ConsumableId | MatID |
+| Mat_InboundOrder | Quantity | InboundQty |
+| Mat_InboundOrder | HandlerId | HandlerID |
+| Mat_InboundOrder | Status | AuditStatus |
+| Mat_InboundOrder | AuditorId | AuditorID |
+| Mat_InboundOrder | AuditTime | AuditTime |
+| Mat_InboundOrder | AuditRemark | AuditRemark |
+| Mat_OutboundOrder | Code | OutboundCode |
+| Mat_OutboundOrder | ConsumableId | MatID |
+| Mat_OutboundOrder | Quantity | RequestQty |
+| Mat_OutboundOrder | TargetRoomId | TargetRoomID |
+| Mat_OutboundOrder | ApplicantId | RequesterID |
+| Mat_OutboundOrder | OutTime | OutTime |
+| Mat_OutboundOrder | Status | AuditStatus |
+| Mat_OutboundOrder | AuditorId | AuditorID |
+| Mat_OutboundOrder | AuditTime | AuditTime |
+| Mat_OutboundOrder | AuditRemark | AuditRemark |
+| Mat_StockLog | ConsumableId | MatID |
+| Mat_StockLog | BeforeQuantity | OldQty |
+| Mat_StockLog | ChangeQuantity | ChangeQty |
+| Mat_StockLog | AfterQuantity | NewQty |
+| Mat_StockLog | ReferenceId | ReferenceID |
+| Mat_StockLog | ReferenceNo | ReferenceNo |
+| Mat_StockLog | OperatorId | OperatorID |
+| Mat_StockLog | Remark | Reason |
 
 ---
 
@@ -596,28 +778,27 @@ erDiagram
 
 ## 索引设计
 
-| 表名 | 索引字段 | 索引类型 | 唯一 |
-|------|----------|----------|------|
-| Sys_User | UserName | UNIQUE | YES |
-| Sys_User | EmployeeNo | | NO |
-| Sys_User | MainDepartmentID | | NO |
-| Sys_Role | RoleCode | UNIQUE | YES |
-| Sys_Permission | PermissionCode | UNIQUE | YES |
-| Sys_Institution | InstitutionCode | UNIQUE | YES |
-| Sys_Department | DepartmentCode | UNIQUE | YES |
-| Edu_Semester | SemesterCode | UNIQUE | YES |
-| Edu_Course | CourseCode | UNIQUE | YES |
-| Edu_Major | MajorCode | UNIQUE | YES |
-| Edu_Class | ClassCode | UNIQUE | YES |
-| Ven_Building | BuildingCode | UNIQUE | YES |
-| Ven_Room | RoomCode | UNIQUE | YES |
-| Lab_ExperimentItem | ItemCode | UNIQUE | YES |
-| Lab_BookingApply | ApplyCode | UNIQUE | YES |
-| Dev_Asset | AssetCode | UNIQUE | YES |
-| Mat_Consumable | MatCode | UNIQUE | YES |
-| Mat_InboundOrder | InboundCode | UNIQUE | YES |
-| Mat_OutboundOrder | OutboundCode | UNIQUE | YES |
-| Mat_StockLog | MatID, CreatedAt | Composite | NO |
+| 表名 | 索引字段 | 唯一 |
+|------|----------|------|
+| Sys_User | UserName | YES |
+| Sys_User | EmployeeNo | NO |
+| Sys_Role | RoleCode | YES |
+| Sys_Permission | PermissionCode | YES |
+| Sys_Institution | InstitutionCode | YES |
+| Sys_Department | DepartmentCode | YES |
+| Edu_Semester | SemesterCode | YES |
+| Edu_Course | CourseCode | YES |
+| Edu_Major | MajorCode | YES |
+| Edu_Class | ClassCode | YES |
+| Ven_Building | BuildingCode | YES |
+| Ven_Room | RoomCode | YES |
+| Lab_ExperimentItem | ItemCode | YES |
+| Lab_BookingApply | ApplyCode | YES |
+| Dev_Asset | AssetCode | YES |
+| Mat_Consumable | MatCode | YES |
+| Mat_InboundOrder | InboundCode | YES |
+| Mat_OutboundOrder | OutboundCode | YES |
+| Mat_StockLog | (MatID, CreatedAt) | NO (复合) |
 
 ---
 
@@ -664,3 +845,17 @@ erDiagram
 
 ### 权限点 (65个)
 覆盖 user/role/permission/institution/department/semester/course/major/class/teachingtask/building/room/schedule/booking/usage/asset/loan/consumable/experimentitem 等19个模块
+
+---
+
+## 字段类型对照 (C# Entity vs SQLite)
+
+| C# 类型 | SQLite 类型 |
+|---------|------------|
+| GUID | TEXT |
+| string | TEXT |
+| int | INTEGER |
+| decimal | REAL |
+| double | REAL |
+| DateTime | TEXT (ISO8601) |
+| DateTime? | TEXT (ISO8601, nullable) |

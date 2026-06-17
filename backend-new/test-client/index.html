@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LIMS API 测试客户端</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; background: #f0f2f5; color: #333; min-height: 100vh; }
+    .container { max-width: 900px; margin: 0 auto; padding: 24px; }
+
+    .header { background: #2c3e50; color: #fff; padding: 20px 24px; border-radius: 8px; margin-bottom: 20px; }
+    .header h1 { font-size: 1.4rem; font-weight: 600; }
+    .header p { font-size: 0.85rem; opacity: 0.7; margin-top: 4px; }
+
+    .card { background: #fff; border-radius: 8px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+    .card h2 { font-size: 1rem; font-weight: 600; margin-bottom: 14px; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 8px; }
+
+    .form-row { display: flex; gap: 12px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
+    label { font-size: 0.85rem; font-weight: 500; min-width: 60px; }
+    input { padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.85rem; min-width: 180px; }
+    input:focus { outline: none; border-color: #3498db; box-shadow: 0 0 0 2px rgba(52,152,219,.2); }
+
+    button { padding: 6px 16px; border: none; border-radius: 4px; font-size: 0.85rem; cursor: pointer; transition: background .15s; }
+    .btn-primary { background: #3498db; color: #fff; }
+    .btn-primary:hover { background: #2980b9; }
+    .btn-danger { background: #e74c3c; color: #fff; }
+    .btn-danger:hover { background: #c0392b; }
+    .btn-success { background: #27ae60; color: #fff; }
+    .btn-success:hover { background: #1e8449; }
+    .btn-sm { padding: 4px 10px; font-size: 0.8rem; }
+
+    .token-box { background: #ecf0f1; border-radius: 4px; padding: 10px 12px; font-size: 0.78rem; word-break: break-all; color: #555; margin-top: 10px; }
+    .token-label { font-weight: 600; color: #2c3e50; margin-bottom: 6px; font-size: 0.85rem; }
+
+    .api-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+    .api-row .method { font-weight: 700; font-size: 0.75rem; padding: 3px 8px; border-radius: 3px; min-width: 60px; text-align: center; }
+    .method-get { background: #27ae60; color: #fff; }
+    .method-post { background: #3498db; color: #fff; }
+    .method-put { background: #f39c12; color: #fff; }
+    .method-delete { background: #e74c3c; color: #fff; }
+
+    .api-path { font-size: 0.85rem; color: #2c3e50; font-family: 'Consolas', 'Courier New', monospace; flex: 1; min-width: 200px; }
+
+    textarea { width: 100%; height: 80px; border: 1px solid #ccc; border-radius: 4px; padding: 8px; font-family: 'Consolas', 'Courier New', monospace; font-size: 0.8rem; resize: vertical; }
+
+    .response { background: #1e1e1e; color: #d4d4d4; border-radius: 4px; padding: 14px; font-family: 'Consolas', 'Courier New', monospace; font-size: 0.8rem; white-space: pre-wrap; word-break: break-all; max-height: 400px; overflow-y: auto; margin-top: 10px; }
+    .response-error { color: #f48771; }
+    .response-ok { color: #89d185; }
+    .response-header { font-size: 0.78rem; color: #9cdcfe; margin-bottom: 8px; border-bottom: 1px solid #333; padding-bottom: 6px; }
+
+    .status-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; font-weight: 600; }
+    .status-ok { background: #27ae60; color: #fff; }
+    .status-err { background: #e74c3c; color: #fff; }
+    .status-pending { background: #f39c12; color: #fff; }
+
+    .info-row { display: flex; gap: 12px; margin-bottom: 10px; font-size: 0.85rem; align-items: center; }
+    .info-label { font-weight: 600; color: #555; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <h1>LIMS API 测试客户端</h1>
+    <p id="backendUrl">后端地址: 等待设置...</p>
+  </div>
+
+  <!-- Auth -->
+  <div class="card">
+    <h2>1. 认证</h2>
+    <div class="form-row">
+      <label>后端地址</label>
+      <input type="text" id="baseUrl" value="http://localhost:5047" style="min-width:240px">
+      <button class="btn-primary" onclick="setBaseUrl()">设置</button>
+      <span id="urlStatus" style="font-size:.8rem;color:#27ae60;display:none">已连接</span>
+    </div>
+    <div class="form-row">
+      <label>用户名</label>
+      <input type="text" id="username" value="admin">
+      <label>密码</label>
+      <input type="password" id="password" value="admin123">
+      <button class="btn-primary" onclick="login()">登录</button>
+      <button class="btn-danger" onclick="logout()">登出</button>
+    </div>
+    <div class="token-box" id="tokenBox" style="display:none">
+      <div class="token-label">Token</div>
+      <div id="tokenDisplay"></div>
+    </div>
+    <div class="info-row" id="userInfo" style="display:none">
+      <span class="info-label">登录用户:</span>
+      <span id="userDisplay"></span>
+    </div>
+  </div>
+
+  <!-- Quick Test -->
+  <div class="card">
+    <h2>2. 快速测试（无需 Body）</h2>
+    <div class="api-row">
+      <span class="method method-get">GET</span>
+      <span class="api-path">/api/v1/permissions</span>
+      <button class="btn-primary btn-sm" onclick="quickGet('/api/v1/permissions', '快速测试-权限列表')">测试</button>
+    </div>
+    <div class="api-row">
+      <span class="method method-get">GET</span>
+      <span class="api-path">/api/v1/roles</span>
+      <button class="btn-primary btn-sm" onclick="quickGet('/api/v1/roles', '快速测试-角色列表')">测试</button>
+    </div>
+    <div class="api-row">
+      <span class="method method-get">GET</span>
+      <span class="api-path">/api/v1/semesters</span>
+      <button class="btn-primary btn-sm" onclick="quickGet('/api/v1/semesters', '快速测试-学期列表')">测试</button>
+    </div>
+    <div class="api-row">
+      <span class="method method-get">GET</span>
+      <span class="api-path">/api/v1/institutions/tree</span>
+      <button class="btn-primary btn-sm" onclick="quickGet('/api/v1/institutions/tree', '快速测试-机构树')">测试</button>
+    </div>
+    <div class="api-row">
+      <span class="method method-get">GET</span>
+      <span class="api-path">/api/v1/departments/tree</span>
+      <button class="btn-primary btn-sm" onclick="quickGet('/api/v1/departments/tree', '快速测试-部门树')">测试</button>
+    </div>
+    <div class="api-row">
+      <span class="method method-get">GET</span>
+      <span class="api-path">/api/v1/courses</span>
+      <button class="btn-primary btn-sm" onclick="quickGet('/api/v1/courses', '快速测试-课程列表')">测试</button>
+    </div>
+    <div class="api-row">
+      <span class="method method-get">GET</span>
+      <span class="api-path">/api/v1/majors</span>
+      <button class="btn-primary btn-sm" onclick="quickGet('/api/v1/majors', '快速测试-专业列表')">测试</button>
+    </div>
+    <div class="api-row">
+      <span class="method method-get">GET</span>
+      <span class="api-path">/api/v1/classes</span>
+      <button class="btn-primary btn-sm" onclick="quickGet('/api/v1/classes', '快速测试-班级列表')">测试</button>
+    </div>
+    <div class="api-row">
+      <span class="method method-get">GET</span>
+      <span class="api-path">/api/v1/buildings</span>
+      <button class="btn-primary btn-sm" onclick="quickGet('/api/v1/buildings', '快速测试-楼宇列表')">测试</button>
+    </div>
+    <div class="api-row">
+      <span class="method method-get">GET</span>
+      <span class="api-path">/api/v1/rooms</span>
+      <button class="btn-primary btn-sm" onclick="quickGet('/api/v1/rooms', '快速测试-场地列表')">测试</button>
+    </div>
+    <div class="api-row">
+      <span class="method method-get">GET</span>
+      <span class="api-path">/api/v1/consumables</span>
+      <button class="btn-primary btn-sm" onclick="quickGet('/api/v1/consumables', '快速测试-耗材列表')">测试</button>
+    </div>
+    <div class="api-row">
+      <span class="method method-get">GET</span>
+      <span class="api-path">/api/v1/assets</span>
+      <button class="btn-primary btn-sm" onclick="quickGet('/api/v1/assets', '快速测试-设备列表')">测试</button>
+    </div>
+  </div>
+
+  <!-- Custom Request -->
+  <div class="card">
+    <h2>3. 自定义请求</h2>
+    <div class="form-row">
+      <select id="customMethod" style="padding:6px 8px;border:1px solid #ccc;border-radius:4px;font-size:.85rem">
+        <option value="GET">GET</option>
+        <option value="POST">POST</option>
+        <option value="PUT">PUT</option>
+        <option value="DELETE">DELETE</option>
+      </select>
+      <input type="text" id="customPath" value="/api/v1/users" style="flex:1;min-width:300px">
+      <button class="btn-success" onclick="sendCustom()">发送</button>
+    </div>
+    <textarea id="customBody" placeholder="请求 Body (JSON)，仅 POST/PUT 使用"></textarea>
+  </div>
+
+  <!-- Response -->
+  <div class="card">
+    <h2>4. 响应</h2>
+    <div id="responseHeader" style="display:none">
+      <span class="status-badge status-pending" id="statusBadge">等待</span>
+      <span id="responseTime" style="font-size:.8rem;color:#888;margin-left:10px"></span>
+      <span id="responsePath" style="font-size:.8rem;color:#555;margin-left:10px"></span>
+    </div>
+    <div class="response" id="responseBody">响应将显示在这里...</div>
+  </div>
+
+  <!-- History -->
+  <div class="card">
+    <h2>5. 请求历史 <button class="btn-danger btn-sm" onclick="clearHistory()">清空</button></h2>
+    <div id="historyList" style="font-size:.8rem;color:#666"></div>
+  </div>
+
+</div>
+
+<script>
+  let token = localStorage.getItem('lims_token') || '';
+  let tokenInfo = JSON.parse(localStorage.getItem('lims_token_info') || 'null');
+  let baseUrl = localStorage.getItem('lims_base_url') || 'http://localhost:5047';
+  let history = [];
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('baseUrl').value = baseUrl;
+    updateHeader();
+    if (token) {
+      document.getElementById('tokenBox').style.display = 'block';
+      document.getElementById('tokenDisplay').textContent = token;
+      document.getElementById('urlStatus').style.display = 'inline';
+    }
+    if (tokenInfo) {
+      document.getElementById('userInfo').style.display = 'flex';
+      document.getElementById('userDisplay').textContent = `${tokenInfo.username} / ${tokenInfo.realName}`;
+    }
+  });
+
+  function setBaseUrl() {
+    baseUrl = document.getElementById('baseUrl').value.trim().replace(/\/$/, '');
+    localStorage.setItem('lims_base_url', baseUrl);
+    updateHeader();
+  }
+
+  function updateHeader() {
+    document.getElementById('backendUrl').textContent = '后端地址: ' + baseUrl;
+  }
+
+  async function login() {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    if (!username || !password) { alert('请输入用户名和密码'); return; }
+    showResponse('pending', '', 'POST /api/v1/auth/login');
+    const start = Date.now();
+    try {
+      const resp = await fetch(`${baseUrl}/api/v1/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await resp.json();
+      const elapsed = Date.now() - start;
+      if (data.code === 200 && data.data && data.data.token) {
+        token = data.data.token;
+        tokenInfo = data.data.user;
+        localStorage.setItem('lims_token', token);
+        localStorage.setItem('lims_token_info', JSON.stringify(tokenInfo));
+        document.getElementById('tokenBox').style.display = 'block';
+        document.getElementById('tokenDisplay').textContent = token;
+        document.getElementById('userInfo').style.display = 'flex';
+        document.getElementById('userDisplay').textContent = `${tokenInfo.username} / ${tokenInfo.realName}`;
+        document.getElementById('urlStatus').style.display = 'inline';
+        showResponse('ok', data, `POST /api/v1/auth/login (${elapsed}ms)`);
+        addHistory('POST', '/api/v1/auth/login', 200, elapsed);
+      } else {
+        showResponse('error', data, `POST /api/v1/auth/login (${elapsed}ms)`);
+        addHistory('POST', '/api/v1/auth/login', data.code || 401, elapsed);
+      }
+    } catch (e) {
+      showResponse('error', { error: e.message }, `POST /api/v1/auth/login (${Date.now()-start}ms)`);
+    }
+  }
+
+  function logout() {
+    token = '';
+    tokenInfo = null;
+    localStorage.removeItem('lims_token');
+    localStorage.removeItem('lims_token_info');
+    document.getElementById('tokenBox').style.display = 'none';
+    document.getElementById('tokenDisplay').textContent = '';
+    document.getElementById('userInfo').style.display = 'none';
+    document.getElementById('userDisplay').textContent = '';
+    document.getElementById('urlStatus').style.display = 'none';
+    showResponse('info', { message: '已登出，Token 已清除' }, '登出');
+  }
+
+  async function quickGet(path, label) {
+    showResponse('pending', '', label || path);
+    const start = Date.now();
+    try {
+      const resp = await fetch(`${baseUrl}${path}`, { headers: authHeader() });
+      const data = await resp.json();
+      const elapsed = Date.now() - start;
+      const ok = resp.ok;
+      showResponse(ok ? 'ok' : 'error', data, `${label || path} (${elapsed}ms)`);
+      addHistory('GET', path, resp.status, elapsed);
+    } catch (e) {
+      showResponse('error', { error: e.message }, `${label || path} (${Date.now()-start}ms)`);
+    }
+  }
+
+  async function sendCustom() {
+    const method = document.getElementById('customMethod').value;
+    const path = document.getElementById('customPath').value.trim();
+    const body = document.getElementById('customBody').value.trim();
+    if (!path) { alert('请输入路径'); return; }
+    showResponse('pending', '', `${method} ${path}`);
+    const start = Date.now();
+    try {
+      const opts = { method, headers: { ...authHeader(), 'Content-Type': 'application/json' } };
+      if ((method === 'POST' || method === 'PUT') && body) {
+        opts.body = body;
+      }
+      const resp = await fetch(`${baseUrl}${path}`, opts);
+      let data;
+      const ct = resp.headers.get('content-type') || '';
+      if (ct.includes('application/json')) {
+        data = await resp.json();
+      } else {
+        data = await resp.text();
+      }
+      const elapsed = Date.now() - start;
+      showResponse(resp.ok ? 'ok' : 'error', data, `${method} ${path} (${elapsed}ms) - HTTP ${resp.status}`);
+      addHistory(method, path, resp.status, elapsed);
+    } catch (e) {
+      showResponse('error', { error: e.message }, `${method} ${path} (${Date.now()-start}ms)`);
+    }
+  }
+
+  function authHeader() {
+    const h = { 'Accept': 'application/json' };
+    if (token) h['Authorization'] = `Bearer ${token}`;
+    return h;
+  }
+
+  function showResponse(type, data, label) {
+    const badge = document.getElementById('statusBadge');
+    const header = document.getElementById('responseHeader');
+    const body = document.getElementById('responseBody');
+    const time = document.getElementById('responseTime');
+    const path = document.getElementById('responsePath');
+    header.style.display = 'flex';
+    time.textContent = '';
+    path.textContent = label || '';
+
+    if (type === 'pending') {
+      badge.className = 'status-badge status-pending';
+      badge.textContent = '请求中...';
+      body.textContent = '正在请求...';
+      body.className = 'response';
+      return;
+    }
+
+    if (type === 'info') {
+      badge.style.display = 'none';
+      body.textContent = JSON.stringify(data, null, 2);
+      body.className = 'response';
+      return;
+    }
+
+    badge.style.display = 'inline-block';
+    if (type === 'ok') {
+      badge.className = 'status-badge status-ok';
+      badge.textContent = '成功';
+      body.className = 'response response-ok';
+    } else {
+      badge.className = 'status-badge status-err';
+      badge.textContent = '失败';
+      body.className = 'response response-error';
+    }
+
+    body.textContent = JSON.stringify(data, null, 2);
+  }
+
+  function addHistory(method, path, status, elapsed) {
+    const entry = { method, path, status, elapsed, ts: new Date().toLocaleTimeString() };
+    history.unshift(entry);
+    if (history.length > 20) history.pop();
+    renderHistory();
+  }
+
+  function renderHistory() {
+    const el = document.getElementById('historyList');
+    if (!history.length) { el.textContent = '暂无记录'; return; }
+    el.innerHTML = history.map((h, i) => {
+      const cls = h.status >= 200 && h.status < 300 ? 'status-ok' : 'status-err';
+      return `<div style="padding:4px 0;border-bottom:1px solid #eee">
+        <span style="font-weight:700;font-size:.72rem;color:#fff;background:${methodColor(h.method)};padding:1px 5px;border-radius:2px;margin-right:6px">${h.method}</span>
+        <span style="font-family:monospace;font-size:.78rem">${h.path}</span>
+        <span class="status-badge ${cls}" style="margin-left:8px">${h.status}</span>
+        <span style="color:#888;font-size:.75rem;margin-left:8px">${h.elapsed}ms</span>
+        <span style="color:#aaa;font-size:.72rem;margin-left:8px">${h.ts}</span>
+      </div>`;
+    }).join('');
+  }
+
+  function methodColor(m) {
+    return { GET:'#27ae60', POST:'#3498db', PUT:'#f39c12', DELETE:'#e74c3c' }[m] || '#888';
+  }
+
+  function clearHistory() { history = []; renderHistory(); }
+</script>
+</body>
+</html>

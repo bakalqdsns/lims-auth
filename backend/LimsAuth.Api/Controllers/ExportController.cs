@@ -8,7 +8,7 @@ using LimsAuth.Api.Services;
 namespace LimsAuth.Api.Controllers;
 
 [ApiController]
-[Route("api/export")]
+[Route("api/v1/export")]
 [Authorize]
 public class ExportController : ControllerBase
 {

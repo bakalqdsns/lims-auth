@@ -63,15 +63,10 @@ public class PermissionService : IPermissionService
         return ApiResponse<List<PermissionModuleDto>>.Success(grouped);
     }
 
-    public async Task RegisterPermissionPoliciesAsync(IServiceProvider services)
+    public Task RegisterPermissionPoliciesAsync(IServiceProvider services)
     {
-        var db = services.GetRequiredService<AppDbContext>();
-        var perms = await db.SysPermissions.ToListAsync();
-        using var scope = services.GetRequiredService<IServiceScopeFactory>().CreateScope();
-        var authOptions = scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerOptions>();
-        var builder = scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Authorization.IAuthorizationBuilder>();
-
-        // Policy registration is handled via AddAuthorization policies in Program.cs
-        // Individual controllers use [Authorize(Policy = "Permission:xxx")] attribute
+        // Policies are registered statically via PermissionPolicies.AddPermissionAuthorization()
+        // which is called in Program.cs before this method is invoked.
+        return Task.CompletedTask;
     }
 }

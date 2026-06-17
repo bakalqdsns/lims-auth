@@ -322,7 +322,7 @@ public class UsageRegisterService : IUsageRegisterService
             ExpectedCount = request.ExpectedCount, ActualCount = request.ActualCount,
             AttendanceRecord = request.AttendanceRecord, TeachingRecord = request.TeachingRecord,
             DeviceRecord = request.DeviceRecord, RegisterStatus = request.RegisterStatus,
-            RegisterUserId = request.ScheduleId, RegisterTime = DateTime.UtcNow,
+            RegisterUserId = request.ScheduleId ?? Guid.Empty, RegisterTime = DateTime.UtcNow,
             CreatedAt = DateTime.UtcNow
         };
         _db.LabUsageRegisters.Add(u);

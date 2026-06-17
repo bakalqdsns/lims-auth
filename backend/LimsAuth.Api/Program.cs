@@ -6,6 +6,7 @@ using System.Text;
 using LimsAuth.Api.Data;
 using LimsAuth.Api.Services;
 using LimsAuth.Api.Authorization;
+using LimsAuth.Api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -66,6 +67,10 @@ builder.Services.AddScoped<IReservationService, ReservationService>();
 builder.Services.AddScoped<ITeachingApplicationService, TeachingApplicationService>();
 builder.Services.AddScoped<IUsageRegistrationService, UsageRegistrationService>();
 builder.Services.AddScoped<IStatisticsService, StatisticsService>();
+
+// 全局业务异常处理
+builder.Services.AddExceptionHandler<BusinessExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 // JWT Authentication
 var secretKey = builder.Configuration["Jwt:SecretKey"] ?? "your-super-secret-key-min-32-chars-long!!";
@@ -201,6 +206,9 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// 全局业务异常处理 -> 业务异常转 400(不暴露堆栈)
+app.UseExceptionHandler();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

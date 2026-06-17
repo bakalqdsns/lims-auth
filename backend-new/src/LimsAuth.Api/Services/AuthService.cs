@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using LimsAuth.Api.Data;
 using LimsAuth.Api.Models;
+using LimsAuth.Api.Models.Entities;
 
 namespace LimsAuth.Api.Services;
 

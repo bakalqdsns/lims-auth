@@ -103,7 +103,7 @@ public class ExperimentTaskListTemplate : IExportTemplate
             body.AppendChild(MakeParagraph("", spacing: 200));
             body.AppendChild(MakeSummaryLine($"共 {totalTasks} 条任务，合计学生 {totalStudents} 人"));
             body.AppendChild(MakeParagraph("", spacing: 200));
-            body.AppendChild(MakeSignatures());
+            foreach (var p in MakeSignatures()) body.AppendChild(p);
 
             mainPart.Document.Save();
         }
@@ -282,23 +282,25 @@ public class ExperimentTaskListTemplate : IExportTemplate
         return new Paragraph(new ParagraphProperties(pp), new Run(rp, new Text(text)));
     }
 
-    private static Paragraph MakeSignatures()
+    private static IEnumerable<Paragraph> MakeSignatures()
     {
-        var pp = new StyleParagraphProperties(
-            new SpacingBetweenLines { After = "0" }
-        );
-        var rp = new StyleRunProperties(new FontSize { Val = "21" });
+        var pp1 = new StyleParagraphProperties(new SpacingBetweenLines { After = "0" });
+        var pp2 = new StyleParagraphProperties(new SpacingBetweenLines { After = "0" });
+        var pp3 = new StyleParagraphProperties(new SpacingBetweenLines { After = "0" });
+        var rp1 = new StyleRunProperties(new FontSize { Val = "21" });
+        var rp2 = new StyleRunProperties(new FontSize { Val = "21" });
+        var rp3 = new StyleRunProperties(new FontSize { Val = "21" });
 
-        var line1 = new Paragraph(new ParagraphProperties(pp),
-            new Run(rp, new Text("制表人：________________    审核人：________________    负责人：________________")));
+        var line1 = new Paragraph(new ParagraphProperties(pp1),
+            new Run(rp1, new Text("制表人：________________    审核人：________________    负责人：________________")));
 
-        var line2 = new Paragraph(new ParagraphProperties(pp),
-            new Run(rp, new Text($"日期：{DateTime.Now:yyyy} 年 {DateTime.Now.Month} 月 {DateTime.Now.Day} 日")));
+        var line2 = new Paragraph(new ParagraphProperties(pp2),
+            new Run(rp2, new Text($"日期：{DateTime.Now:yyyy} 年 {DateTime.Now.Month} 月 {DateTime.Now.Day} 日")));
 
-        var line3 = new Paragraph(new ParagraphProperties(pp),
-            new Run(rp, new Text("（此表由实验室管理员保存）")));
+        var line3 = new Paragraph(new ParagraphProperties(pp3),
+            new Run(rp3, new Text("（此表由实验室管理员保存）")));
 
-        return line1;
+        return new[] { line1, line2, line3 };
     }
 }
 
@@ -384,7 +386,7 @@ public class ExperimentSchedulePlanTemplate : IExportTemplate
                 body.AppendChild(MakeParagraph("", spacing: 120));
                 body.AppendChild(MakeNoteRow());
                 body.AppendChild(MakeParagraph("", spacing: 120));
-                body.AppendChild(MakeSignatures());
+                foreach (var p in MakeSignatures()) body.AppendChild(p);
             }
 
             mainPart.Document.Save();
@@ -623,12 +625,13 @@ public class ExperimentSchedulePlanTemplate : IExportTemplate
             new Run(rp, new Text("备注：1. 实验类型填写\"基础型/综合型/设计型/研究型\"；2. 每组人数指每批次同时做实验的学生人数；3. 循环次数指同一实验内容重复次数。")));
     }
 
-    private static Paragraph MakeSignatures()
+    private static IEnumerable<Paragraph> MakeSignatures()
     {
         var pp = new StyleParagraphProperties(new SpacingBetweenLines { After = "0" });
         var rp = new StyleRunProperties(new FontSize { Val = "21" });
-        return new Paragraph(pp,
+        var line1 = new Paragraph(pp,
             new Run(rp, new Text("制表人：________________    审核人：________________    负责人：________________    日期：________________")));
+        return new[] { line1 };
     }
 }
 

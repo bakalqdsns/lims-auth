@@ -7,7 +7,7 @@ using LimsAuth.Api.Models;
 namespace LimsAuth.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/v1/[controller]")]
 [Authorize]
 public class ExperimentsController : ControllerBase
 {

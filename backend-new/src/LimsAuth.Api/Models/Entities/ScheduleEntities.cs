@@ -1,3 +1,6 @@
+using Microsoft.EntityFrameworkCore;
+using LimsAuth.Api.Data.Configuration;
+
 namespace LimsAuth.Api.Models.Entities;
 
 // ============================================================

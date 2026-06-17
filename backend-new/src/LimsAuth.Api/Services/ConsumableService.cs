@@ -92,13 +92,16 @@ public class ConsumableService : IConsumableService
     public async Task<ApiResponse<ConsumableStatisticsDto>> GetStatisticsAsync()
     {
         var consumables = await _db.MatConsumables.Where(c => c.IsDeleted == 0).ToListAsync();
+        var byCategory = new Dictionary<string, int>();
+        foreach (var g in consumables.GroupBy(c => c.Category ?? ""))
+            byCategory[g.Key] = g.Count();
         var stats = new ConsumableStatisticsDto
         {
             TotalTypes = consumables.Count,
             LowStockTypes = consumables.Count(c => c.CurrentStock <= c.MinStockThreshold),
             OutOfStockTypes = consumables.Count(c => c.CurrentStock == 0),
-            TotalStockValue = consumables.Sum(c => c.CurrentStock * (c.UnitPrice ?? 0)),
-            ByCategory = consumables.GroupBy(c => c.Category).ToDictionary(g => g.Key, g => g.Count),
+            TotalStockValue = consumables.Sum(c => c.CurrentStock * (c.UnitPrice ?? 0m)),
+            ByCategory = byCategory,
             LowStockItems = consumables.Where(c => c.CurrentStock <= c.MinStockThreshold)
                 .Select(c => new LowStockItemDto { Id = c.Id, Code = c.Code, Name = c.Name, Category = c.Category,
                     CurrentStock = c.CurrentStock, MinStockThreshold = c.MinStockThreshold, Unit = c.Unit }).ToList()

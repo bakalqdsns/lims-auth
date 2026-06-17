@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("LimsAuth.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6983edb684ccd3078059d0493655595b8e0e21ee")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7761a31f3135aa5bd05f7ac6f683c30d2a9e70b1")]
 [assembly: System.Reflection.AssemblyProductAttribute("LimsAuth.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("LimsAuth.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
