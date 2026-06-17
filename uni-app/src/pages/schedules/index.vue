@@ -1,5 +1,10 @@
 <template>
   <view class="schedule-page">
+    <!-- 学期选择提示 -->
+    <view v-if="!hasSemester" class="semester-tip">
+      <text>暂未设置当前学期，请联系管理员在「学期管理」中设置默认学期。</text>
+    </view>
+
     <!-- 星期导航 -->
     <view class="week-nav">
       <view
@@ -15,24 +20,26 @@
     </view>
 
     <!-- 课表内容 -->
-    <scroll-view class="schedule-content" scroll-y refresher-enabled @refresherrefresh="loadData">
+    <scroll-view class="schedule-content" scroll-y refresher-enabled @refresherrefresh="onRefresh">
       <view v-if="todaySchedules.length > 0" class="schedule-list">
-        <view v-for="(item, index) in todaySchedules" :key="index" class="schedule-item">
+        <view v-for="item in todaySchedules" :key="item.id" class="schedule-item">
           <view class="schedule-item__time">
-            <text class="period">{{ item.startPeriod }}-{{ item.endPeriod }}节</text>
-            <text class="time-range">{{ item.startTime }} - {{ item.endTime }}</text>
+            <text class="period">{{ item.periodNumber }}节</text>
+            <text class="time-range">{{ periodTimeRange(item.periodNumber) }}</text>
           </view>
           <view class="schedule-item__card">
-            <text class="schedule-course">{{ item.courseName }}</text>
-            <text class="schedule-lab">{{ item.labName }} ({{ item.labCode }})</text>
-            <text class="schedule-class">班级: {{ item.className }}</text>
+            <text class="schedule-course">{{ item.courseName || item.projectName || '排课' }}</text>
+            <text class="schedule-lab">{{ item.labName }}{{ item.buildingName ? `（${item.buildingName}）` : '' }}</text>
+            <text v-if="item.className" class="schedule-class">班级: {{ item.className }}</text>
+            <text v-if="item.teacherName" class="schedule-teacher">教师: {{ item.teacherName }}</text>
+            <text v-if="item.weekNumber" class="schedule-week">第{{ item.weekNumber }}周</text>
           </view>
         </view>
       </view>
 
       <view v-else class="empty">
-        <text class="empty-icon">&#xe6c6;</text>
-        <text class="empty-text">今日无课程安排</text>
+        <Icon name="calendar" :size="48" color="#d0d0d0" />
+        <text class="empty-text">{{ hasSemester ? '今日无课程安排' : '请先设置当前学期' }}</text>
       </view>
 
       <view :style="{ height: '40px' }" />
@@ -44,10 +51,12 @@
 import { ref, computed, onMounted } from 'vue'
 import { useSemesterStore } from '@/stores/semester'
 import { useAuthStore } from '@/stores/auth'
-import { getSchedulesByClass } from '@/api/schedule'
-import { getSchedulesByTeacher } from '@/api/schedule'
+import { getMySchedules } from '@/api/schedule'
+import { getPeriodTimes } from '@/api/semester'
 import { formatDate } from '@/utils/date'
+import Icon from '@/components/Icon.vue'
 import type { Schedule } from '@/types/schedule'
+import type { PeriodTime } from '@/types/semester'
 
 const semesterStore = useSemesterStore()
 const authStore = useAuthStore()
@@ -55,6 +64,9 @@ const authStore = useAuthStore()
 const selectedDay = ref(new Date().getDay() || 7) // 周一=1, 周日=7
 const schedules = ref<Schedule[]>([])
 const isLoading = ref(false)
+const periodMap = ref<Map<number, PeriodTime>>(new Map())
+
+const hasSemester = computed(() => !!semesterStore.currentSemester)
 
 const weekDays = computed(() => {
   const days = []
@@ -75,33 +87,57 @@ const weekDays = computed(() => {
 const todaySchedules = computed(() =>
   schedules.value
     .filter((s) => s.dayOfWeek === selectedDay.value)
-    .sort((a, b) => a.startPeriod - b.startPeriod)
+    .sort((a, b) => a.periodNumber - b.periodNumber)
 )
 
 function selectDay(day: number) {
   selectedDay.value = day
 }
 
+function periodTimeRange(periodNumber: number): string {
+  const p = periodMap.value.get(periodNumber)
+  if (!p) return ''
+  return `${p.startTime} - ${p.endTime}`
+}
+
+async function loadPeriodTimes() {
+  try {
+    const list = await getPeriodTimes()
+    const items = list?.items ?? []
+    const map = new Map<number, PeriodTime>()
+    for (const p of items) {
+      const order = (p as unknown as { periodNumber?: number }).periodNumber ?? (p as unknown as { order?: number }).order
+      if (typeof order === 'number') {
+        map.set(order, p)
+      }
+    }
+    periodMap.value = map
+  } catch {
+    /* ignore — 节次时间不可用时仍可展示节次编号 */
+  }
+}
+
 async function loadData() {
+  if (!authStore.currentUser) return
+  if (!semesterStore.currentSemester) return
+
   isLoading.value = true
   try {
-    const user = authStore.currentUser
-    if (!user) return
+    const resp = await getMySchedules({ semesterId: semesterStore.currentSemester.id })
+    schedules.value = resp?.items ?? []
+  } catch {
+    schedules.value = []
+  } finally {
+    isLoading.value = false
+  }
+}
 
-    if (authStore.isStudent) {
-      const resp = await getSchedulesByClass(user.id)
-      schedules.value = resp?.items ?? []
-    } else if (authStore.isTeacher) {
-      const resp = await getSchedulesByTeacher(user.id)
-      schedules.value = resp?.items ?? []
-    } else {
-      const resp = await getSchedulesByClass(user.id)
-      schedules.value = resp?.items ?? []
-    }
-  } catch { /* ignore */ } finally { isLoading.value = false }
+async function onRefresh() {
+  await Promise.all([semesterStore.loadCurrentSemester(), loadData()])
 }
 
 onMounted(async () => {
+  await Promise.all([semesterStore.loadCurrentSemester(), loadPeriodTimes()])
   await loadData()
 })
 </script>
@@ -110,6 +146,14 @@ onMounted(async () => {
 $primary: #667eea;
 
 .schedule-page { min-height: 100vh; background: #f5f7fa; }
+
+.semester-tip {
+  background: #fff7e6;
+  color: #d48806;
+  padding: 16rpx 24rpx;
+  font-size: 24rpx;
+  border-bottom: 1rpx solid #ffe58f;
+}
 
 .week-nav {
   display: flex;
@@ -170,7 +214,9 @@ $primary: #667eea;
 
 .schedule-course { font-size: 30rpx; font-weight: bold; color: #303133; display: block; margin-bottom: 8rpx; }
 .schedule-lab { font-size: 24rpx; color: #606266; display: block; margin-bottom: 6rpx; }
-.schedule-class { font-size: 24rpx; color: #909399; display: block; }
+.schedule-class { font-size: 24rpx; color: #909399; display: block; margin-bottom: 4rpx; }
+.schedule-teacher { font-size: 24rpx; color: #909399; display: block; margin-bottom: 4rpx; }
+.schedule-week { font-size: 22rpx; color: #c0c4cc; display: block; }
 
 .empty { display: flex; flex-direction: column; align-items: center; padding: 120rpx 0; gap: 16rpx; }
 .empty-icon { font-size: 80rpx; color: #d0d0d0; }

@@ -21,7 +21,7 @@
       <view class="stat-cards">
         <view class="stat-card" @tap="goPage('/pages/labs/index')">
           <view class="stat-card__icon" style="background: #e8f4ff">
-            <text style="color: #409eff">&#xe6a1;</text>
+            <Icon name="flask" :size="14" color="#409eff" />
           </view>
           <view class="stat-card__info">
             <text class="stat-card__num">{{ dashboard?.totalLabs ?? '--' }}</text>
@@ -31,7 +31,7 @@
 
         <view class="stat-card" @tap="goPage('/pages/admin/equipment/index')">
           <view class="stat-card__icon" style="background: #f0f9eb">
-            <text style="color: #67c23a">&#xe6a3;</text>
+            <Icon name="beaker" :size="14" color="#67c23a" />
           </view>
           <view class="stat-card__info">
             <text class="stat-card__num">{{ dashboard?.totalEquipments ?? '--' }}</text>
@@ -41,7 +41,7 @@
 
         <view class="stat-card" @tap="goPage('/pages/admin/teaching-apps/index')">
           <view class="stat-card__icon" style="background: #fef0f0">
-            <text style="color: #f56c6c">&#xe6a2;</text>
+            <Icon name="bell" :size="14" color="#f56c6c" />
           </view>
           <view class="stat-card__info">
             <text class="stat-card__num">{{ dashboard?.pendingApprovals ?? '--' }}</text>
@@ -51,7 +51,7 @@
 
         <view class="stat-card" @tap="goPage('/pages/reservations/index')">
           <view class="stat-card__icon" style="background: #fdf6ec">
-            <text style="color: #e6a23c">&#xe6b2;</text>
+            <Icon name="calendar" :size="14" color="#e6a23c" />
           </view>
           <view class="stat-card__info">
             <text class="stat-card__num">{{ dashboard?.myReservations ?? '--' }}</text>
@@ -154,6 +154,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
+import Icon from '@/components/Icon.vue'
 import { useSemesterStore } from '@/stores/semester'
 import { useStatisticsStore } from '@/stores/statistics'
 import { formatDate } from '@/utils/date'

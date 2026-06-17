@@ -40,19 +40,19 @@
     <!-- 操作菜单 -->
     <view class="menu-section">
       <view class="menu-item" @tap="goPage('/pages/profile/index')">
-        <text class="menu-icon">&#xe6d1;</text>
+        <Icon name="pencil" :size="16" color="#667eea" class="menu-icon" />
         <text class="menu-label">编辑资料</text>
-        <text class="menu-arrow">&#xe6c5;</text>
+        <Icon name="chevron-right" :size="14" color="#c0c4cc" class="menu-arrow" />
       </view>
       <view class="menu-item" @tap="showChangePassword">
-        <text class="menu-icon">&#xe6d2;</text>
+        <Icon name="lock" :size="16" color="#667eea" class="menu-icon" />
         <text class="menu-label">修改密码</text>
-        <text class="menu-arrow">&#xe6c5;</text>
+        <Icon name="chevron-right" :size="14" color="#c0c4cc" class="menu-arrow" />
       </view>
       <view class="menu-item" @tap="showAbout">
-        <text class="menu-icon">&#xe6d3;</text>
+        <Icon name="info" :size="16" color="#667eea" class="menu-icon" />
         <text class="menu-label">关于我们</text>
-        <text class="menu-arrow">&#xe6c5;</text>
+        <Icon name="chevron-right" :size="14" color="#c0c4cc" class="menu-arrow" />
       </view>
     </view>
 
@@ -72,7 +72,9 @@
     <view class="sheet" @tap.stop>
       <view class="sheet__header">
         <text class="sheet__title">修改密码</text>
-        <text class="sheet__close" @tap="showPwdSheet = false">&#xe6c7;</text>
+        <view class="sheet__close" @tap="showPwdSheet = false">
+          <Icon name="close" :size="14" color="#909399" />
+        </view>
       </view>
       <view class="sheet__body">
         <view class="form-item">
@@ -99,6 +101,7 @@
 import { ref, computed, reactive } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
+import Icon from '@/components/Icon.vue'
 
 const authStore = useAuthStore()
 const appStore = useAppStore()
@@ -275,14 +278,18 @@ $primary: #667eea;
 }
 
 .menu-icon {
-  font-size: 36rpx;
-  color: $primary;
+  width: 36rpx;
+  height: 36rpx;
   margin-right: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $primary;
 }
 
 .menu-label { flex: 1; font-size: 28rpx; color: #303133; }
 
-.menu-arrow { font-size: 28rpx; color: #c0c4cc; }
+.menu-arrow { color: #c0c4cc; }
 
 .logout-section { padding: 0 24rpx; }
 
@@ -330,7 +337,14 @@ $primary: #667eea;
 
   &__header { display: flex; align-items: center; justify-content: space-between; padding: 32rpx; border-bottom: 1rpx solid #f0f0f0; }
   &__title { font-size: 32rpx; font-weight: bold; color: #303133; }
-  &__close { font-size: 36rpx; color: #909399; }
+  &__close {
+    width: 48rpx;
+    height: 48rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #909399;
+  }
   &__body { padding: 32rpx; }
   &__footer { padding: 24rpx 32rpx; border-top: 1rpx solid #f0f0f0; }
 }

@@ -1,40 +1,68 @@
 /**
  * 预约相关类型定义
- * 与 Flutter lib/models/reservation.dart 对齐
+ * 与后端 ScheduleDtos.cs + ReservationService.cs 对齐:
+ * 后端 ApprovalStatus 枚举的 ToString() 为 PascalCase (Pending / Approved / Rejected)
  */
 
 export type ReservationStatus =
-  | 'pending'    // 待审批
-  | 'approved'   // 已通过
-  | 'rejected'  // 已拒绝
-  | 'cancelled' // 已取消
-  | 'in_use'    // 使用中
-  | 'completed' // 已完成
-  | 'no_show'   // 未签到
+  | 'Pending'    // 待审批
+  | 'Approved'   // 已通过
+  | 'Rejected'   // 已拒绝
+  | 'Cancelled'  // 已取消
+  | 'InUse'      // 使用中
+  | 'Completed'  // 已完成
+  | 'NoShow'     // 未签到
+
+export const RESERVATION_STATUS_LABELS: Record<ReservationStatus, string> = {
+  Pending: '待审批',
+  Approved: '已通过',
+  Rejected: '已拒绝',
+  Cancelled: '已取消',
+  InUse: '使用中',
+  Completed: '已完成',
+  NoShow: '未签到',
+}
 
 export interface Reservation {
   id: string
-  reservationNo: string
+  reservationNo?: string
+  semesterId?: string
+  semesterName?: string
   labId: string
-  labName: string
-  labCode: string
-  userId: string
-  userName: string
-  userPhone?: string
-  date: string
-  timeSlot: string
-  periodStart?: string
-  periodEnd?: string
+  labName?: string
+  labCode?: string
+  applicantId: string
+  applicantName: string
+  applicantPhone?: string
+  useDate?: string
+  date?: string
+  weekNumber?: number
+  dayOfWeek?: number
+  periodNumbers?: number[]
+  startPeriod?: number
+  endPeriod?: number
+  timeSlot?: string
+  projectName?: string
+  projectCategory?: string
   purpose?: string
   attendeeCount?: number
-  status: ReservationStatus
-  approverId?: string
+  memberCount?: number
+  /** 后端返回字符串枚举名 (Pending / Approved / Rejected ...) */
+  status: ReservationStatus | string
+  approvalComment?: string
+  approvedBy?: string
   approverName?: string
   approvedAt?: string
+  isCancelled?: boolean
+  cancelReason?: string
   checkedInAt?: string
   checkedOutAt?: string
   remark?: string
   createdAt: string
+  /** 历史字段兼容: 部分旧调用使用 userName/userId */
+  userId?: string
+  userName?: string
+  userPhone?: string
 }
 
 export interface ReservationQuery {
@@ -63,10 +91,9 @@ export interface CreateReservationRequest {
   remark?: string
 }
 
-export interface ApprovalRequest {
-  approved: boolean
-  comment?: string
-  remark?: string
+export interface ReservationApprovalRequest {
+  comment: string
+  approverName?: string
 }
 
 export interface CancelRequest {

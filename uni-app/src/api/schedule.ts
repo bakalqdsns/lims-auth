@@ -12,6 +12,7 @@
  *  GET  /api/v1/schedules/by-lab/{labId}
  *  GET  /api/v1/schedules/by-teacher/{teacherId}
  *  GET  /api/v1/schedules/by-class/{classId}
+ *  GET  /api/v1/schedules/my
  *  GET  /api/v1/schedules/importable-tasks
  *  POST /api/v1/schedules/import-from-tasks
  */
@@ -92,6 +93,11 @@ export function getSchedulesByClass(classId: string, query?: Omit<ScheduleQuery,
     `/schedules/by-class/${classId}`,
     query as Record<string, string>
   )
+}
+
+/** 当前用户的课表（学生按所在班级 + 教师按 teacherId） */
+export function getMySchedules(query?: ScheduleQuery) {
+  return get<ApiResponse<Schedule[]>>('/schedules/my', query as Record<string, string>)
 }
 
 /** 可导入的实验任务 */

@@ -5,30 +5,38 @@
 
 export interface Schedule {
   id: string
-  courseId: string
-  courseName: string
-  courseCode?: string
-  classId: string
-  className: string
-  teacherId: string
-  teacherName: string
   semesterId: string
   semesterName?: string
-  labId: string
-  labName: string
-  labCode?: string
+  labId?: string
+  labName?: string
+  buildingName?: string
+  weekNumber: number
+  startWeek?: number
+  endWeek?: number
   dayOfWeek: number
-  weekNumber?: number
-  startPeriod: number
-  endPeriod: number
+  periodNumber: number
+  source?: string
+  status?: string
+  courseId?: string
+  courseName?: string
+  projectName?: string
+  teacherId?: string
+  teacherName?: string
+  classId?: string
+  className?: string
+  majorId?: string
+  majorName?: string
+  studentCount?: number
+  remark?: string
+  hasConflict?: boolean
+  conflictInfo?: string
+  createdAt?: string
+  /** 前端派生字段 */
+  startPeriod?: number
+  endPeriod?: number
   startTime?: string
   endTime?: string
-  weekPattern: string
-  startWeek: number
-  endWeek: number
-  status: number
-  description?: string
-  createdAt: string
+  labCode?: string
 }
 
 export interface ScheduleQuery {

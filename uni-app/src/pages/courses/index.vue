@@ -2,7 +2,7 @@
   <view class="courses-page">
     <!-- 搜索栏 -->
     <view class="search-bar">
-      <text class="search-icon">&#xe6c0;</text>
+      <Icon name="search" :size="14" color="rgba(255,255,255,0.8)" class="search-icon" />
       <input v-model="keyword" class="search-input" placeholder="搜索课程名称/编号" confirm-type="search" @confirm="loadData" />
     </view>
 
@@ -27,11 +27,14 @@
       </view>
 
       <view v-if="!isLoading && courses.length === 0" class="empty">
-        <text class="empty-icon">&#xe6c6;</text>
+        <Icon name="inbox" :size="48" color="#d0d0d0" />
         <text class="empty-text">暂无课程</text>
       </view>
 
-      <view v-if="hasMore && courses.length > 0" class="load-more"><text>加载更多...</text></view>
+      <view v-if="hasMore && courses.length > 0" class="load-more">
+        <Icon name="arrow-down" :size="10" color="#909399" />
+        <text>加载更多...</text>
+      </view>
       <view :style="{ height: '40px' }" />
     </scroll-view>
   </view>
@@ -40,6 +43,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { getCourses } from '@/api/course'
+import Icon from '@/components/Icon.vue'
 import type { Course } from '@/types/teaching'
 
 const keyword = ref('')
@@ -134,5 +138,14 @@ $primary: #667eea;
 .empty { display: flex; flex-direction: column; align-items: center; padding: 120rpx 0; gap: 16rpx; }
 .empty-icon { font-size: 80rpx; color: #d0d0d0; }
 .empty-text { font-size: 28rpx; color: #909399; }
-.load-more { text-align: center; padding: 24rpx; font-size: 24rpx; color: #909399; }
+.load-more {
+  text-align: center;
+  padding: 24rpx;
+  font-size: 24rpx;
+  color: #909399;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+}
 </style>

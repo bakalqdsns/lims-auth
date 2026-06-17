@@ -2,7 +2,7 @@
   <view class="equipment-page">
     <!-- 搜索栏 -->
     <view class="search-bar">
-      <text class="search-icon">&#xe6c0;</text>
+      <Icon name="search" :size="14" color="rgba(255,255,255,0.8)" class="search-icon" />
       <input
         v-model="keyword"
         class="search-input"
@@ -28,7 +28,7 @@
       >
         <view class="equip-card__left">
           <view class="equip-icon">
-            <text>&#xe6a3;</text>
+            <Icon name="beaker" :size="20" color="#67c23a" />
           </view>
         </view>
         <view class="equip-card__right">
@@ -36,9 +36,10 @@
           <text class="equip-code">{{ item.code }}</text>
           <view class="equip-meta">
             <text v-if="item.category" class="meta-tag">{{ item.category }}</text>
-            <text class="meta-quantity">
-              可用 {{ item.availableQuantity }}/{{ item.totalQuantity }}
-            </text>
+            <view class="meta-quantity">
+              <Icon name="tag" :size="10" color="#67c23a" class="meta-icon" />
+              <text>可用 {{ item.availableQuantity }}/{{ item.totalQuantity }}</text>
+            </view>
           </view>
         </view>
         <view class="equip-card__status">
@@ -48,11 +49,12 @@
       </view>
 
       <view v-if="!isLoading && equipments.length === 0" class="empty">
-        <text class="empty-icon">&#xe6c6;</text>
+        <Icon name="inbox" :size="48" color="#d0d0d0" />
         <text class="empty-text">暂无设备</text>
       </view>
 
       <view v-if="hasMore && equipments.length > 0" class="load-more">
+        <Icon name="arrow-down" :size="10" color="#909399" />
         <text>加载更多...</text>
       </view>
 
@@ -64,7 +66,9 @@
       <view class="detail-sheet" @tap.stop>
         <view class="detail-sheet__header">
           <text class="detail-sheet__title">设备详情</text>
-          <text class="detail-sheet__close" @tap="showDetailSheet = false">&#xe6c7;</text>
+          <view class="detail-sheet__close" @tap="showDetailSheet = false">
+            <Icon name="close" :size="14" color="#909399" />
+          </view>
         </view>
         <scroll-view class="detail-sheet__body" scroll-y v-if="selectedEquip">
           <view class="detail-row">
@@ -118,6 +122,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useEquipmentStore } from '@/stores/equipment'
+import Icon from '@/components/Icon.vue'
 import type { Equipment } from '@/types/equipment'
 
 const equipStore = useEquipmentStore()
@@ -297,6 +302,9 @@ $primary: #667eea;
 .meta-quantity {
   font-size: 24rpx;
   color: #67c23a;
+  display: inline-flex;
+  align-items: center;
+  gap: 4rpx;
 }
 
 .status-dot {
@@ -330,6 +338,10 @@ $primary: #667eea;
   padding: 24rpx;
   font-size: 24rpx;
   color: #909399;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
 }
 
 .detail-overlay {
@@ -367,7 +379,11 @@ $primary: #667eea;
   }
 
   &__close {
-    font-size: 36rpx;
+    width: 48rpx;
+    height: 48rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: #909399;
   }
 

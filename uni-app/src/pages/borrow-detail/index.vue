@@ -4,7 +4,7 @@
 
     <template v-else-if="record">
       <!-- 状态头部 -->
-      <view class="detail-header" :class="'header--' + record.status">
+      <view class="detail-header" :class="'header--' + statusClass(record.status)">
         <text class="detail-header__status">{{ statusLabel(record.status) }}</text>
         <text class="detail-header__no">{{ record.recordNo }}</text>
       </view>
@@ -49,10 +49,10 @@
 
       <!-- 操作按钮 -->
       <view class="bottom-bar">
-        <button v-if="record.status === 'borrowed'" class="action-btn action-btn--return" @tap="submitReturn">提交归还</button>
-        <button v-if="record.status === 'pending' && isAdmin" class="action-btn action-btn--primary" @tap="approveRecord">审批通过</button>
-        <button v-if="record.status === 'pending' && isAdmin" class="action-btn action-btn--danger" @tap="rejectRecord">拒绝</button>
-        <button v-if="record.status === 'borrowed'" class="action-btn action-btn--renew" @tap="showRenewSheet = true">申请续借</button>
+        <button v-if="record.status === '已借出' || record.status === '已逾期'" class="action-btn action-btn--return" @tap="submitReturn">提交归还</button>
+        <button v-if="(record.status === '待老师审批' || record.status === '待管理员审批') && isAdmin" class="action-btn action-btn--primary" @tap="approveRecord">审批通过</button>
+        <button v-if="(record.status === '待老师审批' || record.status === '待管理员审批') && isAdmin" class="action-btn action-btn--danger" @tap="rejectRecord">拒绝</button>
+        <button v-if="record.status === '已借出' || record.status === '已逾期'" class="action-btn action-btn--renew" @tap="showRenewSheet = true">申请续借</button>
       </view>
     </template>
 
@@ -61,7 +61,9 @@
       <view class="sheet" @tap.stop>
         <view class="sheet__header">
           <text class="sheet__title">申请续借</text>
-          <text class="sheet__close" @tap="showRenewSheet = false">&#xe6c7;</text>
+          <view class="sheet__close" @tap="showRenewSheet = false">
+            <Icon name="close" :size="14" color="#909399" />
+          </view>
         </view>
         <view class="sheet__body">
           <view class="form-item">
@@ -83,7 +85,9 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { getBorrowRecordById, getBorrowRecordFlow, submitReturn as submitReturnApi, renewBorrow, adminApprove } from '@/api/borrow-record'
+import Icon from '@/components/Icon.vue'
 import type { BorrowRecord, BorrowStatus } from '@/types/borrow'
+import { BORROW_STATUS_LABELS, borrowStatusClass } from '@/types/borrow'
 
 interface BorrowFlowStepData {
   step: number
@@ -103,7 +107,12 @@ const newReturnDate = ref('')
 
 const isAdmin = computed(() => authStore.isAdmin)
 
+function statusClass(status: string): string {
+  return borrowStatusClass(status)
+}
+
 function statusLabel(status: BorrowStatus | string): string {
+  if (status in BORROW_STATUS_LABELS) return BORROW_STATUS_LABELS[status as BorrowStatus]
   const map: Record<string, string> = {
     pending: '待审批', approved: '已通过', borrowed: '已借出', returning: '归还中',
     returned: '已归还', renewing: '续借中', rejected: '已拒绝', cancelled: '已取消', overdue: '已逾期',
@@ -215,6 +224,11 @@ $primary: #667eea;
   &.header--overdue { background: linear-gradient(135deg, #f56c6c, #f78989); }
   &.header--rejected { background: linear-gradient(135deg, #c0c4cc, #d3d6db); }
   &.header--cancelled { background: linear-gradient(135deg, #909399, #a6a9ad); }
+  &.header--default { background: linear-gradient(135deg, #909399, #a6a9ad); }
+  /* 后端中文字符串映射后的英文 class */
+  &.header--pending-teacher, &.header--pending-admin, &.header--renew-pending, &.header--return-pending { background: linear-gradient(135deg, #e6a23c, #f56c6c); }
+  &.header--awaiting-pickup, &.header--awaiting-return { background: linear-gradient(135deg, #e6a23c, #f0c060); }
+  &.header--returning { background: linear-gradient(135deg, #e6a23c, #f0c060); }
 }
 
 .section { padding: 0 24rpx 24rpx; }
@@ -290,7 +304,14 @@ $primary: #667eea;
 
   &__header { display: flex; align-items: center; justify-content: space-between; padding: 32rpx; border-bottom: 1rpx solid #f0f0f0; }
   &__title { font-size: 32rpx; font-weight: bold; color: #303133; }
-  &__close { font-size: 36rpx; color: #909399; }
+  &__close {
+    width: 48rpx;
+    height: 48rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #909399;
+  }
   &__body { flex: 1; padding: 32rpx; max-height: 35vh; }
   &__footer { padding: 24rpx 32rpx; border-top: 1rpx solid #f0f0f0; }
 }

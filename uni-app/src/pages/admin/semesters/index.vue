@@ -21,7 +21,7 @@
       </view>
 
       <view v-if="!isLoading && semesters.length === 0" class="empty">
-        <text class="empty-icon">&#xe6c6;</text>
+        <Icon name="inbox" :size="48" color="#d0d0d0" />
         <text class="empty-text">暂无学期</text>
       </view>
 
@@ -30,7 +30,10 @@
 
     <!-- 新增按钮 -->
     <view class="bottom-bar">
-      <button class="add-btn" @tap="showAddSheet = true">+ 新增学期</button>
+      <button class="add-btn" @tap="showAddSheet = true">
+        <Icon name="plus" :size="12" color="#fff" />
+        <text>新增学期</text>
+      </button>
     </view>
 
     <!-- 新增弹窗 -->
@@ -38,7 +41,9 @@
       <view class="sheet" @tap.stop>
         <view class="sheet__header">
           <text class="sheet__title">新增学期</text>
-          <text class="sheet__close" @tap="showAddSheet = false">&#xe6c7;</text>
+          <view class="sheet__close" @tap="showAddSheet = false">
+            <Icon name="close" :size="14" color="#909399" />
+          </view>
         </view>
         <view class="sheet__body">
           <view class="form-item">
@@ -70,6 +75,7 @@
 import { ref, computed, reactive, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { getSemesters, createSemester, deleteSemester, setCurrentSemester } from '@/api/semester'
+import Icon from '@/components/Icon.vue'
 import type { Semester } from '@/types/semester'
 
 const authStore = useAuthStore()
@@ -220,6 +226,7 @@ $primary: #667eea;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 12rpx;
   border: none;
   &::after { border: none; }
 }
@@ -235,7 +242,14 @@ $primary: #667eea;
 
   &__header { display: flex; align-items: center; justify-content: space-between; padding: 32rpx; border-bottom: 1rpx solid #f0f0f0; }
   &__title { font-size: 32rpx; font-weight: bold; color: #303133; }
-  &__close { font-size: 36rpx; color: #909399; }
+  &__close {
+    width: 48rpx;
+    height: 48rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #909399;
+  }
   &__body { padding: 32rpx; }
   &__footer { padding: 24rpx 32rpx; border-top: 1rpx solid #f0f0f0; }
 }

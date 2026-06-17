@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using LimsAuth.Api.Models;
 using LimsAuth.Api.Services;
 
@@ -100,6 +101,17 @@ public class SchedulesController : ControllerBase
     {
         query.ClassId = classId;
         var list = await _scheduleService.GetScheduleEntriesAsync(query);
+        return Ok(new { code = 200, data = list });
+    }
+
+    [HttpGet("my")]
+    public async Task<ActionResult<IEnumerable<ScheduleEntryDto>>> GetMy([FromQuery] ScheduleQuery query)
+    {
+        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!Guid.TryParse(userIdStr, out var userId))
+            return Unauthorized(new { code = 401, message = "无法识别当前用户" });
+
+        var list = await _scheduleService.GetMyScheduleEntriesAsync(userId, query);
         return Ok(new { code = 200, data = list });
     }
 

@@ -17,7 +17,7 @@
       </view>
 
       <view v-if="!isLoading && roles.length === 0" class="empty">
-        <text class="empty-icon">&#xe6c6;</text>
+        <Icon name="inbox" :size="48" color="#d0d0d0" />
         <text class="empty-text">暂无角色</text>
       </view>
 
@@ -29,6 +29,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { getRoles } from '@/api/role'
+import Icon from '@/components/Icon.vue'
 import type { Role } from '@/types/role'
 
 const isLoading = ref(false)

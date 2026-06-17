@@ -8,7 +8,7 @@
       <view class="login-header">
         <view class="logo-wrapper">
           <view class="logo">
-            <text class="logo-icon">&#xe6ba;</text>
+            <Icon name="flask" :size="48" color="#fff" />
           </view>
         </view>
         <text class="app-title">实验室管理系统</text>
@@ -44,7 +44,7 @@
             @confirm="handleLogin"
           />
           <view class="password-toggle" @tap="showPassword = !showPassword">
-            <text>{{ showPassword ? '&#xe6c7;' : '&#xe6c8;' }}</text>
+            <Icon :name="showPassword ? 'eye' : 'lock'" :size="20" color="#909399" />
           </view>
         </view>
 
@@ -87,6 +87,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import Icon from '@/components/Icon.vue'
 
 const authStore = useAuthStore()
 
@@ -239,8 +240,12 @@ $primary-dark: #764ba2;
 .password-toggle {
   position: absolute;
   right: 24rpx;
-  bottom: 24rpx;
-  font-size: 36rpx;
+  bottom: 18rpx;
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: #909399;
 }
 

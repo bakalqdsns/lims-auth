@@ -7,6 +7,7 @@ namespace LimsAuth.Api.Services;
 public interface IScheduleService
 {
     Task<List<ScheduleEntryDto>> GetScheduleEntriesAsync(ScheduleQuery query);
+    Task<List<ScheduleEntryDto>> GetMyScheduleEntriesAsync(Guid userId, ScheduleQuery query);
     Task<ScheduleEntryDto?> GetScheduleByIdAsync(Guid id);
     Task<ScheduleEntryDto> CreateCentralScheduleAsync(CreateScheduleEntryRequest request, string? createdBy = null);
     Task<bool> UpdateCentralScheduleAsync(Guid id, UpdateScheduleEntryRequest request, string? updatedBy = null);
@@ -81,6 +82,56 @@ public class ScheduleService : IScheduleService
                 .ThenInclude(l => l!.Building)
             .FirstOrDefaultAsync(x => x.Id == id);
         return entry == null ? null : MapToDto(entry);
+    }
+
+    public async Task<List<ScheduleEntryDto>> GetMyScheduleEntriesAsync(Guid userId, ScheduleQuery query)
+    {
+        var classIds = await _db.ClassStudents
+            .Where(cs => cs.StudentId == userId)
+            .Select(cs => cs.ClassId)
+            .ToListAsync();
+
+        var q = _db.ScheduleEntries
+            .Include(x => x.Semester)
+            .Include(x => x.Lab)
+                .ThenInclude(l => l!.Building)
+            .Where(x => x.Status != "Cancelled")
+            .AsQueryable();
+
+        if (classIds.Count > 0)
+        {
+            q = q.Where(x => classIds.Contains(x.ClassId ?? Guid.Empty) || x.TeacherId == userId);
+        }
+        else
+        {
+            q = q.Where(x => x.TeacherId == userId);
+        }
+
+        if (query.SemesterId.HasValue)
+            q = q.Where(x => x.SemesterId == query.SemesterId.Value);
+        if (query.StartWeek.HasValue && query.EndWeek.HasValue)
+            q = q.Where(x =>
+                (x.StartWeek.HasValue && x.EndWeek.HasValue && x.StartWeek <= query.EndWeek && x.EndWeek >= query.StartWeek) ||
+                (!x.StartWeek.HasValue && x.WeekNumber >= query.StartWeek && x.WeekNumber <= query.EndWeek));
+        else if (query.StartWeek.HasValue)
+            q = q.Where(x =>
+                (x.StartWeek.HasValue && x.EndWeek.HasValue && x.StartWeek <= query.StartWeek && x.EndWeek >= query.StartWeek) ||
+                (!x.StartWeek.HasValue && x.WeekNumber == query.StartWeek));
+        if (query.DayOfWeek.HasValue)
+            q = q.Where(x => x.DayOfWeek == query.DayOfWeek.Value);
+        if (query.LabId.HasValue)
+            q = q.Where(x => x.LabId == query.LabId.Value);
+        if (query.BuildingId.HasValue)
+            q = q.Where(x => x.Lab != null && x.Lab.BuildingId == query.BuildingId.Value);
+
+        var list = await q
+            .OrderBy(x => x.SemesterId)
+            .ThenBy(x => x.WeekNumber)
+            .ThenBy(x => x.DayOfWeek)
+            .ThenBy(x => x.PeriodNumber)
+            .ToListAsync();
+
+        return list.Select(MapToDto).ToList();
     }
 
     public async Task<ScheduleEntryDto> CreateCentralScheduleAsync(CreateScheduleEntryRequest request, string? createdBy = null)

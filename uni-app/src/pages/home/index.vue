@@ -30,37 +30,37 @@
         <view class="quick-grid">
           <view class="quick-item" @tap="goPage('/pages/labs/index')">
             <view class="quick-item__icon" style="background: #e8f4ff">
-              <text style="color: #409eff">&#xe6a1;</text>
+              <Icon name="flask" :size="14" color="#409eff" />
             </view>
             <text class="quick-item__label">实验室</text>
           </view>
           <view class="quick-item" @tap="goPage('/pages/reservations/index')">
             <view class="quick-item__icon" style="background: #fdf6ec">
-              <text style="color: #e6a23c">&#xe6a2;</text>
+              <Icon name="calendar" :size="14" color="#e6a23c" />
             </view>
             <text class="quick-item__label">我的预约</text>
           </view>
           <view class="quick-item" @tap="goPage('/pages/equipment/index')">
             <view class="quick-item__icon" style="background: #f0f9eb">
-              <text style="color: #67c23a">&#xe6a3;</text>
+              <Icon name="beaker" :size="14" color="#67c23a" />
             </view>
             <text class="quick-item__label">设备借还</text>
           </view>
           <view class="quick-item" @tap="goPage('/pages/courses/index')">
             <view class="quick-item__icon" style="background: #fef0f0">
-              <text style="color: #f56c6c">&#xe6a4;</text>
+              <Icon name="doc" :size="14" color="#f56c6c" />
             </view>
             <text class="quick-item__label">课程中心</text>
           </view>
           <view class="quick-item" @tap="goPage('/pages/schedules/index')">
             <view class="quick-item__icon" style="background: #f4f4f5">
-              <text style="color: #909399">&#xe6a5;</text>
+              <Icon name="clock" :size="14" color="#909399" />
             </view>
             <text class="quick-item__label">我的课表</text>
           </view>
           <view class="quick-item" @tap="goPage('/pages/borrow/index')">
             <view class="quick-item__icon" style="background: #ecf5ff">
-              <text style="color: #667eea">&#xe6a6;</text>
+              <Icon name="list" :size="14" color="#667eea" />
             </view>
             <text class="quick-item__label">借用记录</text>
           </view>
@@ -78,37 +78,37 @@
         <view class="admin-grid">
           <view class="admin-item" @tap="goPage('/pages/admin/users/index')">
             <view class="admin-item__icon">
-              <text>&#xe6b0;</text>
+              <Icon name="users" :size="14" color="#667eea" />
             </view>
             <text class="admin-item__label">用户管理</text>
           </view>
           <view class="admin-item" @tap="goPage('/pages/admin/equipment/index')">
             <view class="admin-item__icon">
-              <text>&#xe6b1;</text>
+              <Icon name="beaker" :size="14" color="#667eea" />
             </view>
             <text class="admin-item__label">设备管理</text>
           </view>
           <view class="admin-item" @tap="goPage('/pages/admin/teaching-apps/index')">
             <view class="admin-item__icon">
-              <text>&#xe6b2;</text>
+              <Icon name="bell" :size="14" color="#667eea" />
             </view>
             <text class="admin-item__label">审批中心</text>
           </view>
           <view class="admin-item" @tap="goPage('/pages/admin/statistics/index')">
             <view class="admin-item__icon">
-              <text>&#xe6b3;</text>
+              <Icon name="list" :size="14" color="#667eea" />
             </view>
             <text class="admin-item__label">数据统计</text>
           </view>
           <view class="admin-item" @tap="goPage('/pages/admin/semesters/index')">
             <view class="admin-item__icon">
-              <text>&#xe6b4;</text>
+              <Icon name="calendar" :size="14" color="#667eea" />
             </view>
             <text class="admin-item__label">学期管理</text>
           </view>
           <view class="admin-item" @tap="goPage('/pages/admin/roles/index')">
             <view class="admin-item__icon">
-              <text>&#xe6b5;</text>
+              <Icon name="lock" :size="14" color="#667eea" />
             </view>
             <text class="admin-item__label">角色权限</text>
           </view>
@@ -125,6 +125,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
+import Icon from '@/components/Icon.vue'
 import { useSemesterStore } from '@/stores/semester'
 
 const authStore = useAuthStore()

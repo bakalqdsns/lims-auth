@@ -16,7 +16,7 @@ import type {
   TeachingApplication,
   TeachingApplicationQuery,
   CreateTeachingApplicationRequest,
-  ApprovalRequest,
+  TeachingApprovalRequest,
 } from '@/types/teaching'
 
 /** 申请分页列表 */
@@ -54,12 +54,12 @@ export function createTeachingApplication(data: CreateTeachingApplicationRequest
 }
 
 /** 审批通过 */
-export function approveTeachingApplication(id: string, request: ApprovalRequest = { approved: true }) {
+export function approveTeachingApplication(id: string, request: TeachingApprovalRequest = { comment: '' }) {
   return put<ApiResponse>(`/teaching-applications/${id}/approve`, request)
 }
 
 /** 审批驳回 */
-export function rejectTeachingApplication(id: string, request: ApprovalRequest) {
+export function rejectTeachingApplication(id: string, request: TeachingApprovalRequest) {
   return put<ApiResponse>(`/teaching-applications/${id}/reject`, request)
 }
 

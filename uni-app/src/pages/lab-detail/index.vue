@@ -23,42 +23,42 @@
       <!-- 信息卡片 -->
       <view class="info-card">
         <view class="info-row">
-          <text class="info-icon">&#xe6c2;</text>
+          <view class="info-icon"><Icon name="home" :size="14" color="#667eea" /></view>
           <view class="info-content">
             <text class="info-label">位置</text>
             <text class="info-value">{{ lab.buildingName }} {{ lab.roomNumber || '' }}</text>
           </view>
         </view>
         <view class="info-row">
-          <text class="info-icon">&#xe6c3;</text>
+          <view class="info-icon"><Icon name="users" :size="14" color="#667eea" /></view>
           <view class="info-content">
             <text class="info-label">容量</text>
             <text class="info-value">{{ lab.capacity }} 人</text>
           </view>
         </view>
         <view v-if="labType" class="info-row">
-          <text class="info-icon">&#xe6a4;</text>
+          <view class="info-icon"><Icon name="tag" :size="14" color="#667eea" /></view>
           <view class="info-content">
             <text class="info-label">类型</text>
             <text class="info-value">{{ labType }}</text>
           </view>
         </view>
         <view v-if="labArea" class="info-row">
-          <text class="info-icon">&#xe6d0;</text>
+          <view class="info-icon"><Icon name="doc" :size="14" color="#667eea" /></view>
           <view class="info-content">
             <text class="info-label">面积</text>
             <text class="info-value">{{ labArea }} m2</text>
           </view>
         </view>
         <view v-if="labManager" class="info-row">
-          <text class="info-icon">&#xe6d1;</text>
+          <view class="info-icon"><Icon name="user" :size="14" color="#667eea" /></view>
           <view class="info-content">
             <text class="info-label">管理员</text>
             <text class="info-value">{{ labManager }}</text>
           </view>
         </view>
         <view v-if="lab.openingHours" class="info-row">
-          <text class="info-icon">&#xe6d2;</text>
+          <view class="info-icon"><Icon name="clock" :size="14" color="#667eea" /></view>
           <view class="info-content">
             <text class="info-label">开放时间</text>
             <text class="info-value">{{ lab.openingHours }}</text>
@@ -108,7 +108,9 @@
       <view class="reserve-sheet" @tap.stop>
         <view class="reserve-sheet__header">
           <text class="reserve-sheet__title">预约实验室</text>
-          <text class="reserve-sheet__close" @tap="showReserveSheet = false">&#xe6c7;</text>
+          <view class="reserve-sheet__close" @tap="showReserveSheet = false">
+            <Icon name="close" :size="14" color="#909399" />
+          </view>
         </view>
 
         <scroll-view class="reserve-sheet__body" scroll-y>
@@ -166,6 +168,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useLabStore } from '@/stores/lab'
 import { useEquipmentStore } from '@/stores/equipment'
+import Icon from '@/components/Icon.vue'
 import { createReservation } from '@/api/reservation'
 import type { CreateReservationRequest } from '@/types/reservation'
 import type { Equipment } from '@/types/equipment'
@@ -348,10 +351,13 @@ $primary: #667eea;
 }
 
 .info-icon {
-  font-size: 32rpx;
-  color: $primary;
+  width: 48rpx;
+  height: 48rpx;
   margin-right: 20rpx;
-  margin-top: 4rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $primary;
 }
 
 .info-content {
@@ -525,7 +531,11 @@ $primary: #667eea;
   }
 
   &__close {
-    font-size: 36rpx;
+    width: 48rpx;
+    height: 48rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: #909399;
   }
 

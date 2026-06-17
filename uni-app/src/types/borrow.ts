@@ -1,18 +1,71 @@
 /**
  * 借用记录相关类型定义
- * 与 Flutter lib/models/borrow_record.dart 对齐
+ * 与后端 EquipmentBorrow.cs + BorrowStatus 常量对齐
+ *  后端 Status 字段存的是中文字符串 (e.g. "已借出" / "待归还")
  */
 
-export type BorrowStatus =
-  | 'pending'    // 待审批
-  | 'approved'   // 已通过
-  | 'borrowed'   // 已借出
-  | 'returning' // 归还中
-  | 'returned'  // 已归还
-  | 'renewing'  // 续借中
-  | 'rejected'  // 已拒绝
-  | 'cancelled' // 已取消
-  | 'overdue'   // 已逾期
+export const BORROW_STATUS = {
+  PendingTeacherApproval: '待老师审批',
+  PendingAdminApproval: '待管理员审批',
+  AwaitingPickup: '待领取',
+  Borrowed: '已借出',
+  AwaitingReturn: '待归还',
+  Returned: '已归还',
+  Rejected: '已拒绝',
+  Overdue: '已逾期',
+  RenewPending: '续借审批中',
+  ReturnPending: '管理员审批中',
+} as const
+
+export type BorrowStatus = (typeof BORROW_STATUS)[keyof typeof BORROW_STATUS]
+
+export const BORROW_STATUS_LABELS: Record<BorrowStatus, string> = {
+  待老师审批: '待老师审批',
+  待管理员审批: '待管理员审批',
+  待领取: '待领取',
+  已借出: '已借出',
+  待归还: '待归还',
+  已归还: '已归还',
+  已拒绝: '已拒绝',
+  已逾期: '已逾期',
+  续借审批中: '续借审批中',
+  管理员审批中: '管理员审批中',
+}
+
+/**
+ * 借用状态 -> CSS 类名后缀（仅英文，避免微信 WXSS 不支持中文字符选择器）
+ * 后端 BorrowStatus 使用中文字符串,前端 class 不能直接拼接中文
+ */
+export const BORROW_STATUS_CLASS: Record<string, string> = {
+  待老师审批: 'pending-teacher',
+  待管理员审批: 'pending-admin',
+  待领取: 'awaiting-pickup',
+  已借出: 'borrowed',
+  待归还: 'awaiting-return',
+  已归还: 'returned',
+  已拒绝: 'rejected',
+  已逾期: 'overdue',
+  续借审批中: 'renew-pending',
+  管理员审批中: 'return-pending',
+  // 历史英文值
+  pending: 'pending',
+  approved: 'approved',
+  borrowed: 'borrowed',
+  returning: 'returning',
+  returned: 'returned',
+  renewing: 'renewing',
+  rejected: 'rejected',
+  cancelled: 'cancelled',
+  overdue: 'overdue',
+  pending_supervisor: 'pending-supervisor',
+  pending_admin: 'pending-admin',
+  PendingSupervisor: 'pending-supervisor',
+  PendingAdmin: 'pending-admin',
+}
+
+export function borrowStatusClass(status: string): string {
+  return BORROW_STATUS_CLASS[status] || 'default'
+}
 
 export interface BorrowRecord {
   id: string

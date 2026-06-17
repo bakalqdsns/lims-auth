@@ -204,41 +204,60 @@ export interface AddTeachingTaskTeacherRequest {
 }
 
 /* =============== 授课申请 =============== */
+export type TeachingApplicationStatus = 'Pending' | 'Approved' | 'Rejected' | 'Cancelled'
+
+export const TEACHING_STATUS_LABELS: Record<TeachingApplicationStatus, string> = {
+  Pending: '待审批',
+  Approved: '已通过',
+  Rejected: '已拒绝',
+  Cancelled: '已取消',
+}
+
 export interface TeachingApplication {
   id: string
   applicationNo?: string
-  teacherId: string
-  teacherName: string
-  courseId: string
+  semesterId?: string
+  semesterName?: string
+  teachingTaskId?: string
   courseName: string
-  classId: string
+  majorId?: string
+  majorName?: string
+  classId?: string
   className: string
-  labId: string
-  labName: string
-  semesterId: string
-  semesterName: string
-  weekNumber?: number
-  dayOfWeek?: number
-  startPeriod?: number
-  endPeriod?: number
-  date: string
-  timeSlot: string
-  purpose?: string
-  studentCount: number
-  status: number
-  approverId?: string
+  startWeek: number
+  endWeek: number
+  dayOfWeek: number
+  periodNumbers: number[]
+  expectedLabId?: string
+  expectedLabName?: string
+  remark?: string
+  applicantId: string
+  applicantName: string
+  /** 后端返回字符串枚举名 (Pending / Approved / Rejected) */
+  status: string
+  approvalComment?: string
+  approvedBy?: string
   approverName?: string
   approvedAt?: string
-  approvalComment?: string
-  remark?: string
+  isCancelled: boolean
+  cancelReason?: string
   createdAt: string
+  createdBy?: string
 }
 
 export interface TeachingApplicationQuery {
   semesterId?: string
-  status?: number
+  status?: number | string
   applicantId?: string
   keyword?: string
+  page?: number
+  pageSize?: number
+}
+
+/** 授课申请审批请求 (与后端 ScheduleDtos.ApprovalRequest 对齐) */
+export interface TeachingApprovalRequest {
+  comment?: string
+  approverName?: string
 }
 
 export interface CreateTeachingApplicationRequest {

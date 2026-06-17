@@ -1,24 +1,43 @@
 <template>
   <view class="admin-equipment-page">
     <view class="search-bar">
-      <text class="search-icon">&#xe6c0;</text>
+      <Icon name="search" :size="14" color="rgba(255,255,255,0.8)" class="search-icon" />
       <input v-model="keyword" class="search-input" placeholder="搜索设备名称/编号" confirm-type="search" @confirm="loadData" />
-      <button class="add-btn" @tap="showAddSheet = true">+ 新增</button>
+      <button class="add-btn" @tap="showAddSheet = true">
+        <Icon name="plus" :size="10" color="#fff" />
+        <text>新增</text>
+      </button>
     </view>
 
     <!-- 统计卡片 -->
     <view v-if="stats" class="stats-bar">
-      <view class="stat-item"><text class="stat-num">{{ stats.totalCount }}</text><text class="stat-label">总数</text></view>
-      <view class="stat-item"><text class="stat-num stat-num--green">{{ stats.availableCount }}</text><text class="stat-label">可用</text></view>
-      <view class="stat-item"><text class="stat-num stat-num--yellow">{{ stats.borrowedCount }}</text><text class="stat-label">已借</text></view>
-      <view class="stat-item"><text class="stat-num stat-num--red">{{ stats.maintenanceCount }}</text><text class="stat-label">维护</text></view>
+      <view class="stat-item">
+        <Icon name="list" :size="12" color="#909399" />
+        <text class="stat-num">{{ stats.totalCount }}</text>
+        <text class="stat-label">总数</text>
+      </view>
+      <view class="stat-item">
+        <Icon name="circle-check" :size="12" color="#67c23a" />
+        <text class="stat-num stat-num--green">{{ stats.availableCount }}</text>
+        <text class="stat-label">可用</text>
+      </view>
+      <view class="stat-item">
+        <Icon name="arrow-right" :size="12" color="#e6a23c" />
+        <text class="stat-num stat-num--yellow">{{ stats.borrowedCount ?? 0 }}</text>
+        <text class="stat-label">已借</text>
+      </view>
+      <view class="stat-item">
+        <Icon name="warning" :size="12" color="#f56c6c" />
+        <text class="stat-num stat-num--red">{{ stats.maintenanceCount }}</text>
+        <text class="stat-label">维护</text>
+      </view>
     </view>
 
     <!-- 设备列表 -->
     <scroll-view class="list-area" scroll-y refresher-enabled @refresherrefresh="loadData" @scrolltolower="loadMore">
       <view v-for="eq in equipments" :key="eq.id" class="equip-card">
         <view class="equip-card__left">
-          <view class="equip-icon"><text>&#xe6a3;</text></view>
+          <view class="equip-icon"><Icon name="beaker" :size="20" color="#67c23a" /></view>
         </view>
         <view class="equip-card__info">
           <text class="equip-name">{{ eq.name }}</text>
@@ -29,17 +48,24 @@
           </view>
         </view>
         <view class="equip-card__actions">
-          <text class="action-icon" @tap="editEquip(eq)">&#xe6d4;</text>
-          <text class="action-icon action-icon--danger" @tap="deleteEquip(eq)">&#xe6d5;</text>
+          <view class="action-icon" @tap="editEquip(eq)">
+            <Icon name="pencil" :size="16" color="#667eea" />
+          </view>
+          <view class="action-icon action-icon--danger" @tap="deleteEquip(eq)">
+            <Icon name="close" :size="16" color="#f56c6c" />
+          </view>
         </view>
       </view>
 
       <view v-if="!isLoading && equipments.length === 0" class="empty">
-        <text class="empty-icon">&#xe6c6;</text>
+        <Icon name="inbox" :size="48" color="#d0d0d0" />
         <text class="empty-text">暂无设备</text>
       </view>
 
-      <view v-if="hasMore && equipments.length > 0" class="load-more"><text>加载更多...</text></view>
+      <view v-if="hasMore && equipments.length > 0" class="load-more">
+        <Icon name="arrow-down" :size="10" color="#909399" />
+        <text>加载更多...</text>
+      </view>
       <view :style="{ height: '40px' }" />
     </scroll-view>
 
@@ -48,7 +74,9 @@
       <view class="sheet" @tap.stop>
         <view class="sheet__header">
           <text class="sheet__title">{{ editingEquip ? '编辑设备' : '新增设备' }}</text>
-          <text class="sheet__close" @tap="showAddSheet = false">&#xe6c7;</text>
+          <view class="sheet__close" @tap="showAddSheet = false">
+            <Icon name="close" :size="14" color="#909399" />
+          </view>
         </view>
         <scroll-view class="sheet__body" scroll-y>
           <view class="form-item">
@@ -83,6 +111,7 @@
 <script setup lang="ts">
 import { ref, computed, reactive, onMounted } from 'vue'
 import { getEquipments, createEquipment, updateEquipment, deleteEquipment as deleteApi, getEquipmentStatistics } from '@/api/equipment'
+import Icon from '@/components/Icon.vue'
 import type { Equipment, EquipmentStatistics } from '@/types/equipment'
 
 const keyword = ref('')
@@ -220,7 +249,7 @@ $primary: #667eea;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6rpx;
+  gap: 4rpx;
 }
 
 .stat-num { font-size: 36rpx; font-weight: bold; color: #303133; &--green { color: #67c23a; } &--yellow { color: #e6a23c; } &--red { color: #f56c6c; } }
@@ -260,13 +289,28 @@ $primary: #667eea;
 .meta-tag { background: #f0f0f0; color: #909399; font-size: 22rpx; padding: 4rpx 12rpx; border-radius: 8rpx; }
 .meta-qty { font-size: 24rpx; color: #67c23a; }
 
-.action-icon { font-size: 36rpx; color: $primary; }
+.action-icon {
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $primary;
+}
 .action-icon--danger { color: #f56c6c; }
 
 .empty { display: flex; flex-direction: column; align-items: center; padding: 120rpx 0; gap: 16rpx; }
-.empty-icon { font-size: 80rpx; color: #d0d0d0; }
 .empty-text { font-size: 28rpx; color: #909399; }
-.load-more { text-align: center; padding: 24rpx; font-size: 24rpx; color: #909399; }
+.load-more {
+  text-align: center;
+  padding: 24rpx;
+  font-size: 24rpx;
+  color: #909399;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+}
 
 .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 999; display: flex; align-items: flex-end; }
 
@@ -280,7 +324,14 @@ $primary: #667eea;
 
   &__header { display: flex; align-items: center; justify-content: space-between; padding: 32rpx; border-bottom: 1rpx solid #f0f0f0; }
   &__title { font-size: 32rpx; font-weight: bold; color: #303133; }
-  &__close { font-size: 36rpx; color: #909399; }
+  &__close {
+    width: 48rpx;
+    height: 48rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #909399;
+  }
   &__body { flex: 1; padding: 32rpx; max-height: 45vh; }
   &__footer { padding: 24rpx 32rpx; border-top: 1rpx solid #f0f0f0; }
 }

@@ -10,7 +10,7 @@
       </view>
 
       <view v-if="!isLoading && departments.length === 0" class="empty">
-        <text class="empty-icon">&#xe6c6;</text>
+        <Icon name="inbox" :size="48" color="#d0d0d0" />
         <text class="empty-text">暂无部门</text>
       </view>
 
@@ -22,6 +22,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { get } from '@/utils/request'
+import Icon from '@/components/Icon.vue'
 
 interface Department { id: number; name: string; code: string; parentId?: number; parentName?: string }
 

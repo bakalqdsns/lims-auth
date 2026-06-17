@@ -3,7 +3,7 @@
     <!-- 顶部导航 -->
     <view class="header">
       <view class="search-bar">
-        <text class="search-icon">&#xe6c0;</text>
+        <Icon name="search" :size="14" color="rgba(255,255,255,0.8)" class="search-icon" />
         <input
           v-model="keyword"
           class="search-input"
@@ -15,7 +15,7 @@
       </view>
       <!-- 筛选按钮 -->
       <view class="filter-btn" @tap="showFilter = !showFilter">
-        <text>&#xe6c1;</text>
+        <Icon name="list" :size="16" color="#fff" />
       </view>
     </view>
 
@@ -26,7 +26,7 @@
         <picker mode="selector" :range="campusOptions" range-key="name" @change="onCampusChange">
           <view class="picker-value">
             {{ selectedCampusName || '全部校区' }}
-            <text class="picker-arrow">&#xe6c5;</text>
+            <Icon name="arrow-down" :size="12" color="#909399" class="picker-arrow" />
           </view>
         </picker>
       </view>
@@ -35,7 +35,7 @@
         <picker mode="selector" :range="statusOptions" range-key="label" @change="onStatusChange">
           <view class="picker-value">
             {{ selectedStatusLabel || '全部状态' }}
-            <text class="picker-arrow">&#xe6c5;</text>
+            <Icon name="arrow-down" :size="12" color="#909399" class="picker-arrow" />
           </view>
         </picker>
       </view>
@@ -63,7 +63,7 @@
         <!-- 左侧图标 -->
         <view class="lab-card__left">
           <view class="lab-icon">
-            <text>&#xe6c8;</text>
+            <Icon name="flask" :size="20" color="#667eea" />
           </view>
         </view>
 
@@ -73,12 +73,14 @@
           <text class="lab-code">{{ lab.code }}</text>
           <view class="lab-meta">
             <text class="meta-tag" v-if="lab.type">{{ lab.type }}</text>
-            <text class="meta-capacity">
-              可容纳 {{ lab.capacity }} 人
-            </text>
-            <text class="meta-equip">
-              {{ lab.equipmentCount }} 台设备
-            </text>
+            <view class="meta-capacity">
+              <Icon name="users" :size="10" color="#67c23a" class="meta-icon" />
+              <text>可容纳 {{ lab.capacity }} 人</text>
+            </view>
+            <view class="meta-equip">
+              <Icon name="beaker" :size="10" color="#909399" class="meta-icon" />
+              <text>{{ lab.equipmentCount }} 台设备</text>
+            </view>
           </view>
         </view>
 
@@ -96,12 +98,13 @@
 
       <!-- 空状态 -->
       <view v-if="!isLoading && labs.length === 0" class="empty">
-        <text class="empty-icon">&#xe6c6;</text>
+        <Icon name="inbox" :size="48" color="#d0d0d0" />
         <text class="empty-text">暂无实验室</text>
       </view>
 
       <!-- 加载更多 -->
       <view v-if="hasMore && labs.length > 0" class="load-more">
+        <Icon name="arrow-down" :size="10" color="#909399" />
         <text>加载更多...</text>
       </view>
 
@@ -113,6 +116,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useLabStore } from '@/stores/lab'
+import Icon from '@/components/Icon.vue'
 import type { Lab } from '@/types/campus'
 
 const labStore = useLabStore()
@@ -410,11 +414,17 @@ $primary: #667eea;
 .meta-capacity {
   font-size: 24rpx;
   color: #67c23a;
+  display: inline-flex;
+  align-items: center;
+  gap: 4rpx;
 }
 
 .meta-equip {
   font-size: 24rpx;
   color: #909399;
+  display: inline-flex;
+  align-items: center;
+  gap: 4rpx;
 }
 
 .status-dot {
@@ -454,5 +464,9 @@ $primary: #667eea;
   padding: 24rpx;
   font-size: 24rpx;
   color: #909399;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
 }
 </style>
