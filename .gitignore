@@ -53,3 +53,4 @@ mobile-android/app/build/
 /frontend/node_modules
 /frontend/node_modules
 /frontend/案例
+pc-frontend/node_modules/electron/dist/resources/default_app.asar
