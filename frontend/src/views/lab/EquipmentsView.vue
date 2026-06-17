@@ -298,8 +298,9 @@ const fetchEquipments = async () => {
       pageSize: pagination.pageSize
     })
     if (res.data.code === 200) {
-      equipmentList.value = res.data.data
-      total.value = res.data.total ?? res.data.data.length
+      const payload = res.data.data
+      equipmentList.value = Array.isArray(payload) ? payload : (payload?.items ?? [])
+      total.value = payload?.total ?? equipmentList.value.length
     }
   } catch (error) {
     ElMessage.error('获取设备列表失败')

@@ -144,7 +144,9 @@ const fetchEquipments = async () => {
       status: queryForm.status || undefined
     })
     if (res.data.code === 200) {
-      equipmentList.value = res.data.data
+      const payload = res.data.data
+      equipmentList.value = Array.isArray(payload) ? payload : (payload?.items ?? [])
+      total.value = payload?.total ?? equipmentList.value.length
     }
   } catch (error) {
     ElMessage.error('获取设备列表失败')
