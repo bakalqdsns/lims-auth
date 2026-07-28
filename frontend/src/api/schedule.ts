@@ -360,15 +360,16 @@ export interface ReservationQuery {
 // 授课申请 DTO
 export interface TeachingApplicationDto {
   id: string
-  semesterId: string
+  semesterId?: string
   semesterName?: string
-  teachingTaskId: string
+  teachingTaskId?: string
   courseName: string
-  majorId: string
+  majorId?: string
   majorName: string
-  classId: string
+  classId?: string
   className: string
-  weekNumbers: number[]
+  startWeek: number
+  endWeek: number
   dayOfWeek: number
   periodNumbers: number[]
   expectedLabId?: string
@@ -391,11 +392,12 @@ export interface CreateTeachingApplicationRequest {
   semesterId: string
   teachingTaskId: string
   courseName: string
-  majorId: string
+  majorId?: string
   majorName: string
-  classId: string
+  classId?: string
   className: string
-  weekNumbers: number[]
+  startWeek: number
+  endWeek: number
   dayOfWeek: number
   periodNumbers: number[]
   expectedLabId?: string

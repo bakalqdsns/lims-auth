@@ -83,7 +83,7 @@
         <el-row :gutter="12">
           <el-col :span="8">
             <el-form-item label="教学周" prop="weekNumber">
-              <el-input-number v-model="form.weekNumber" :min="1" :max="20" style="width: 100%" />
+              <el-input v-model.number="form.weekNumber" type="number" :min="1" :max="20" placeholder="1-20" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
@@ -296,5 +296,6 @@ onMounted(async () => {
 .page-header h2 { margin: 0; font-size: 20px; font-weight: 500; }
 .header-actions { display: flex; gap: 12px; }
 .search-card { margin-bottom: 20px; }
+.pagination-container { display: flex; justify-content: flex-end; margin-top: 20px; }
 .pagination-container { display: flex; justify-content: flex-end; margin-top: 20px; }
 </style>

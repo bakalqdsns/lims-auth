@@ -1,10 +1,11 @@
+import { watch } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import type { Directive, DirectiveBinding } from 'vue'
 
-// 检查是否有指定权限
-function checkPermission(value: string | string[]): boolean {
+function checkPermission(value: string | string[]): boolean | null {
   const authStore = useAuthStore()
-  const permissions = authStore.user?.permissions || []
+  if (!authStore.user) return null
+  const permissions = authStore.user.permissions || []
 
   if (Array.isArray(value)) {
     return value.some(p => permissions.includes(p))
@@ -12,63 +13,69 @@ function checkPermission(value: string | string[]): boolean {
   return permissions.includes(value)
 }
 
-// 检查是否有指定角色
-function checkRole(value: string | string[]): boolean {
-  const authStore = useAuthStore()
-  const roles = authStore.user?.roles || []
-  const roleCodes = roles.map((r: any) => r.code)
-
-  if (Array.isArray(value)) {
-    return value.some(r => roleCodes.includes(r))
+function applyVisibility(el: HTMLElement, binding: DirectiveBinding) {
+  const { value } = binding
+  if (!value) return
+  const has = checkPermission(value as string | string[])
+  if (has === false) {
+    el.style.display = 'none'
+  } else if (has === true) {
+    el.style.display = ''
   }
-  return roleCodes.includes(value)
 }
 
-// 权限指令
 export const permission: Directive = {
   mounted(el: HTMLElement, binding: DirectiveBinding) {
-    const { value } = binding
-    if (!value) return
+    applyVisibility(el, binding)
 
-    if (!checkPermission(value)) {
-      el.style.display = 'none'
-    }
+    const authStore = useAuthStore()
+    const stop = watch(
+      () => authStore.user,
+      () => {
+        applyVisibility(el, binding)
+        if (authStore.user) stop()
+      },
+      { immediate: false }
+    )
   },
   updated(el: HTMLElement, binding: DirectiveBinding) {
-    const { value } = binding
-    if (!value) return
-
-    if (checkPermission(value)) {
-      el.style.display = ''
-    } else {
-      el.style.display = 'none'
-    }
+    applyVisibility(el, binding)
   }
 }
 
-// 角色指令
 export const role: Directive = {
   mounted(el: HTMLElement, binding: DirectiveBinding) {
+    const authStore = useAuthStore()
+    const roles = authStore.user?.roles || []
     const { value } = binding
     if (!value) return
 
-    if (!checkRole(value)) {
-      el.style.display = 'none'
-    }
+    const has = Array.isArray(value) ? value.some(r => roles.includes(r)) : roles.includes(value)
+    if (!has) el.style.display = 'none'
+
+    const stop = watch(
+      () => authStore.user,
+      () => {
+        const updatedRoles = authStore.user?.roles || []
+        const updatedHas = Array.isArray(value)
+          ? value.some(r => updatedRoles.includes(r))
+          : updatedRoles.includes(value as string)
+        el.style.display = updatedHas ? '' : 'none'
+        if (authStore.user) stop()
+      },
+      { immediate: false }
+    )
   },
   updated(el: HTMLElement, binding: DirectiveBinding) {
+    const authStore = useAuthStore()
+    const roles = authStore.user?.roles || []
     const { value } = binding
     if (!value) return
-
-    if (checkRole(value)) {
-      el.style.display = ''
-    } else {
-      el.style.display = 'none'
-    }
+    const has = Array.isArray(value) ? value.some(r => roles.includes(r)) : roles.includes(value)
+    el.style.display = has ? '' : 'none'
   }
 }
 
-// 注册指令的插件
 export default {
   install(app: any) {
     app.directive('permission', permission)

@@ -57,6 +57,23 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
+    /// 更新个人资料
+    /// </summary>
+    [HttpPut("profile")]
+    [Authorize]
+    public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(ApiResponse<bool>.Error(401, "未授权"));
+        }
+
+        var response = await _authService.UpdateProfileAsync(userId, request);
+        return StatusCode(response.Code, response);
+    }
+
+    /// <summary>
     /// 刷新 Token
     /// </summary>
     [HttpPost("refresh")]

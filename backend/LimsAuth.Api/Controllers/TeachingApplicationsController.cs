@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using LimsAuth.Api.Models;
 using LimsAuth.Api.Services;
+using System.Text.Json;
+using SysFile = System.IO.File;
 
 namespace LimsAuth.Api.Controllers;
 
@@ -12,6 +14,7 @@ namespace LimsAuth.Api.Controllers;
 public class TeachingApplicationsController : ControllerBase
 {
     private readonly ITeachingApplicationService _service;
+    private static readonly string _logPath = Path.Combine(AppContext.BaseDirectory, "teaching_app.log");
 
     public TeachingApplicationsController(ITeachingApplicationService service)
     {
@@ -21,15 +24,8 @@ public class TeachingApplicationsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<TeachingApplicationDto>>> GetApplications([FromQuery] TeachingApplicationQuery query)
     {
-        try
-        {
-            var list = await _service.GetApplicationsAsync(query);
-            return Ok(new { code = 200, data = list });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { code = 500, message = ex.Message, detail = ex.StackTrace });
-        }
+        var list = await _service.GetApplicationsAsync(query);
+        return Ok(new { code = 200, data = list });
     }
 
     [HttpGet("{id}")]
@@ -46,8 +42,19 @@ public class TeachingApplicationsController : ControllerBase
         var userId = GetUserId();
         var userName = GetUserName();
         var createdBy = User.Identity?.Name;
-        var app = await _service.CreateApplicationAsync(request, userId, userName, createdBy);
-        return Ok(new { code = 200, data = app, message = "授课申请提交成功" });
+        try
+        {
+            var app = await _service.CreateApplicationAsync(request, userId, userName, createdBy);
+            return Ok(new { code = 200, data = app, message = "授课申请提交成功" });
+        }
+        catch (Exception ex)
+        {
+            var inner = ex;
+            while (inner.InnerException != null) inner = inner.InnerException;
+            var log = $"[{DateTime.Now:HH:mm:ss}] CREATE FAILED\n  Request: {JsonSerializer.Serialize(request)}\n  Message: {ex.Message}\n  Inner: {inner.Message}\n  Stack: {inner.StackTrace}\n";
+            SysFile.AppendAllText(_logPath, log);
+            return StatusCode(500, new { code = 500, message = ex.Message, inner = inner.Message, detail = inner.StackTrace });
+        }
     }
 
     [HttpPut("{id}/approve")]

@@ -39,6 +39,7 @@ const routeNameMap: Record<string, string> = {
   buildings: '楼宇管理',
   floorPlan: '建筑平面图',
   labs: '实验室管理',
+  labEquipments: '设备管理',
   equipments: '设备管理',
   scheduleSearch: '排课查询',
   centralScheduling: '集中排课',
@@ -47,7 +48,8 @@ const routeNameMap: Record<string, string> = {
   teachingApplications: '教学申请',
   usageRegistration: '使用登记',
   scheduleStatistics: '统计分析',
-  scheduleDashboard: '排课看板'
+  scheduleDashboard: '排课看板',
+  profile: '个人资料'
 }
 
 const breadcrumbList = computed(() => {
@@ -70,4 +72,3 @@ const breadcrumbList = computed(() => {
   color: #409EFF;
 }
 </style>
-

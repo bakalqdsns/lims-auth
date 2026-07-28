@@ -73,7 +73,7 @@
           <template #default="{ row }">
             <el-button link type="primary" @click="handleEdit(row)" v-permission="'equipment:update'">编辑</el-button>
             <el-button link type="primary" @click="handleUpdateStatus(row)">更新状态</el-button>
-            <el-popconfirm title="确定删除该设备吗？" @confirm="handleDelete(row)" v-permission="'equipment:delete'">
+            <el-popconfirm v-if="canDelete" title="确定删除该设备吗？" @confirm="handleDelete(row)" v-permission="'equipment:delete'">
               <template #reference>
                 <el-button link type="danger">删除</el-button>
               </template>
@@ -103,14 +103,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Plus, Search } from '@element-plus/icons-vue'
+import { useAuthStore } from '@/stores/auth'
 import { equipmentApi, labApi, type EquipmentDto, type LabDto, EQUIPMENT_CATEGORIES, EQUIPMENT_STATUSES } from '../../api/lab'
 import EquipmentFormDialog from './components/EquipmentFormDialog.vue'
 
 const route = useRoute()
+const authStore = useAuthStore()
+const canDelete = computed(() => authStore.hasPermission('equipment:delete') || authStore.isSuperAdmin)
 
 const queryForm = reactive({
   keyword: '',
@@ -141,7 +144,9 @@ const fetchEquipments = async () => {
       status: queryForm.status || undefined
     })
     if (res.data.code === 200) {
-      equipmentList.value = res.data.data
+      const payload = res.data.data
+      equipmentList.value = Array.isArray(payload) ? payload : (payload?.items ?? [])
+      total.value = payload?.total ?? equipmentList.value.length
     }
   } catch (error) {
     ElMessage.error('获取设备列表失败')
@@ -222,11 +227,8 @@ const confirmUpdateStatus = async () => {
 
 const getStatusType = (status: string) => {
   const typeMap: Record<string, string> = {
-    '正常': 'success',
-    '维修中': 'warning',
-    '报废': 'danger',
-    '借用中': 'info',
-    '闲置': ''
+    '在库-可用': 'success', '在库-待维修': 'warning', '在库-已预约': 'info',
+    '借出': 'primary', '送修': 'danger', '报废': 'info', '丢失': 'danger'
   }
   return typeMap[status] || ''
 }

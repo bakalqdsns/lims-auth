@@ -45,11 +45,12 @@ public class ExperimentsController : ControllerBase
         if (classId.HasValue)
             query = query.Where(e => e.ClassId == classId.Value);
 
-        return await query.OrderByDescending(e => e.CreatedAt).ToListAsync();
+        var list = await query.OrderByDescending(e => e.CreatedAt).ToListAsync();
+        return Ok(new { code = 200, data = list });
     }
 
     [HttpGet("tasks/{id}")]
-    public async Task<ActionResult<ExperimentTeachingTask>> GetExperimentTask(Guid id)
+    public async Task<IActionResult> GetExperimentTask(Guid id)
     {
         var task = await _context.ExperimentTeachingTasks
             .Include(e => e.Semester)
@@ -63,9 +64,9 @@ public class ExperimentsController : ControllerBase
             .FirstOrDefaultAsync(e => e.Id == id);
 
         if (task == null)
-            return NotFound();
+            return NotFound(new { code = 404, message = "实验教学任务不存在" });
 
-        return task;
+        return Ok(new { code = 200, data = task });
     }
 
     [HttpPost("tasks")]

@@ -17,8 +17,12 @@ public class PermissionHandler : AuthorizationHandler<PermissionRequirement>
             .Select(c => c.Value)
             .ToList();
 
-        // 超级管理员拥有所有权限
-        var isSuperAdmin = context.User.HasClaim(c => c.Type == ClaimTypes.Role && c.Value == "super_admin");
+        // 超级管理员拥有所有权限（同时检查 ClaimTypes.Role 和 "role" 两种 claim 类型）
+        var isSuperAdmin =
+            context.User.HasClaim(c => c.Type == ClaimTypes.Role && c.Value == "super_admin") ||
+            context.User.HasClaim(c => c.Type == "role" && c.Value == "super_admin") ||
+            context.User.HasClaim(c => c.Type == ClaimTypes.Role && c.Value == "admin") ||
+            context.User.HasClaim(c => c.Type == "role" && c.Value == "admin");
         if (isSuperAdmin)
         {
             context.Succeed(requirement);

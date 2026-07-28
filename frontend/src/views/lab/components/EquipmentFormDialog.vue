@@ -40,6 +40,11 @@
             </el-select>
           </el-form-item>
         </el-col>
+        <el-col :span="12">
+          <el-form-item label="计量单位">
+            <el-input v-model="form.unit" placeholder="如：台、套、部" />
+          </el-form-item>
+        </el-col>
       </el-row>
 
       <el-row :gutter="20">
@@ -71,12 +76,17 @@
       </el-row>
 
       <el-row :gutter="20">
-        <el-col :span="12">
+        <el-col :span="8">
           <el-form-item label="购买价格">
             <el-input-number v-model="form.price" :min="0" :precision="2" style="width: 100%" />
           </el-form-item>
         </el-col>
-        <el-col :span="12">
+        <el-col :span="8">
+          <el-form-item label="总数量">
+            <el-input-number v-model="form.totalQuantity" :min="1" style="width: 100%" />
+          </el-form-item>
+        </el-col>
+        <el-col :span="8">
           <el-form-item label="设备状态" prop="status">
             <el-select v-model="form.status" placeholder="选择状态" style="width: 100%">
               <el-option v-for="status in EQUIPMENT_STATUSES" :key="status" :label="status" :value="status" />
@@ -150,14 +160,19 @@ const form = reactive({
   manufacturer: '',
   serialNumber: '',
   category: '通用设备',
+  unit: '',
   labId: undefined as string | undefined,
   location: '',
   purchaseDate: undefined as string | undefined,
   warrantyMonths: undefined as number | undefined,
   price: undefined as number | undefined,
-  status: '正常',
+  status: '在库-可用',
   requiresBooking: false,
   maxBookingHours: undefined as number | undefined,
+  totalQuantity: 1,
+  availableQuantity: 1,
+  brand: '',
+  supplier: '',
   imageUrl: '',
   instructions: '',
   description: ''
@@ -177,14 +192,19 @@ const resetForm = () => {
   form.manufacturer = ''
   form.serialNumber = ''
   form.category = '通用设备'
+  form.unit = ''
   form.labId = undefined
   form.location = ''
   form.purchaseDate = undefined
   form.warrantyMonths = undefined
   form.price = undefined
-  form.status = '正常'
+  form.status = '在库-可用'
   form.requiresBooking = false
   form.maxBookingHours = undefined
+  form.totalQuantity = 1
+  form.availableQuantity = 1
+  form.brand = ''
+  form.supplier = ''
   form.imageUrl = ''
   form.instructions = ''
   form.description = ''
@@ -198,6 +218,7 @@ const fillForm = () => {
     form.manufacturer = props.equipmentData.manufacturer || ''
     form.serialNumber = props.equipmentData.serialNumber || ''
     form.category = props.equipmentData.category
+    form.unit = props.equipmentData.unit || ''
     form.labId = props.equipmentData.labId
     form.location = props.equipmentData.location || ''
     form.purchaseDate = props.equipmentData.purchaseDate
@@ -206,6 +227,10 @@ const fillForm = () => {
     form.status = props.equipmentData.status
     form.requiresBooking = props.equipmentData.requiresBooking
     form.maxBookingHours = props.equipmentData.maxBookingHours
+    form.totalQuantity = props.equipmentData.totalQuantity ?? 1
+    form.availableQuantity = props.equipmentData.availableQuantity ?? 1
+    form.brand = props.equipmentData.brand || ''
+    form.supplier = props.equipmentData.supplier || ''
     form.imageUrl = props.equipmentData.imageUrl || ''
     form.instructions = props.equipmentData.instructions || ''
     form.description = props.equipmentData.description || ''
@@ -225,6 +250,7 @@ const handleSubmit = async () => {
       manufacturer: form.manufacturer || undefined,
       serialNumber: form.serialNumber || undefined,
       category: form.category,
+      unit: form.unit || undefined,
       labId: form.labId,
       location: form.location || undefined,
       purchaseDate: form.purchaseDate,
@@ -233,6 +259,10 @@ const handleSubmit = async () => {
       status: form.status,
       requiresBooking: form.requiresBooking,
       maxBookingHours: form.maxBookingHours,
+      totalQuantity: form.totalQuantity,
+      availableQuantity: form.availableQuantity,
+      brand: form.brand || undefined,
+      supplier: form.supplier || undefined,
       imageUrl: form.imageUrl || undefined,
       instructions: form.instructions || undefined,
       description: form.description || undefined
@@ -250,10 +280,11 @@ const handleSubmit = async () => {
       visible.value = false
       emit('success')
     } else {
-      ElMessage.error(res.data.message)
+      ElMessage.error(res.data.message || (props.type === 'create' ? '创建失败' : '更新失败'))
     }
-  } catch (error) {
-    ElMessage.error(props.type === 'create' ? '创建失败' : '更新失败')
+  } catch (error: any) {
+    const msg = error?.response?.data?.message || error?.message || (props.type === 'create' ? '创建失败' : '更新失败')
+    ElMessage.error(msg)
   } finally {
     submitting.value = false
   }

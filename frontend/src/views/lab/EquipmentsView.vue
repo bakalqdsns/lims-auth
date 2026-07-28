@@ -4,14 +4,52 @@
       <div>
         <h2>设备管理</h2>
         <el-breadcrumb v-if="route.query.labName" class="breadcrumb">
-          <el-breadcrumb-item :to="{ path: '/lab/labs' }">实验室管理</el-breadcrumb-item>
+          <el-breadcrumb-item :to="{ path: '/lab/equipments' }">设备台账</el-breadcrumb-item>
           <el-breadcrumb-item>{{ route.query.labName }}</el-breadcrumb-item>
         </el-breadcrumb>
       </div>
-      <el-button type="primary" @click="handleCreate" v-permission="'equipment:create'">
-        <el-icon><Plus /></el-icon>
-        新增设备
-      </el-button>
+      <div class="header-actions">
+        <el-button type="info" @click="importDialogVisible = true" v-permission="'equipment:create'">
+          <el-icon><Upload /></el-icon>
+          导入
+        </el-button>
+        <el-button type="success" @click="handleExport" :loading="exporting">
+          <el-icon><Download /></el-icon>
+          导出 Excel
+        </el-button>
+        <el-button type="primary" @click="handleCreate" v-permission="'equipment:create'">
+          <el-icon><Plus /></el-icon>
+          新增设备
+        </el-button>
+      </div>
+    </div>
+
+    <!-- 统计卡片 -->
+    <div class="stats-grid" v-loading="statsLoading">
+      <div class="stat-card">
+        <div class="stat-value">{{ stats.total }}</div>
+        <div class="stat-label">设备总数</div>
+      </div>
+      <div class="stat-card stat-normal">
+        <div class="stat-value">{{ stats.normalCount }}</div>
+        <div class="stat-label">在库-可用</div>
+      </div>
+      <div class="stat-card stat-borrowed">
+        <div class="stat-value">{{ stats.borrowedCount }}</div>
+        <div class="stat-label">借出</div>
+      </div>
+      <div class="stat-card stat-maintenance">
+        <div class="stat-value">{{ stats.maintenanceCount }}</div>
+        <div class="stat-label">维修中</div>
+      </div>
+      <div class="stat-card stat-scrapped">
+        <div class="stat-value">{{ stats.scrappedCount }}</div>
+        <div class="stat-label">已报废</div>
+      </div>
+      <div class="stat-card stat-value">
+        <div class="stat-value">¥{{ formatPrice(stats.totalValue) }}</div>
+        <div class="stat-label">设备总价值</div>
+      </div>
     </div>
 
     <!-- 搜索栏 -->
@@ -47,6 +85,11 @@
 
     <!-- 设备列表 -->
     <el-card shadow="never">
+      <template #header>
+        <div class="table-header">
+          <span>设备列表（共 {{ total }} 台）</span>
+        </div>
+      </template>
       <el-table v-loading="loading" :data="equipmentList" stripe>
         <el-table-column prop="code" label="设备代码" width="120" />
         <el-table-column prop="name" label="设备名称" min-width="180" />
@@ -69,11 +112,18 @@
             <span v-else class="text-gray">否</span>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="200" fixed="right">
+        <el-table-column prop="price" label="价格(元)" width="100" align="right">
+          <template #default="{ row }">
+            <span v-if="row.price">{{ row.price.toFixed(2) }}</span>
+            <span v-else class="text-gray">-</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="240" fixed="right">
           <template #default="{ row }">
             <el-button link type="primary" @click="handleEdit(row)" v-permission="'equipment:update'">编辑</el-button>
-            <el-button link type="primary" @click="handleUpdateStatus(row)">更新状态</el-button>
-            <el-popconfirm title="确定删除该设备吗？" @confirm="handleDelete(row)" v-permission="'equipment:delete'">
+            <el-button link type="primary" @click="handleUpdateStatus(row)">状态</el-button>
+            <el-button v-if="row.status === '在库-可用'" link type="success" @click="handleOpenBorrow(row)">借出</el-button>
+            <el-popconfirm v-if="canDelete" title="确定删除该设备吗？" @confirm="handleDelete(row)" v-permission="'equipment:delete'">
               <template #reference>
                 <el-button link type="danger">删除</el-button>
               </template>
@@ -81,9 +131,24 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <!-- 分页 -->
+      <div class="pagination-wrapper">
+        <el-pagination
+          v-model:current-page="pagination.page"
+          v-model:page-size="pagination.pageSize"
+          :page-sizes="[10, 20, 50, 100]"
+          :total="total"
+          layout="total, sizes, prev, pager, next, jumper"
+          @size-change="handleSizeChange"
+          @current-change="handlePageChange"
+        />
+      </div>
     </el-card>
 
     <EquipmentFormDialog v-model="dialogVisible" :type="dialogType" :equipment-data="currentEquipment" :labs="labs" @success="handleSearch" />
+
+    <EquipmentImportDialog v-model="importDialogVisible" @success="handleSearch" />
 
     <!-- 状态更新对话框 -->
     <el-dialog title="更新设备状态" v-model="statusDialogVisible" width="400px">
@@ -99,18 +164,55 @@
         <el-button type="primary" @click="confirmUpdateStatus">确定</el-button>
       </template>
     </el-dialog>
+
+    <!-- 借出申请对话框 -->
+    <el-dialog title="设备借出申请" v-model="borrowDialogVisible" width="550px" destroy-on-close>
+      <el-form ref="borrowFormRef" :model="borrowForm" :rules="borrowRules" label-width="100px">
+        <el-descriptions :column="2" border size="small" style="margin-bottom: 16px">
+          <el-descriptions-item label="设备名称" :span="2">{{ borrowForm.equipmentName }}</el-descriptions-item>
+          <el-descriptions-item label="设备编号">{{ borrowForm.equipmentCode }}</el-descriptions-item>
+          <el-descriptions-item label="所属实验室">{{ borrowForm.labName || '未分配' }}</el-descriptions-item>
+        </el-descriptions>
+        <el-form-item label="联系电话" prop="phone">
+          <el-input v-model="borrowForm.phone" placeholder="请输入联系电话" maxlength="50" />
+        </el-form-item>
+        <el-form-item label="借用时间" prop="borrowDate" required>
+          <el-date-picker v-model="borrowForm.borrowDate" type="date" value-format="YYYY-MM-DD" placeholder="选择借用日期" style="width: 100%" />
+        </el-form-item>
+        <el-form-item label="计划归还" prop="expectedReturnDate" required>
+          <el-date-picker v-model="borrowForm.expectedReturnDate" type="date" value-format="YYYY-MM-DD" placeholder="选择计划归还日期" style="width: 100%" />
+        </el-form-item>
+        <el-form-item label="使用地点" prop="usageLocation">
+          <el-input v-model="borrowForm.usageLocation" placeholder="请输入使用地点" maxlength="200" />
+        </el-form-item>
+        <el-form-item label="借用用途" prop="purpose" required>
+          <el-input v-model="borrowForm.purpose" type="textarea" :rows="3" placeholder="请输入借用用途" maxlength="500" show-word-limit />
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input v-model="borrowForm.remarks" type="textarea" :rows="2" placeholder="备注信息（可选）" maxlength="500" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="borrowDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="borrowLoading" @click="submitBorrow">提交申请</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Plus, Search } from '@element-plus/icons-vue'
-import { equipmentApi, labApi, type EquipmentDto, type LabDto, EQUIPMENT_CATEGORIES, EQUIPMENT_STATUSES } from '@/api/lab'
+import { Plus, Search, Download, Upload } from '@element-plus/icons-vue'
+import { useAuthStore } from '@/stores/auth'
+import { equipmentApi, labApi, borrowApi, type EquipmentDto, type LabDto, type EquipmentStatisticsDto, EQUIPMENT_CATEGORIES, EQUIPMENT_STATUSES, type CreateBorrowRequest } from '@/api/lab'
 import EquipmentFormDialog from './components/EquipmentFormDialog.vue'
+import EquipmentImportDialog from './components/EquipmentImportDialog.vue'
 
 const route = useRoute()
+const authStore = useAuthStore()
+const canDelete = computed(() => authStore.hasPermission('equipment:delete') || authStore.isSuperAdmin)
 
 const queryForm = reactive({
   keyword: '',
@@ -119,17 +221,70 @@ const queryForm = reactive({
   status: ''
 })
 
+const pagination = reactive({
+  page: 1,
+  pageSize: 20
+})
+
 const loading = ref(false)
+const statsLoading = ref(false)
+const exporting = ref(false)
 const equipmentList = ref<EquipmentDto[]>([])
 const labs = ref<LabDto[]>([])
+const total = ref(0)
+
+const stats = reactive<EquipmentStatisticsDto>({
+  total: 0, activeCount: 0, inactiveCount: 0,
+  normalCount: 0, maintenanceCount: 0, borrowedCount: 0, scrappedCount: 0,
+  requiresBookingCount: 0, totalValue: 0,
+  byCategory: {}, byStatus: {}, byLab: {}
+})
 
 const dialogVisible = ref(false)
 const dialogType = ref<'create' | 'edit'>('create')
 const currentEquipment = ref<EquipmentDto | null>(null)
+const importDialogVisible = ref(false)
 
 const statusDialogVisible = ref(false)
 const newStatus = ref('')
 const statusEquipmentId = ref('')
+
+const borrowDialogVisible = ref(false)
+const borrowLoading = ref(false)
+const borrowFormRef = ref()
+const borrowForm = reactive<CreateBorrowRequest & { equipmentName: string; equipmentCode: string; labName: string }>({
+  equipmentId: '',
+  equipmentName: '',
+  equipmentCode: '',
+  labName: '',
+  borrowDate: '',
+  expectedReturnDate: '',
+  purpose: '',
+  phone: '',
+  usageLocation: '',
+  remarks: ''
+})
+
+const validateReturnDate = (_rule: any, value: string, callback: any) => {
+  if (!borrowForm.borrowDate) {
+    callback(new Error('请先选择借用日期'))
+  } else if (value && new Date(value) <= new Date(borrowForm.borrowDate)) {
+    callback(new Error('计划归还日期必须晚于借用日期'))
+  } else {
+    callback()
+  }
+}
+
+const borrowRules: Record<string, any[]> = {
+  phone: [{ required: true, message: '请输入联系电话', trigger: 'blur' }],
+  borrowDate: [{ required: true, message: '请选择借用日期', trigger: 'change' }],
+  expectedReturnDate: [
+    { required: true, message: '请选择计划归还日期', trigger: 'change' },
+    { validator: validateReturnDate, trigger: 'change' }
+  ],
+  usageLocation: [{ required: true, message: '请输入使用地点', trigger: 'blur' }],
+  purpose: [{ required: true, message: '请输入借用用途', trigger: 'blur' }]
+}
 
 const fetchEquipments = async () => {
   loading.value = true
@@ -138,15 +293,33 @@ const fetchEquipments = async () => {
       keyword: queryForm.keyword || undefined,
       labId: queryForm.labId || undefined,
       category: queryForm.category || undefined,
-      status: queryForm.status || undefined
+      status: queryForm.status || undefined,
+      page: pagination.page,
+      pageSize: pagination.pageSize
     })
     if (res.data.code === 200) {
-      equipmentList.value = res.data.data
+      const payload = res.data.data
+      equipmentList.value = Array.isArray(payload) ? payload : (payload?.items ?? [])
+      total.value = payload?.total ?? equipmentList.value.length
     }
   } catch (error) {
     ElMessage.error('获取设备列表失败')
   } finally {
     loading.value = false
+  }
+}
+
+const fetchStats = async () => {
+  statsLoading.value = true
+  try {
+    const res = await equipmentApi.getStatistics()
+    if (res.data.code === 200) {
+      Object.assign(stats, res.data.data)
+    }
+  } catch (error) {
+    console.error('获取统计数据失败', error)
+  } finally {
+    statsLoading.value = false
   }
 }
 
@@ -162,6 +335,7 @@ const fetchLabs = async () => {
 }
 
 const handleSearch = () => {
+  pagination.page = 1
   fetchEquipments()
 }
 
@@ -170,6 +344,16 @@ const handleReset = () => {
   queryForm.labId = ''
   queryForm.category = ''
   queryForm.status = ''
+  pagination.page = 1
+  fetchEquipments()
+}
+
+const handleSizeChange = () => {
+  pagination.page = 1
+  fetchEquipments()
+}
+
+const handlePageChange = () => {
   fetchEquipments()
 }
 
@@ -191,6 +375,7 @@ const handleDelete = async (row: EquipmentDto) => {
     if (res.data.code === 200) {
       ElMessage.success('删除成功')
       fetchEquipments()
+      fetchStats()
     } else {
       ElMessage.error(res.data.message)
     }
@@ -212,6 +397,7 @@ const confirmUpdateStatus = async () => {
       ElMessage.success('状态更新成功')
       statusDialogVisible.value = false
       fetchEquipments()
+      fetchStats()
     } else {
       ElMessage.error(res.data.message)
     }
@@ -220,13 +406,82 @@ const confirmUpdateStatus = async () => {
   }
 }
 
+const handleOpenBorrow = (row: EquipmentDto) => {
+  borrowForm.equipmentId = row.id
+  borrowForm.equipmentName = row.name
+  borrowForm.equipmentCode = row.code
+  borrowForm.labName = row.labName || ''
+  borrowForm.borrowDate = ''
+  borrowForm.expectedReturnDate = ''
+  borrowForm.purpose = ''
+  borrowForm.phone = ''
+  borrowForm.usageLocation = ''
+  borrowForm.remarks = ''
+  borrowDialogVisible.value = true
+}
+
+const submitBorrow = async () => {
+  const valid = await borrowFormRef.value?.validate().catch(() => false)
+  if (!valid) return
+
+  borrowLoading.value = true
+  try {
+    const res = await borrowApi.createRequest({
+      equipmentId: borrowForm.equipmentId,
+      borrowDate: borrowForm.borrowDate,
+      expectedReturnDate: borrowForm.expectedReturnDate,
+      purpose: borrowForm.purpose,
+      phone: borrowForm.phone,
+      usageLocation: borrowForm.usageLocation,
+      remarks: borrowForm.remarks
+    })
+    if (res.data.code === 200) {
+      ElMessage.success('借出申请已提交')
+      borrowDialogVisible.value = false
+      fetchEquipments()
+      fetchStats()
+    } else {
+      ElMessage.error(res.data.message)
+    }
+  } catch (err: any) {
+    ElMessage.error(err?.response?.data?.message || '提交失败')
+  } finally {
+    borrowLoading.value = false
+  }
+}
+
+const handleExport = async () => {
+  exporting.value = true
+  try {
+    const res = await equipmentApi.exportExcel({
+      keyword: queryForm.keyword || undefined,
+      category: queryForm.category || undefined,
+      status: queryForm.status || undefined
+    })
+    const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `设备台账_${new Date().toISOString().slice(0, 10)}.xlsx`
+    link.click()
+    URL.revokeObjectURL(url)
+    ElMessage.success('导出成功')
+  } catch (error) {
+    ElMessage.error('导出失败')
+  } finally {
+    exporting.value = false
+  }
+}
+
+const formatPrice = (value: number) => {
+  if (value >= 10000) return (value / 10000).toFixed(1) + '万'
+  return value.toFixed(0)
+}
+
 const getStatusType = (status: string) => {
   const typeMap: Record<string, string> = {
-    '正常': 'success',
-    '维修中': 'warning',
-    '报废': 'danger',
-    '借用中': 'info',
-    '闲置': ''
+    '在库-可用': 'success', '在库-待维修': 'warning', '在库-已预约': 'info',
+    '借出': 'primary', '送修': 'danger', '报废': 'info', '丢失': 'danger'
   }
   return typeMap[status] || ''
 }
@@ -234,6 +489,7 @@ const getStatusType = (status: string) => {
 onMounted(() => {
   fetchLabs()
   fetchEquipments()
+  fetchStats()
 })
 </script>
 
@@ -246,7 +502,7 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .page-header h2 {
@@ -255,12 +511,63 @@ onMounted(() => {
   font-weight: 500;
 }
 
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
 .breadcrumb {
   margin-top: 8px;
 }
 
+/* 统计卡片 */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.stat-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+  border: 1px solid #ebeef5;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 600;
+  color: #303133;
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 4px;
+}
+
+.stat-normal .stat-value { color: #67c23a; }
+.stat-borrowed .stat-value { color: #409eff; }
+.stat-maintenance .stat-value { color: #e6a23c; }
+.stat-scrapped .stat-value { color: #f56c6c; }
+.stat-value .stat-value { color: #303133; }
+
 .search-card {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+}
+
+.table-header {
+  font-size: 14px;
+  color: #606266;
+}
+
+.pagination-wrapper {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .text-gray {

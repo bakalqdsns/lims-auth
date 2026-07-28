@@ -19,11 +19,13 @@ public class ReservationService : IReservationService
 {
     private readonly AppDbContext _db;
     private readonly IScheduleService _scheduleService;
+    private readonly ISemesterService _semesterService;
 
-    public ReservationService(AppDbContext db, IScheduleService scheduleService)
+    public ReservationService(AppDbContext db, IScheduleService scheduleService, ISemesterService semesterService)
     {
         _db = db;
         _scheduleService = scheduleService;
+        _semesterService = semesterService;
     }
 
     public async Task<List<ReservationDto>> GetReservationsAsync(ReservationQuery query)
@@ -69,18 +71,28 @@ public class ReservationService : IReservationService
         string applicantPhone,
         string? createdBy = null)
     {
+        // 自动获取当前学期（如果前端未传）
+        var semesterId = request.SemesterId ?? (await _semesterService.GetCurrentAsync())?.Id;
+        if (semesterId == null)
+            throw new InvalidOperationException("没有当前学期，无法创建预约");
+
+        // 从日期自动计算星期和周次
+        var useDate = request.UseDate ?? DateTime.UtcNow;
+        var dayOfWeek = request.DayOfWeek ?? (int)useDate.DayOfWeek;
+        var periods = request.PeriodNumbers ?? new List<int>();
+
         var reservation = new Reservation
         {
             Id = Guid.NewGuid(),
-            SemesterId = request.SemesterId,
-            LabId = request.LabId,
-            UseDate = request.UseDate,
-            DayOfWeek = request.DayOfWeek,
-            PeriodNumbers = request.PeriodNumbers,
-            WeekNumber = request.WeekNumber,
+            SemesterId = semesterId.Value,
+            LabId = request.LabId ?? Guid.Empty,
+            UseDate = useDate,
+            DayOfWeek = dayOfWeek,
+            PeriodNumbers = periods,
+            WeekNumber = request.WeekNumber ?? 1,
             ExpectedDurationHours = request.ExpectedDurationHours,
-            ProjectName = request.ProjectName,
-            ProjectCategory = request.ProjectCategory,
+            ProjectName = request.ProjectName ?? "预约实验",
+            ProjectCategory = request.ProjectCategory ?? "",
             Remark = request.Remark,
             ApplicantId = applicantId,
             ApplicantName = applicantName,

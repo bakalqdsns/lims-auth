@@ -133,6 +133,31 @@ public class AuthService
     }
 
     /// <summary>
+    /// 更新个人资料（仅允许更新姓名、邮箱、手机号）
+    /// </summary>
+    public async Task<ApiResponse<bool>> UpdateProfileAsync(Guid userId, UpdateProfileRequest request)
+    {
+        var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId && u.IsActive);
+        if (user == null)
+        {
+            return ApiResponse<bool>.Error(404, "用户不存在");
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.FullName))
+            user.FullName = request.FullName;
+        if (!string.IsNullOrWhiteSpace(request.Email))
+            user.Email = request.Email;
+        if (!string.IsNullOrWhiteSpace(request.Phone))
+            user.Phone = request.Phone;
+
+        user.UpdatedAt = DateTime.UtcNow;
+        await _dbContext.SaveChangesAsync();
+
+        _logger.LogInformation("用户 {Username} 更新了个人资料", user.Username);
+        return ApiResponse<bool>.Success(true, "个人资料更新成功");
+    }
+
+    /// <summary>
     /// 刷新 Token
     /// </summary>
     public async Task<ApiResponse<LoginData>> RefreshTokenAsync(Guid userId)

@@ -155,7 +155,7 @@ const form = reactive({
   purchaseDate: undefined as string | undefined,
   warrantyMonths: undefined as number | undefined,
   price: undefined as number | undefined,
-  status: '正常',
+  status: '在库-可用',
   requiresBooking: false,
   maxBookingHours: undefined as number | undefined,
   imageUrl: '',
@@ -182,7 +182,7 @@ const resetForm = () => {
   form.purchaseDate = undefined
   form.warrantyMonths = undefined
   form.price = undefined
-  form.status = '正常'
+  form.status = '在库-可用'
   form.requiresBooking = false
   form.maxBookingHours = undefined
   form.imageUrl = ''

@@ -898,7 +898,7 @@ namespace LimsAuth.Api.Data.Migrations
                             PurchaseDate = new DateTime(2023, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RequiresBooking = false,
                             SerialNumber = "SN123456789",
-                            Status = "正常",
+                            Status = "在库-可用",
                             WarrantyMonths = 36
                         },
                         new
@@ -918,7 +918,7 @@ namespace LimsAuth.Api.Data.Migrations
                             PurchaseDate = new DateTime(2023, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RequiresBooking = false,
                             SerialNumber = "SN123456790",
-                            Status = "正常",
+                            Status = "在库-可用",
                             WarrantyMonths = 36
                         },
                         new
@@ -939,7 +939,7 @@ namespace LimsAuth.Api.Data.Migrations
                             PurchaseDate = new DateTime(2023, 6, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RequiresBooking = true,
                             SerialNumber = "SN987654321",
-                            Status = "正常",
+                            Status = "在库-可用",
                             WarrantyMonths = 24
                         },
                         new
@@ -960,7 +960,7 @@ namespace LimsAuth.Api.Data.Migrations
                             PurchaseDate = new DateTime(2023, 6, 15, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RequiresBooking = true,
                             SerialNumber = "SN987654322",
-                            Status = "正常",
+                            Status = "在库-可用",
                             WarrantyMonths = 24
                         },
                         new
@@ -981,7 +981,7 @@ namespace LimsAuth.Api.Data.Migrations
                             PurchaseDate = new DateTime(2023, 3, 10, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RequiresBooking = true,
                             SerialNumber = "SN555566667",
-                            Status = "正常",
+                            Status = "在库-可用",
                             WarrantyMonths = 24
                         },
                         new
@@ -1001,7 +1001,7 @@ namespace LimsAuth.Api.Data.Migrations
                             PurchaseDate = new DateTime(2023, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             RequiresBooking = false,
                             SerialNumber = "SN777788889",
-                            Status = "正常",
+                            Status = "在库-可用",
                             WarrantyMonths = 12
                         });
                 });

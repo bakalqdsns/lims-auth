@@ -31,6 +31,7 @@ public class TeachingTaskService : ITeachingTaskService
             .Include(t => t.Semester)
             .Include(t => t.Course)
             .Include(t => t.Class)
+            .Include(t => t.Major)
             .Include(t => t.Teachers)
                 .ThenInclude(tt => tt.Teacher)
             .AsQueryable();
@@ -67,6 +68,9 @@ public class TeachingTaskService : ITeachingTaskService
             CourseCode = t.Course?.Code ?? "",
             ClassId = t.ClassId,
             ClassName = t.Class?.Name ?? "",
+            MajorId = t.MajorId,
+            MajorName = t.Major?.Name ?? "",
+            Grade = t.Class?.Grade,
             TaskType = t.TaskType,
             Description = t.Description,
             IsActive = t.IsActive,
@@ -87,6 +91,7 @@ public class TeachingTaskService : ITeachingTaskService
             .Include(t => t.Semester)
             .Include(t => t.Course)
             .Include(t => t.Class)
+            .Include(t => t.Major)
             .Include(t => t.Teachers)
                 .ThenInclude(tt => tt.Teacher)
             .FirstOrDefaultAsync(t => t.Id == id);
@@ -103,6 +108,9 @@ public class TeachingTaskService : ITeachingTaskService
             CourseCode = task.Course?.Code ?? "",
             ClassId = task.ClassId,
             ClassName = task.Class?.Name ?? "",
+            MajorId = task.MajorId,
+            MajorName = task.Major?.Name ?? "",
+            Grade = task.Class?.Grade,
             TaskType = task.TaskType,
             Description = task.Description,
             IsActive = task.IsActive,
@@ -259,6 +267,9 @@ public class TeachingTaskDto
     public string CourseCode { get; set; } = string.Empty;
     public Guid ClassId { get; set; }
     public string ClassName { get; set; } = string.Empty;
+    public Guid MajorId { get; set; }
+    public string MajorName { get; set; } = string.Empty;
+    public string? Grade { get; set; }
     public string TaskType { get; set; } = string.Empty;
     public string? Description { get; set; }
     public bool IsActive { get; set; }

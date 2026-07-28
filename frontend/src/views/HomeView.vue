@@ -21,7 +21,8 @@
             <span>首页</span>
           </el-menu-item>
 
-          <el-sub-menu index="/system" v-if="canAccessSystem">
+          <!-- 系统管理：仅管理员可见 -->
+          <el-sub-menu index="/system" v-if="authStore.isAdmin">
             <template #title>
               <el-icon><Setting /></el-icon>
               <span>系统管理</span>
@@ -40,104 +41,167 @@
             </el-menu-item>
           </el-sub-menu>
 
-          <el-sub-menu index="/teaching">
+          <!-- 教学管理：管理员全部可见，教师可见课程/班级/任务 -->
+          <el-sub-menu index="/teaching" v-if="authStore.isAdmin || authStore.isTeacher">
             <template #title>
               <el-icon><School /></el-icon>
               <span>教学管理</span>
             </template>
-            <el-menu-item index="/teaching/semesters">
-              <el-icon><Calendar /></el-icon>
-              <span>学期管理</span>
-            </el-menu-item>
-            <el-menu-item index="/teaching/courses">
-              <el-icon><Reading /></el-icon>
-              <span>课程管理</span>
-            </el-menu-item>
-            <el-menu-item index="/teaching/majors">
-              <el-icon><School /></el-icon>
-              <span>专业管理</span>
-            </el-menu-item>
-            <el-menu-item index="/teaching/classes">
-              <el-icon><UserFilled /></el-icon>
-              <span>班级管理</span>
-            </el-menu-item>
-            <el-menu-item index="/teaching/tasks">
-              <el-icon><Timer /></el-icon>
-              <span>教学任务</span>
-            </el-menu-item>
-            <el-menu-item index="/teaching/periods">
-              <el-icon><Timer /></el-icon>
-              <span>节次时间</span>
-            </el-menu-item>
+            <!-- 管理员可见全部 -->
+            <template v-if="authStore.isAdmin">
+              <el-menu-item index="/teaching/semesters">
+                <el-icon><Calendar /></el-icon>
+                <span>学期管理</span>
+              </el-menu-item>
+              <el-menu-item index="/teaching/courses">
+                <el-icon><Reading /></el-icon>
+                <span>课程管理</span>
+              </el-menu-item>
+              <el-menu-item index="/teaching/majors">
+                <el-icon><School /></el-icon>
+                <span>专业管理</span>
+              </el-menu-item>
+              <el-menu-item index="/teaching/classes">
+                <el-icon><UserFilled /></el-icon>
+                <span>班级管理</span>
+              </el-menu-item>
+              <el-menu-item index="/teaching/tasks">
+                <el-icon><Timer /></el-icon>
+                <span>教学任务</span>
+              </el-menu-item>
+              <el-menu-item index="/teaching/periods">
+                <el-icon><Timer /></el-icon>
+                <span>节次时间</span>
+              </el-menu-item>
+            </template>
+            <!-- 教师可见：课程、班级、教学任务 -->
+            <template v-else-if="authStore.isTeacher">
+              <el-menu-item index="/teaching/courses">
+                <el-icon><Reading /></el-icon>
+                <span>课程管理</span>
+              </el-menu-item>
+              <el-menu-item index="/teaching/classes">
+                <el-icon><UserFilled /></el-icon>
+                <span>班级管理</span>
+              </el-menu-item>
+              <el-menu-item index="/teaching/tasks">
+                <el-icon><Timer /></el-icon>
+                <span>教学任务</span>
+              </el-menu-item>
+            </template>
           </el-sub-menu>
 
-          <el-sub-menu index="/experiment">
+          <!-- 实验教学管理：管理员全部可见，教师可见任务/项目库/开出/实训 -->
+          <el-sub-menu index="/experiment" v-if="authStore.isAdmin || authStore.isTeacher">
             <template #title>
               <el-icon><Tools /></el-icon>
               <span>实验教学管理</span>
             </template>
-            <el-menu-item index="/experiment/tasks">
-              <el-icon><Document /></el-icon>
-              <span>教学任务</span>
+            <!-- 管理员可见全部 -->
+            <template v-if="authStore.isAdmin">
+              <el-menu-item index="/experiment/tasks">
+                <el-icon><Document /></el-icon>
+                <span>教学任务</span>
+              </el-menu-item>
+              <el-menu-item index="/experiment/items">
+                <el-icon><Collection /></el-icon>
+                <span>实验项目库</span>
+              </el-menu-item>
+              <el-menu-item index="/experiment/schedules">
+                <el-icon><Calendar /></el-icon>
+                <span>项目开出</span>
+              </el-menu-item>
+              <el-menu-item index="/experiment/quality">
+                <el-icon><DataLine /></el-icon>
+                <span>教学质量</span>
+              </el-menu-item>
+              <el-menu-item index="/experiment/plans">
+                <el-icon><Memo /></el-icon>
+                <span>实训计划</span>
+              </el-menu-item>
+            </template>
+            <!-- 教师可见：任务、项目库、开出、实训 -->
+            <template v-else-if="authStore.isTeacher">
+              <el-menu-item index="/experiment/tasks">
+                <el-icon><Document /></el-icon>
+                <span>教学任务</span>
+              </el-menu-item>
+              <el-menu-item index="/experiment/items">
+                <el-icon><Collection /></el-icon>
+                <span>实验项目库</span>
+              </el-menu-item>
+              <el-menu-item index="/experiment/schedules">
+                <el-icon><Calendar /></el-icon>
+                <span>项目开出</span>
+              </el-menu-item>
+              <el-menu-item index="/experiment/plans">
+                <el-icon><Memo /></el-icon>
+                <span>实训计划</span>
+              </el-menu-item>
+            </template>
+          </el-sub-menu>
+
+          <!-- 实验室设备管理：所有角色可见（管理员可管理，教师和学生可浏览+借还） -->
+          <el-sub-menu index="/lab" v-if="hasPermission('equipment:read')">
+            <template #title>
+              <el-icon><Monitor /></el-icon>
+              <span>实验室设备管理</span>
+            </template>
+            <el-menu-item index="/lab/equipments">
+              <el-icon><Tools /></el-icon>
+              <span>设备台账</span>
             </el-menu-item>
-            <el-menu-item index="/experiment/items">
-              <el-icon><Collection /></el-icon>
-              <span>实验项目库</span>
-            </el-menu-item>
-            <el-menu-item index="/experiment/schedules">
-              <el-icon><Calendar /></el-icon>
-              <span>项目开出</span>
-            </el-menu-item>
-            <el-menu-item index="/experiment/quality">
-              <el-icon><DataLine /></el-icon>
-              <span>教学质量</span>
-            </el-menu-item>
-            <el-menu-item index="/experiment/plans">
-              <el-icon><Memo /></el-icon>
-              <span>实训计划</span>
+            <el-menu-item index="/lab/borrow-records">
+              <el-icon><Switch /></el-icon>
+              <span>设备借还</span>
             </el-menu-item>
           </el-sub-menu>
 
-          <el-sub-menu index="/scheduling" class="scheduling-submenu">
+          <!-- 预约排课管理：所有角色可见，按角色分层子项 -->
+          <el-sub-menu index="/scheduling" class="scheduling-submenu" v-if="authStore.token">
             <template #title>
               <el-icon><Calendar /></el-icon>
               <span>预约排课管理</span>
             </template>
+            <!-- 所有角色可见 -->
             <el-menu-item index="/scheduling/list">
               <el-icon><Search /></el-icon>
               <span>排课查询</span>
-            </el-menu-item>
-            <el-menu-item index="/scheduling/central">
-              <el-icon><Edit /></el-icon>
-              <span>集中排课</span>
             </el-menu-item>
             <el-menu-item index="/scheduling/reservations">
               <el-icon><Postcard /></el-icon>
               <span>预约申请</span>
             </el-menu-item>
-            <el-menu-item index="/scheduling/reservations/approval">
-              <el-icon><CircleCheck /></el-icon>
-              <span>预约审批</span>
-            </el-menu-item>
-            <el-menu-item index="/scheduling/teaching-applications">
-              <el-icon><Tickets /></el-icon>
-              <span>教学申请</span>
-            </el-menu-item>
-            <el-menu-item index="/scheduling/usage-registration">
-              <el-icon><EditPen /></el-icon>
-              <span>使用登记</span>
-            </el-menu-item>
-            <el-menu-item index="/scheduling/statistics">
-              <el-icon><DataAnalysis /></el-icon>
-              <span>统计分析</span>
-            </el-menu-item>
-            <el-menu-item index="/scheduling/dashboard">
-              <el-icon><DataBoard /></el-icon>
-              <span>排课看板</span>
-            </el-menu-item>
+            <!-- 管理员 + 教师可见 -->
+            <template v-if="authStore.isAdmin || authStore.isTeacher">
+              <el-menu-item index="/scheduling/teaching-applications">
+                <el-icon><Tickets /></el-icon>
+                <span>教学申请</span>
+              </el-menu-item>
+              <el-menu-item index="/scheduling/usage-registration">
+                <el-icon><EditPen /></el-icon>
+                <span>使用登记</span>
+              </el-menu-item>
+            </template>
+            <!-- 仅管理员可见 -->
+            <template v-if="authStore.isAdmin">
+              <el-menu-item index="/scheduling/central">
+                <el-icon><Edit /></el-icon>
+                <span>集中排课</span>
+              </el-menu-item>
+              <el-menu-item index="/scheduling/statistics">
+                <el-icon><DataAnalysis /></el-icon>
+                <span>统计分析</span>
+              </el-menu-item>
+              <el-menu-item index="/scheduling/dashboard">
+                <el-icon><DataBoard /></el-icon>
+                <span>排课看板</span>
+              </el-menu-item>
+            </template>
           </el-sub-menu>
 
-          <el-sub-menu index="/venue" v-if="hasPermission('lab:read') || hasPermission('equipment:read') || hasPermission('campus:read') || hasPermission('building:read')">
+          <!-- 场馆信息管理：所有角色可见 -->
+          <el-sub-menu index="/venue" v-if="hasPermission('lab:read') || hasPermission('campus:read') || hasPermission('building:read')">
             <template #title>
               <el-icon><OfficeBuilding /></el-icon>
               <span>场馆信息管理</span>
@@ -158,9 +222,17 @@
               <el-icon><HomeFilled /></el-icon>
               <span>实验室管理</span>
             </el-menu-item>
-            <el-menu-item v-if="hasPermission('equipment:read')" index="/venue/equipments">
-              <el-icon><Tools /></el-icon>
-              <span>设备管理</span>
+          </el-sub-menu>
+
+          <!-- 耗材管理：所有登录用户可见 -->
+          <el-sub-menu index="/consumables" v-if="hasPermission('consumable:read')">
+            <template #title>
+              <el-icon><Goods /></el-icon>
+              <span>耗材管理</span>
+            </template>
+            <el-menu-item index="/consumables">
+              <el-icon><Goods /></el-icon>
+              <span>耗材总览</span>
             </el-menu-item>
           </el-sub-menu>
         </el-menu>
@@ -173,6 +245,9 @@
             <breadcrumb />
           </div>
           <div class="header-right">
+            <el-tag v-if="authStore.userRole" type="info" effect="plain" class="role-tag">
+              {{ getRoleLabel(authStore.userRole) }}
+            </el-tag>
             <el-dropdown @command="handleCommand">
               <span class="user-info">
                 <el-avatar :size="32" :icon="UserFilled" />
@@ -269,11 +344,13 @@ import {
   Search,
   Edit,
   Postcard,
-  CircleCheck,
   Tickets,
   EditPen,
   DataAnalysis,
-  DataBoard
+  DataBoard,
+  Monitor,
+  Switch,
+  Goods
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '../stores/auth'
 import { userApi } from '../api/system'
@@ -285,21 +362,25 @@ const authStore = useAuthStore()
 
 const hasPermission = authStore.hasPermission
 
-// 当前激活的菜单
 const activeMenu = computed(() => route.path)
 
-// 是否可以访问系统管理
-const canAccessSystem = computed(() => {
-  return hasPermission('user:read') ||
-         hasPermission('role:read') ||
-         hasPermission('department:read')
-})
+const getRoleLabel = (role: string) => {
+  const labels: Record<string, string> = {
+    super_admin: '超级管理员',
+    admin: '系统管理员',
+    lab_admin: '实验室管理员',
+    teacher: '教师',
+    student: '学生',
+    auditor: '审计员'
+  }
+  return labels[role] || role
+}
 
 // 用户菜单命令
 const handleCommand = (command: string) => {
   switch (command) {
     case 'profile':
-      ElMessage.info('个人资料功能开发中...')
+      router.push('/profile')
       break
     case 'password':
       passwordDialogVisible.value = true
@@ -425,6 +506,11 @@ const handleChangePassword = async () => {
 .header-right {
   display: flex;
   align-items: center;
+  gap: 12px;
+}
+
+.role-tag {
+  font-size: 12px;
 }
 
 .user-info {

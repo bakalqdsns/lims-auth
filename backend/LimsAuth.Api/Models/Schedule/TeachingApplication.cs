@@ -10,22 +10,19 @@ public class TeachingApplication
     [Column("id")]
     public Guid Id { get; set; } = Guid.NewGuid();
 
-    [Required]
     [Column("semester_id")]
-    public Guid SemesterId { get; set; }
+    public Guid? SemesterId { get; set; }
 
-    [Required]
     [Column("teaching_task_id")]
-    public Guid TeachingTaskId { get; set; }
+    public Guid? TeachingTaskId { get; set; }
 
     [Required]
     [Column("course_name")]
     [MaxLength(200)]
     public string CourseName { get; set; } = string.Empty;
 
-    [Required]
     [Column("major_id")]
-    public Guid MajorId { get; set; }
+    public Guid? MajorId { get; set; }
 
     [Required]
     [Column("major_name")]
@@ -34,7 +31,7 @@ public class TeachingApplication
 
     [Required]
     [Column("class_id")]
-    public Guid ClassId { get; set; }
+    public Guid? ClassId { get; set; }
 
     [Required]
     [Column("class_name")]
@@ -53,6 +50,12 @@ public class TeachingApplication
             : System.Text.Json.JsonSerializer.Deserialize<List<int>>(WeekNumbersJson) ?? new List<int>();
         set => WeekNumbersJson = System.Text.Json.JsonSerializer.Serialize(value);
     }
+
+    [Column("start_week")]
+    public int StartWeek { get; set; }
+
+    [Column("end_week")]
+    public int EndWeek { get; set; }
 
     [Column("day_of_week")]
     public int DayOfWeek { get; set; }
@@ -120,7 +123,7 @@ public class TeachingApplication
     public string? UpdatedBy { get; set; }
 
     public virtual Semester? Semester { get; set; }
-    public virtual TeachingTask? TeachingTask { get; set; }
+    public virtual ExperimentTeachingTask? ExperimentTask { get; set; }
     public virtual Major? Major { get; set; }
     public virtual Class? Class { get; set; }
     public virtual Lab? ExpectedLab { get; set; }

@@ -79,6 +79,15 @@ public class ReservationsController : ControllerBase
         return Ok(new { code = 200, data = list });
     }
 
+    [HttpGet("my")]
+    public async Task<ActionResult<IEnumerable<ReservationDto>>> GetMy()
+    {
+        var userId = GetUserId();
+        var query = new ReservationQuery { ApplicantId = userId };
+        var list = await _reservationService.GetReservationsAsync(query);
+        return Ok(new { code = 200, data = list });
+    }
+
     private Guid GetUserId()
     {
         var idStr = User.FindFirstValue(ClaimTypes.NameIdentifier);

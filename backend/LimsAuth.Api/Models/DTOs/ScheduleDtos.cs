@@ -10,6 +10,8 @@ public class ScheduleQuery
 {
     public Guid? SemesterId { get; set; }
     public int? WeekNumber { get; set; }
+    public int? StartWeek { get; set; }
+    public int? EndWeek { get; set; }
     public int? DayOfWeek { get; set; }
     public Guid? LabId { get; set; }
     public Guid? BuildingId { get; set; }
@@ -26,6 +28,8 @@ public class AvailabilityQuery
 {
     public Guid SemesterId { get; set; }
     public int WeekNumber { get; set; }
+    public int? StartWeek { get; set; }
+    public int? EndWeek { get; set; }
     public int DayOfWeek { get; set; }
     public List<int> PeriodNumbers { get; set; } = new();
     public Guid? BuildingId { get; set; }
@@ -82,7 +86,10 @@ public class ScheduleEntryDto
     public string? SemesterName { get; set; }
     public Guid? LabId { get; set; }
     public string? LabName { get; set; }
+    public string? BuildingName { get; set; }
     public int WeekNumber { get; set; }
+    public int? StartWeek { get; set; }
+    public int? EndWeek { get; set; }
     public int DayOfWeek { get; set; }
     public int PeriodNumber { get; set; }
     public string Source { get; set; } = string.Empty;
@@ -114,6 +121,8 @@ public class CreateScheduleEntryRequest
     public Guid SemesterId { get; set; }
     public Guid? LabId { get; set; }
     public int WeekNumber { get; set; }
+    public int? StartWeek { get; set; }
+    public int? EndWeek { get; set; }
     public int DayOfWeek { get; set; }
     public int PeriodNumber { get; set; }
     public string Source { get; set; } = "CentralScheduling";
@@ -189,19 +198,19 @@ public class ReservationDto
 
 public class CreateReservationRequest
 {
-    [Required]
-    public Guid SemesterId { get; set; }
-    [Required]
-    public Guid LabId { get; set; }
-    public DateTime UseDate { get; set; }
-    public int DayOfWeek { get; set; }
-    public List<int> PeriodNumbers { get; set; } = new();
-    public int WeekNumber { get; set; }
+    // 兼容前端简化格式
+    public Guid? LabId { get; set; }
+    public DateTime? UseDate { get; set; }
+    public int? DayOfWeek { get; set; }
+    public List<int>? PeriodNumbers { get; set; }
+    public int? WeekNumber { get; set; }
     public double? ExpectedDurationHours { get; set; }
-    [Required]
-    public string ProjectName { get; set; } = string.Empty;
-    public string ProjectCategory { get; set; } = string.Empty;
     public string? Remark { get; set; }
+
+    // 兼容旧格式
+    public Guid? SemesterId { get; set; }
+    public string? ProjectName { get; set; }
+    public string? ProjectCategory { get; set; }
     public Guid? ProjectLeaderId { get; set; }
     public string? ProjectLeaderName { get; set; }
     public string? ProjectLeaderPhone { get; set; }
@@ -241,15 +250,16 @@ public class CancelRequest
 public class TeachingApplicationDto
 {
     public Guid Id { get; set; }
-    public Guid SemesterId { get; set; }
+    public Guid? SemesterId { get; set; }
     public string? SemesterName { get; set; }
-    public Guid TeachingTaskId { get; set; }
+    public Guid? TeachingTaskId { get; set; }
     public string CourseName { get; set; } = string.Empty;
-    public Guid MajorId { get; set; }
+    public Guid? MajorId { get; set; }
     public string MajorName { get; set; } = string.Empty;
-    public Guid ClassId { get; set; }
+    public Guid? ClassId { get; set; }
     public string ClassName { get; set; } = string.Empty;
-    public List<int> WeekNumbers { get; set; } = new();
+    public int StartWeek { get; set; }
+    public int EndWeek { get; set; }
     public int DayOfWeek { get; set; }
     public List<int> PeriodNumbers { get; set; } = new();
     public Guid? ExpectedLabId { get; set; }
@@ -270,16 +280,15 @@ public class TeachingApplicationDto
 
 public class CreateTeachingApplicationRequest
 {
-    [Required]
-    public Guid SemesterId { get; set; }
-    [Required]
-    public Guid TeachingTaskId { get; set; }
+    public Guid? SemesterId { get; set; }
+    public Guid? TeachingTaskId { get; set; }
     public string CourseName { get; set; } = string.Empty;
-    public Guid MajorId { get; set; }
+    public Guid? MajorId { get; set; }
     public string MajorName { get; set; } = string.Empty;
-    public Guid ClassId { get; set; }
+    public Guid? ClassId { get; set; }
     public string ClassName { get; set; } = string.Empty;
-    public List<int> WeekNumbers { get; set; } = new();
+    public int StartWeek { get; set; }
+    public int EndWeek { get; set; }
     public int DayOfWeek { get; set; }
     public List<int> PeriodNumbers { get; set; } = new();
     public Guid? ExpectedLabId { get; set; }
@@ -499,4 +508,39 @@ public class AlertItem
     public string Message { get; set; } = string.Empty;
     public DateTime Time { get; set; }
     public string? RelatedId { get; set; }
+}
+
+// ============================================================
+// Experiment Task Import DTOs
+// ============================================================
+
+public class ExperimentTaskImportDto
+{
+    public Guid Id { get; set; }
+    public string CourseName { get; set; } = string.Empty;
+    public string ClassName { get; set; } = string.Empty;
+    public string MajorName { get; set; } = string.Empty;
+    public int StudentCount { get; set; }
+    public string TeacherNames { get; set; } = string.Empty;
+    public int TotalExperimentHours { get; set; }
+    public int CurrentSemesterExperimentHours { get; set; }
+    public int ScheduleCount { get; set; }
+    public List<ExperimentScheduleItemDto> Schedules { get; set; } = new();
+}
+
+public class ExperimentScheduleItemDto
+{
+    public Guid Id { get; set; }
+    public string ExperimentName { get; set; } = string.Empty;
+    public int? WeekNumber { get; set; }
+    public int? DayOfWeek { get; set; }
+    public int? PeriodNumber { get; set; }
+    public Guid? LabId { get; set; }
+    public string? LabName { get; set; }
+    public bool IsConducted { get; set; }
+}
+
+public class ImportTasksRequest
+{
+    public List<Guid> TaskIds { get; set; } = new();
 }

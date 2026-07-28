@@ -7,6 +7,7 @@ namespace LimsAuth.Api.Services;
 public interface IScheduleService
 {
     Task<List<ScheduleEntryDto>> GetScheduleEntriesAsync(ScheduleQuery query);
+    Task<List<ScheduleEntryDto>> GetMyScheduleEntriesAsync(Guid userId, ScheduleQuery query);
     Task<ScheduleEntryDto?> GetScheduleByIdAsync(Guid id);
     Task<ScheduleEntryDto> CreateCentralScheduleAsync(CreateScheduleEntryRequest request, string? createdBy = null);
     Task<bool> UpdateCentralScheduleAsync(Guid id, UpdateScheduleEntryRequest request, string? updatedBy = null);
@@ -14,6 +15,8 @@ public interface IScheduleService
     Task<ConflictCheckResult> CheckConflictsAsync(ScheduleEntry entry);
     Task<List<ScheduleTableRow>> GetScheduleTableAsync(ScheduleQuery query);
     Task<List<Lab>> GetAvailableLabsAsync(AvailabilityQuery query);
+    Task<List<ExperimentTaskImportDto>> GetImportableExperimentTasksAsync(Guid semesterId);
+    Task<int> ImportFromExperimentTasksAsync(List<Guid> taskIds, string? createdBy = null);
 }
 
 public class ScheduleService : IScheduleService
@@ -30,12 +33,20 @@ public class ScheduleService : IScheduleService
         var q = _db.ScheduleEntries
             .Include(x => x.Semester)
             .Include(x => x.Lab)
+                .ThenInclude(l => l!.Building)
+            .Where(x => x.Status != "Cancelled")
             .AsQueryable();
 
         if (query.SemesterId.HasValue)
             q = q.Where(x => x.SemesterId == query.SemesterId.Value);
-        if (query.WeekNumber.HasValue)
-            q = q.Where(x => x.WeekNumber == query.WeekNumber.Value);
+        if (query.StartWeek.HasValue && query.EndWeek.HasValue)
+            q = q.Where(x => 
+                (x.StartWeek.HasValue && x.EndWeek.HasValue && x.StartWeek <= query.EndWeek && x.EndWeek >= query.StartWeek) ||
+                (!x.StartWeek.HasValue && x.WeekNumber >= query.StartWeek && x.WeekNumber <= query.EndWeek));
+        else if (query.StartWeek.HasValue)
+            q = q.Where(x => 
+                (x.StartWeek.HasValue && x.EndWeek.HasValue && x.StartWeek <= query.StartWeek && x.EndWeek >= query.StartWeek) ||
+                (!x.StartWeek.HasValue && x.WeekNumber == query.StartWeek));
         if (query.DayOfWeek.HasValue)
             q = q.Where(x => x.DayOfWeek == query.DayOfWeek.Value);
         if (query.LabId.HasValue)
@@ -68,8 +79,59 @@ public class ScheduleService : IScheduleService
         var entry = await _db.ScheduleEntries
             .Include(x => x.Semester)
             .Include(x => x.Lab)
+                .ThenInclude(l => l!.Building)
             .FirstOrDefaultAsync(x => x.Id == id);
         return entry == null ? null : MapToDto(entry);
+    }
+
+    public async Task<List<ScheduleEntryDto>> GetMyScheduleEntriesAsync(Guid userId, ScheduleQuery query)
+    {
+        var classIds = await _db.ClassStudents
+            .Where(cs => cs.StudentId == userId)
+            .Select(cs => cs.ClassId)
+            .ToListAsync();
+
+        var q = _db.ScheduleEntries
+            .Include(x => x.Semester)
+            .Include(x => x.Lab)
+                .ThenInclude(l => l!.Building)
+            .Where(x => x.Status != "Cancelled")
+            .AsQueryable();
+
+        if (classIds.Count > 0)
+        {
+            q = q.Where(x => classIds.Contains(x.ClassId ?? Guid.Empty) || x.TeacherId == userId);
+        }
+        else
+        {
+            q = q.Where(x => x.TeacherId == userId);
+        }
+
+        if (query.SemesterId.HasValue)
+            q = q.Where(x => x.SemesterId == query.SemesterId.Value);
+        if (query.StartWeek.HasValue && query.EndWeek.HasValue)
+            q = q.Where(x =>
+                (x.StartWeek.HasValue && x.EndWeek.HasValue && x.StartWeek <= query.EndWeek && x.EndWeek >= query.StartWeek) ||
+                (!x.StartWeek.HasValue && x.WeekNumber >= query.StartWeek && x.WeekNumber <= query.EndWeek));
+        else if (query.StartWeek.HasValue)
+            q = q.Where(x =>
+                (x.StartWeek.HasValue && x.EndWeek.HasValue && x.StartWeek <= query.StartWeek && x.EndWeek >= query.StartWeek) ||
+                (!x.StartWeek.HasValue && x.WeekNumber == query.StartWeek));
+        if (query.DayOfWeek.HasValue)
+            q = q.Where(x => x.DayOfWeek == query.DayOfWeek.Value);
+        if (query.LabId.HasValue)
+            q = q.Where(x => x.LabId == query.LabId.Value);
+        if (query.BuildingId.HasValue)
+            q = q.Where(x => x.Lab != null && x.Lab.BuildingId == query.BuildingId.Value);
+
+        var list = await q
+            .OrderBy(x => x.SemesterId)
+            .ThenBy(x => x.WeekNumber)
+            .ThenBy(x => x.DayOfWeek)
+            .ThenBy(x => x.PeriodNumber)
+            .ToListAsync();
+
+        return list.Select(MapToDto).ToList();
     }
 
     public async Task<ScheduleEntryDto> CreateCentralScheduleAsync(CreateScheduleEntryRequest request, string? createdBy = null)
@@ -80,6 +142,8 @@ public class ScheduleService : IScheduleService
             SemesterId = request.SemesterId,
             LabId = request.LabId,
             WeekNumber = request.WeekNumber,
+            StartWeek = request.StartWeek,
+            EndWeek = request.EndWeek,
             DayOfWeek = request.DayOfWeek,
             PeriodNumber = request.PeriodNumber,
             Source = Enum.TryParse<ScheduleSource>(request.Source, true, out var s) ? s : ScheduleSource.CentralScheduling,
@@ -154,11 +218,7 @@ public class ScheduleService : IScheduleService
         var entry = await _db.ScheduleEntries.FindAsync(id);
         if (entry == null) return false;
 
-        entry.Status = "Cancelled";
-        entry.Source = ScheduleSource.Cancelled;
-        entry.UpdatedAt = DateTime.UtcNow;
-        entry.UpdatedBy = deletedBy;
-
+        _db.ScheduleEntries.Remove(entry);
         await _db.SaveChangesAsync();
         return true;
     }
@@ -171,12 +231,21 @@ public class ScheduleService : IScheduleService
             .Include(x => x.Lab)
             .Where(x => x.SemesterId == entry.SemesterId
                 && x.LabId == entry.LabId
-                && x.WeekNumber == entry.WeekNumber
                 && x.DayOfWeek == entry.DayOfWeek
                 && x.PeriodNumber == entry.PeriodNumber
                 && x.Status == "Active"
                 && x.Id != entry.Id)
             .ToListAsync();
+
+        hardConflicts = hardConflicts.Where(x => 
+            (x.StartWeek.HasValue && x.EndWeek.HasValue && entry.StartWeek.HasValue && entry.EndWeek.HasValue &&
+             x.StartWeek <= entry.EndWeek && x.EndWeek >= entry.StartWeek) ||
+            (!x.StartWeek.HasValue && entry.StartWeek.HasValue && entry.EndWeek.HasValue &&
+             x.WeekNumber >= entry.StartWeek && x.WeekNumber <= entry.EndWeek) ||
+            (x.StartWeek.HasValue && x.EndWeek.HasValue && !entry.StartWeek.HasValue &&
+             entry.WeekNumber >= x.StartWeek && entry.WeekNumber <= x.EndWeek) ||
+            (!x.StartWeek.HasValue && !entry.StartWeek.HasValue && x.WeekNumber == entry.WeekNumber)
+        ).ToList();
 
         foreach (var c in hardConflicts)
         {
@@ -184,7 +253,7 @@ public class ScheduleService : IScheduleService
             {
                 Id = c.Id,
                 Type = "HardConflict",
-                Message = $"实验室 [{c.Lab?.Name}] 在第{c.WeekNumber}周 星期{c.DayOfWeek} 第{c.PeriodNumber}节 已被 [{c.CourseName ?? c.ProjectName}] 占用",
+                Message = $"实验室 [{c.Lab?.Name}] 在第{c.StartWeek ?? c.WeekNumber}-{c.EndWeek ?? c.WeekNumber}周 星期{c.DayOfWeek} 第{c.PeriodNumber}节 已被 [{c.CourseName ?? c.ProjectName}] 占用",
                 LabName = c.Lab?.Name,
                 WeekNumber = c.WeekNumber,
                 DayOfWeek = c.DayOfWeek,
@@ -201,12 +270,21 @@ public class ScheduleService : IScheduleService
         var teacherConflicts = await _db.ScheduleEntries
             .Where(x => x.SemesterId == entry.SemesterId
                 && x.TeacherId == entry.TeacherId
-                && x.WeekNumber == entry.WeekNumber
                 && x.DayOfWeek == entry.DayOfWeek
                 && x.PeriodNumber == entry.PeriodNumber
                 && x.Status == "Active"
                 && x.Id != entry.Id)
             .ToListAsync();
+
+        teacherConflicts = teacherConflicts.Where(x => 
+            (x.StartWeek.HasValue && x.EndWeek.HasValue && entry.StartWeek.HasValue && entry.EndWeek.HasValue &&
+             x.StartWeek <= entry.EndWeek && x.EndWeek >= entry.StartWeek) ||
+            (!x.StartWeek.HasValue && entry.StartWeek.HasValue && entry.EndWeek.HasValue &&
+             x.WeekNumber >= entry.StartWeek && x.WeekNumber <= entry.EndWeek) ||
+            (x.StartWeek.HasValue && x.EndWeek.HasValue && !entry.StartWeek.HasValue &&
+             entry.WeekNumber >= x.StartWeek && entry.WeekNumber <= x.EndWeek) ||
+            (!x.StartWeek.HasValue && !entry.StartWeek.HasValue && x.WeekNumber == entry.WeekNumber)
+        ).ToList();
 
         foreach (var c in teacherConflicts)
         {
@@ -214,7 +292,7 @@ public class ScheduleService : IScheduleService
             {
                 Id = c.Id,
                 Type = "TeacherConflict",
-                Message = $"教师 [{entry.TeacherName}] 在第{c.WeekNumber}周 星期{c.DayOfWeek} 第{c.PeriodNumber}节 已有 [{c.CourseName ?? c.ProjectName}] 的排课",
+                Message = $"教师 [{entry.TeacherName}] 在第{c.StartWeek ?? c.WeekNumber}-{c.EndWeek ?? c.WeekNumber}周 星期{c.DayOfWeek} 第{c.PeriodNumber}节 已有 [{c.CourseName ?? c.ProjectName}] 的排课",
                 WeekNumber = c.WeekNumber,
                 DayOfWeek = c.DayOfWeek,
                 PeriodNumber = c.PeriodNumber
@@ -224,12 +302,21 @@ public class ScheduleService : IScheduleService
         var classConflicts = await _db.ScheduleEntries
             .Where(x => x.SemesterId == entry.SemesterId
                 && x.ClassId == entry.ClassId
-                && x.WeekNumber == entry.WeekNumber
                 && x.DayOfWeek == entry.DayOfWeek
                 && x.PeriodNumber == entry.PeriodNumber
                 && x.Status == "Active"
                 && x.Id != entry.Id)
             .ToListAsync();
+
+        classConflicts = classConflicts.Where(x => 
+            (x.StartWeek.HasValue && x.EndWeek.HasValue && entry.StartWeek.HasValue && entry.EndWeek.HasValue &&
+             x.StartWeek <= entry.EndWeek && x.EndWeek >= entry.StartWeek) ||
+            (!x.StartWeek.HasValue && entry.StartWeek.HasValue && entry.EndWeek.HasValue &&
+             x.WeekNumber >= entry.StartWeek && x.WeekNumber <= entry.EndWeek) ||
+            (x.StartWeek.HasValue && x.EndWeek.HasValue && !entry.StartWeek.HasValue &&
+             entry.WeekNumber >= x.StartWeek && entry.WeekNumber <= x.EndWeek) ||
+            (!x.StartWeek.HasValue && !entry.StartWeek.HasValue && x.WeekNumber == entry.WeekNumber)
+        ).ToList();
 
         foreach (var c in classConflicts)
         {
@@ -237,7 +324,7 @@ public class ScheduleService : IScheduleService
             {
                 Id = c.Id,
                 Type = "ClassConflict",
-                Message = $"班级 [{entry.ClassName}] 在第{c.WeekNumber}周 星期{c.DayOfWeek} 第{c.PeriodNumber}节 已有 [{c.CourseName ?? c.ProjectName}] 的排课",
+                Message = $"班级 [{entry.ClassName}] 在第{c.StartWeek ?? c.WeekNumber}-{c.EndWeek ?? c.WeekNumber}周 星期{c.DayOfWeek} 第{c.PeriodNumber}节 已有 [{c.CourseName ?? c.ProjectName}] 的排课",
                 WeekNumber = c.WeekNumber,
                 DayOfWeek = c.DayOfWeek,
                 PeriodNumber = c.PeriodNumber
@@ -259,7 +346,17 @@ public class ScheduleService : IScheduleService
             .ToListAsync();
 
         if (query.WeekNumber.HasValue)
-            entries = entries.Where(x => x.WeekNumber == query.WeekNumber.Value).ToList();
+        {
+            entries = entries.Where(x => 
+                (x.StartWeek.HasValue && x.EndWeek.HasValue && x.StartWeek <= query.WeekNumber && x.EndWeek >= query.WeekNumber) ||
+                (!x.StartWeek.HasValue && x.WeekNumber == query.WeekNumber.Value)).ToList();
+        }
+        else if (query.StartWeek.HasValue && query.EndWeek.HasValue)
+        {
+            entries = entries.Where(x => 
+                (x.StartWeek.HasValue && x.EndWeek.HasValue && x.StartWeek <= query.EndWeek && x.EndWeek >= query.StartWeek) ||
+                (!x.StartWeek.HasValue && x.WeekNumber >= query.StartWeek && x.WeekNumber <= query.EndWeek)).ToList();
+        }
         if (query.LabId.HasValue)
             entries = entries.Where(x => x.LabId == query.LabId.Value).ToList();
         if (query.BuildingId.HasValue)
@@ -319,12 +416,24 @@ public class ScheduleService : IScheduleService
 
     public async Task<List<Lab>> GetAvailableLabsAsync(AvailabilityQuery query)
     {
-        var occupiedLabIds = await _db.ScheduleEntries
+        var occupiedQuery = _db.ScheduleEntries
             .Where(x => x.SemesterId == query.SemesterId
-                && x.WeekNumber == query.WeekNumber
                 && x.DayOfWeek == query.DayOfWeek
-                && query.PeriodNumbers.Contains(x.PeriodNumber)
-                && x.Status == "Active")
+                && x.Status == "Active");
+
+        if (query.PeriodNumbers != null && query.PeriodNumbers.Count > 0)
+        {
+            occupiedQuery = occupiedQuery.Where(x => query.PeriodNumbers.Contains(x.PeriodNumber));
+        }
+
+        if (query.StartWeek.HasValue && query.EndWeek.HasValue)
+        {
+            occupiedQuery = occupiedQuery.Where(x => 
+                (x.StartWeek.HasValue && x.EndWeek.HasValue && x.StartWeek <= query.EndWeek && x.EndWeek >= query.StartWeek) ||
+                (!x.StartWeek.HasValue && x.WeekNumber >= query.StartWeek && x.WeekNumber <= query.EndWeek));
+        }
+
+        var occupiedLabIds = await occupiedQuery
             .Select(x => x.LabId)
             .Distinct()
             .ToListAsync();
@@ -335,13 +444,17 @@ public class ScheduleService : IScheduleService
             .Where(x => x.IsActive);
 
         if (query.BuildingId.HasValue)
+        {
             q = q.Where(x => x.BuildingId == query.BuildingId.Value);
+        }
 
-        return await q
+        var labs = await q
             .Where(x => !occupiedLabIds.Contains(x.Id))
-            .OrderBy(x => x.Building!.Name)
+            .OrderBy(x => x.Building != null ? x.Building.Name : "")
             .ThenBy(x => x.Name)
             .ToListAsync();
+
+        return labs;
     }
 
     private static ScheduleEntryDto MapToDto(ScheduleEntry e)
@@ -353,7 +466,10 @@ public class ScheduleService : IScheduleService
             SemesterName = e.Semester?.Name,
             LabId = e.LabId,
             LabName = e.Lab?.Name,
+            BuildingName = e.Lab?.Building?.Name,
             WeekNumber = e.WeekNumber,
+            StartWeek = e.StartWeek,
+            EndWeek = e.EndWeek,
             DayOfWeek = e.DayOfWeek,
             PeriodNumber = e.PeriodNumber,
             Source = e.Source.ToString(),
@@ -378,5 +494,122 @@ public class ScheduleService : IScheduleService
             CreatedAt = e.CreatedAt,
             CreatedBy = e.CreatedBy
         };
+    }
+
+    public async Task<List<ExperimentTaskImportDto>> GetImportableExperimentTasksAsync(Guid semesterId)
+    {
+        var tasks = await _db.ExperimentTeachingTasks
+            .Include(x => x.Major)
+            .Include(x => x.Class)
+            .Include(x => x.Schedules)
+                .ThenInclude(s => s.ExperimentItem)
+            .Include(x => x.Schedules)
+                .ThenInclude(s => s.Lab)
+            .Where(x => x.SemesterId == semesterId && x.Status == "Active")
+            .ToListAsync();
+
+        var result = new List<ExperimentTaskImportDto>();
+
+        foreach (var task in tasks)
+        {
+            var dto = new ExperimentTaskImportDto
+            {
+                Id = task.Id,
+                CourseName = task.CourseName,
+                ClassName = task.Class?.Name ?? "",
+                MajorName = task.Major?.Name ?? "",
+                StudentCount = task.StudentCount,
+                TeacherNames = task.TeacherNames ?? "",
+                TotalExperimentHours = task.TotalExperimentHours,
+                CurrentSemesterExperimentHours = task.CurrentSemesterExperimentHours,
+                ScheduleCount = task.Schedules?.Count(s => s.IsConducted && s.WeekNumber.HasValue && s.DayOfWeek.HasValue && s.PeriodNumber.HasValue) ?? 0,
+                Schedules = task.Schedules?
+                    .Where(s => s.IsConducted && s.WeekNumber.HasValue && s.DayOfWeek.HasValue && s.PeriodNumber.HasValue)
+                    .Select(s => new ExperimentScheduleItemDto
+                    {
+                        Id = s.Id,
+                        ExperimentName = s.ExperimentItem?.ExperimentName ?? "",
+                        WeekNumber = s.WeekNumber,
+                        DayOfWeek = s.DayOfWeek,
+                        PeriodNumber = s.PeriodNumber,
+                        LabId = s.LabId,
+                        LabName = s.Lab?.Name,
+                        IsConducted = s.IsConducted
+                    }).ToList() ?? new List<ExperimentScheduleItemDto>()
+            };
+
+            result.Add(dto);
+        }
+
+        return result;
+    }
+
+    public async Task<int> ImportFromExperimentTasksAsync(List<Guid> taskIds, string? createdBy = null)
+    {
+        var importedCount = 0;
+
+        foreach (var taskId in taskIds)
+        {
+            var task = await _db.ExperimentTeachingTasks
+                .Include(x => x.Major)
+                .Include(x => x.Class)
+                .Include(x => x.Schedules)
+                    .ThenInclude(s => s.Lab)
+                .FirstOrDefaultAsync(x => x.Id == taskId);
+
+            if (task == null) continue;
+
+            var schedules = task.Schedules?
+                .Where(s => s.IsConducted && s.WeekNumber.HasValue && s.DayOfWeek.HasValue && s.PeriodNumber.HasValue && s.LabId.HasValue)
+                .ToList();
+
+            if (schedules == null || schedules.Count == 0) continue;
+
+            foreach (var schedule in schedules)
+            {
+                var existingEntry = await _db.ScheduleEntries
+                    .FirstOrDefaultAsync(x =>
+                        x.SemesterId == task.SemesterId &&
+                        x.LabId == schedule.LabId &&
+                        x.WeekNumber == schedule.WeekNumber &&
+                        x.DayOfWeek == schedule.DayOfWeek &&
+                        x.PeriodNumber == schedule.PeriodNumber &&
+                        x.Status == "Active");
+
+                if (existingEntry != null) continue;
+
+                var entry = new ScheduleEntry
+                {
+                    Id = Guid.NewGuid(),
+                    SemesterId = task.SemesterId,
+                    LabId = schedule.LabId,
+                    WeekNumber = schedule.WeekNumber ?? 0,
+                    DayOfWeek = schedule.DayOfWeek ?? 0,
+                    PeriodNumber = schedule.PeriodNumber ?? 0,
+                    Source = ScheduleSource.CentralScheduling,
+                    Status = "Active",
+                    ExperimentTaskId = task.Id,
+                    CourseName = task.CourseName,
+                    TeacherName = task.TeacherNames,
+                    ClassId = task.ClassId,
+                    ClassName = task.Class?.Name,
+                    MajorId = task.MajorId,
+                    MajorName = task.Major?.Name,
+                    StudentCount = task.StudentCount,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = createdBy
+                };
+
+                _db.ScheduleEntries.Add(entry);
+                importedCount++;
+            }
+        }
+
+        if (importedCount > 0)
+        {
+            await _db.SaveChangesAsync();
+        }
+
+        return importedCount;
     }
 }

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using LimsAuth.Api.Data;
 using LimsAuth.Api.Models;
+using System.Text.Json;
 
 namespace LimsAuth.Api.Services;
 
@@ -62,19 +63,46 @@ public class TeachingApplicationService : ITeachingApplicationService
         string applicantName,
         string? createdBy = null)
     {
+        Guid? majorId = request.MajorId;
+        string majorName = request.MajorName;
+        Guid? classId = request.ClassId;
+        string className = request.ClassName;
+
+        if (request.TeachingTaskId.HasValue && (!majorId.HasValue || !classId.HasValue))
+        {
+            var task = await _db.ExperimentTeachingTasks
+                .Include(t => t.Class)
+                .Include(t => t.Major)
+                .FirstOrDefaultAsync(t => t.Id == request.TeachingTaskId.Value);
+
+            if (task != null)
+            {
+                if (!classId.HasValue)
+                {
+                    classId = task.ClassId;
+                    className = task.Class?.Name ?? className;
+                }
+                if (!majorId.HasValue)
+                {
+                    majorId = task.MajorId != Guid.Empty ? task.MajorId : task.Class?.MajorId;
+                    majorName = task.Major?.Name ?? task.Class?.Major?.Name ?? majorName;
+                }
+            }
+        }
+
         var app = new TeachingApplication
         {
             Id = Guid.NewGuid(),
             SemesterId = request.SemesterId,
             TeachingTaskId = request.TeachingTaskId,
             CourseName = request.CourseName,
-            MajorId = request.MajorId,
-            MajorName = request.MajorName,
-            ClassId = request.ClassId,
-            ClassName = request.ClassName,
-            WeekNumbers = request.WeekNumbers,
+            MajorId = majorId,
+            MajorName = majorName,
+            ClassId = classId,
+            ClassName = className,
+            StartWeek = request.StartWeek,
+            EndWeek = request.EndWeek,
             DayOfWeek = request.DayOfWeek,
-            PeriodNumbers = request.PeriodNumbers,
             ExpectedLabId = request.ExpectedLabId,
             Remark = request.Remark,
             ApplicantId = applicantId,
@@ -83,6 +111,9 @@ public class TeachingApplicationService : ITeachingApplicationService
             CreatedAt = DateTime.UtcNow,
             CreatedBy = createdBy
         };
+
+        // FIX: 直接写入数据库列，不要通过 [NotMapped] 属性赋值
+        app.PeriodNumbersJson = JsonSerializer.Serialize(request.PeriodNumbers ?? new List<int>());
 
         _db.TeachingApplications.Add(app);
         await _db.SaveChangesAsync();
@@ -95,24 +126,24 @@ public class TeachingApplicationService : ITeachingApplicationService
         var app = await _db.TeachingApplications
             .Include(x => x.ExpectedLab)
             .FirstOrDefaultAsync(x => x.Id == id);
-        if (app == null) return false;
-        if (app.Status != ApprovalStatus.Pending) return false;
+        if (app == null || app.Status != ApprovalStatus.Pending) return false;
 
         app.Status = ApprovalStatus.Approved;
         app.ApprovalComment = request.Comment;
         app.ApprovedBy = approverId;
         app.ApprovedAt = DateTime.UtcNow;
         app.UpdatedAt = DateTime.UtcNow;
-
         await _db.SaveChangesAsync();
 
-        foreach (var week in app.WeekNumbers)
+        var periodList = JsonSerializer.Deserialize<List<int>>(app.PeriodNumbersJson ?? "[]") ?? new List<int>();
+        var weeks = Enumerable.Range(app.StartWeek, app.EndWeek - app.StartWeek + 1);
+        foreach (var week in weeks)
         {
-            foreach (var period in app.PeriodNumbers)
+            foreach (var period in periodList)
             {
                 await _scheduleService.CreateCentralScheduleAsync(new CreateScheduleEntryRequest
                 {
-                    SemesterId = app.SemesterId,
+                    SemesterId = app.SemesterId ?? Guid.Empty,
                     LabId = app.ExpectedLabId,
                     WeekNumber = week,
                     DayOfWeek = app.DayOfWeek,
@@ -132,15 +163,13 @@ public class TeachingApplicationService : ITeachingApplicationService
     public async Task<bool> RejectApplicationAsync(Guid id, ApprovalRequest request, Guid approverId)
     {
         var app = await _db.TeachingApplications.FindAsync(id);
-        if (app == null) return false;
-        if (app.Status != ApprovalStatus.Pending) return false;
+        if (app == null || app.Status != ApprovalStatus.Pending) return false;
 
         app.Status = ApprovalStatus.Rejected;
         app.ApprovalComment = request.Comment;
         app.ApprovedBy = approverId;
         app.ApprovedAt = DateTime.UtcNow;
         app.UpdatedAt = DateTime.UtcNow;
-
         await _db.SaveChangesAsync();
         return true;
     }
@@ -148,13 +177,11 @@ public class TeachingApplicationService : ITeachingApplicationService
     public async Task<bool> CancelApplicationAsync(Guid id, string? cancelledBy = null)
     {
         var app = await _db.TeachingApplications.FindAsync(id);
-        if (app == null) return false;
-        if (app.Status == ApprovalStatus.Rejected) return false;
+        if (app == null || app.Status == ApprovalStatus.Rejected) return false;
 
         app.IsCancelled = true;
         app.CancelReason = cancelledBy;
         app.UpdatedAt = DateTime.UtcNow;
-
         await _db.SaveChangesAsync();
         return true;
     }
@@ -169,8 +196,7 @@ public class TeachingApplicationService : ITeachingApplicationService
         if (semesterId.HasValue)
             q = q.Where(x => x.SemesterId == semesterId.Value);
 
-        var list = await q.OrderByDescending(x => x.CreatedAt).ToListAsync();
-        return list.Select(MapToDto).ToList();
+        return (await q.OrderByDescending(x => x.CreatedAt).ToListAsync()).Select(MapToDto).ToList();
     }
 
     public async Task<List<TeachingApplicationDto>> GetMyApplicationsAsync(Guid userId, Guid? semesterId)
@@ -183,12 +209,12 @@ public class TeachingApplicationService : ITeachingApplicationService
         if (semesterId.HasValue)
             q = q.Where(x => x.SemesterId == semesterId.Value);
 
-        var list = await q.OrderByDescending(x => x.CreatedAt).ToListAsync();
-        return list.Select(MapToDto).ToList();
+        return (await q.OrderByDescending(x => x.CreatedAt).ToListAsync()).Select(MapToDto).ToList();
     }
 
     private static TeachingApplicationDto MapToDto(TeachingApplication app)
     {
+        var periodList = JsonSerializer.Deserialize<List<int>>(app.PeriodNumbersJson ?? "[]") ?? new List<int>();
         return new TeachingApplicationDto
         {
             Id = app.Id,
@@ -200,9 +226,10 @@ public class TeachingApplicationService : ITeachingApplicationService
             MajorName = app.MajorName,
             ClassId = app.ClassId,
             ClassName = app.ClassName,
-            WeekNumbers = app.WeekNumbers,
+            StartWeek = app.StartWeek,
+            EndWeek = app.EndWeek,
             DayOfWeek = app.DayOfWeek,
-            PeriodNumbers = app.PeriodNumbers,
+            PeriodNumbers = periodList,
             ExpectedLabId = app.ExpectedLabId,
             ExpectedLabName = app.ExpectedLab?.Name,
             Remark = app.Remark,
