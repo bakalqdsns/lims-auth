@@ -261,26 +261,3 @@ GET    /api/v1/period-times    # 节次列表
 | [docs/KNOWN_ISSUES.md](./docs/KNOWN_ISSUES.md) | 已知缺陷与风险清单 |
 
 ---
-
-## 已知问题
-
-详见 [docs/KNOWN_ISSUES.md](./docs/KNOWN_ISSUES.md)，主要包括：
-
-1. **权限控制漏洞** - Majors/Classes/PeriodTimes/Calendar 控制器缺少权限注解
-2. **并发数据冲突** - 学生计数非原子操作
-3. **事务缺失** - 多表操作无事务保护
-4. **外键约束缺失** - 删除数据未检查引用
-5. **N+1 查询性能问题**
-6. **无分页的大列表**
-
----
-
-## 许可证
-
-MIT License
-
----
-
-## 最后更新
-
-2026-05-27
